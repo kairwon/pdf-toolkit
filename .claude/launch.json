@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--host"],
+      "cwd": "/Users/kai/Desktop/pdf-toolkit",
+      "port": 5173
+    }
+  ]
+}
