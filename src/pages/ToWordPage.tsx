@@ -73,7 +73,7 @@ export default function ToWordPage() {
   return (
     <ToolPageWrapper>
       <ToolHeader title="PDF to Word" description="Convert PDF to Word — OCR applied automatically to scanned pages." />
-      <div className="section-card p-4 mb-6 flex items-center justify-between">
+      <div className="p-4 mb-5 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
         <div className="flex items-center gap-3">
           <div className="bg-jade/10 dark:bg-jade-dark/20 rounded-lg p-2 text-jade"><FileText size={16} /></div>
           <div>
@@ -86,7 +86,7 @@ export default function ToWordPage() {
 
       {/* PDF type detection info */}
       {!processing && (
-        <div className="section-card p-5 mb-6 space-y-3">
+        <div className="p-5 mb-5 space-y-3" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
           <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
             Lab of PDF will automatically detect whether your PDF contains selectable text or is a scanned document.
             Text pages are extracted directly; scanned pages use <strong>OCR (Optical Character Recognition)</strong>
@@ -104,7 +104,7 @@ export default function ToWordPage() {
 
       {/* Progress */}
       {processing && (
-        <div className="section-card p-5 mb-6">
+        <div className="p-5 mb-5" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
           <div className="flex items-center gap-3">
             <Loader2 size={18} className="text-jade animate-spin shrink-0" />
             <div>

@@ -126,7 +126,7 @@ export default function SplitPage() {
     <ToolPageWrapper>
       <ToolHeader title="Split PDF" description="Choose which PDF pages to keep, then extract or split." />
 
-      <div className="section-card p-3 mb-5 flex items-center justify-between">
+      <div className="p-3 mb-5 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
         <div className="flex items-center gap-3">
           <div className="bg-jade/10 dark:bg-jade-dark/20 rounded-lg p-2 text-jade"><Split size={16} /></div>
           <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{file.name}</span>

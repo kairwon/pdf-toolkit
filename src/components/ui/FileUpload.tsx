@@ -27,11 +27,12 @@ export default function FileUpload({ onFiles, multiple = true, accept }: FileUpl
     <div
       {...getRootProps()}
       className={cn(
-        'relative cursor-pointer rounded-2xl border-2 border-dashed p-8 sm:p-12 text-center transition-all duration-300 bg-white/60 dark:bg-[#1a1a2e]/60',
+        'relative cursor-pointer rounded-2xl border-2 border-dashed text-center transition-all duration-300 bg-white/60 dark:bg-[#1a1a2e]/60',
         isDragActive
           ? 'border-jade bg-jade/10 dark:bg-jade-dark/20 scale-[1.02]'
           : 'border-gray-200 dark:border-gray-700 hover:border-jade/50 dark:hover:border-jade/50 hover:bg-white/80 dark:hover:bg-white/10',
       )}
+      style={{ padding: '2.5rem', minHeight: '360px', width: '100%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
     >
       <input {...getInputProps()} />
 

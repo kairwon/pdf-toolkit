@@ -114,7 +114,7 @@ export default function ManagePage() {
     <ToolPageWrapper>
       <ToolHeader title="Manage Pages" description="Select PDF pages and perform actions — free online PDF page manager." />
 
-      <div className="section-card p-3 mb-5 flex items-center justify-between">
+      <div className="p-3 mb-5 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
         <div>
           <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{file.name}</span>
           <span className="text-xs text-gray-400 ml-2">{formatFileSize(file.size)} · {previewItems.length} pages</span>

@@ -63,7 +63,7 @@ export default function CompressPage() {
   return (
     <ToolPageWrapper>
       <ToolHeader title="Compress PDF" description="All modes keep text selectable and searchable — free online PDF compression." />
-      <div className="section-card p-4 mb-6 flex items-center justify-between">
+      <div className="p-4 mb-5 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
         <div>
           <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{file.name}</p>
           <p className="text-xs text-gray-400">{formatFileSize(file.size)} · {pageCount} pages</p>
@@ -71,7 +71,7 @@ export default function CompressPage() {
         <button onClick={() => { setFile(null); setPageCount(0) }} className="btn-ghost">Change file</button>
       </div>
 
-      <div className="section-card p-5 mb-6 space-y-2.5">
+      <div className="p-5 mb-5 space-y-2.5" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
         <label className="text-sm font-medium text-gray-600 dark:text-gray-300 block mb-1">Compression level</label>
         {(Object.entries(levelInfo) as [Level, typeof levelInfo[Level]][]).map(([key, info]) => (
           <button key={key} onClick={() => setLevel(key)}

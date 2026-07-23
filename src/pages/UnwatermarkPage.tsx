@@ -44,9 +44,6 @@ export default function UnwatermarkPage() {
     return (
       <ToolPageWrapper>
         <ToolHeader title="Remove Watermark" description="Strip overlay watermarks from PDF files online — free & browser-based." />
-        <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-2.5 mb-5">
-          ⚠ Watermarks embedded directly into page content cannot be fully removed. This tool works best on annotation-type watermarks and common edge / centre placements.
-        </div>
         <FileUpload onFiles={handleFile} multiple={false} />
       </ToolPageWrapper>
     )
@@ -55,7 +52,7 @@ export default function UnwatermarkPage() {
   return (
     <ToolPageWrapper>
       <ToolHeader title="Remove Watermark" description="Strip overlay watermarks and cover common watermark regions — free online tool." />
-      <div className="section-card p-4 mb-6 flex items-center justify-between">
+      <div className="p-4 mb-5 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
         <div>
           <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{file.name}</p>
           <p className="text-xs text-gray-400">{formatFileSize(file.size)} · {pageCount} pages</p>
@@ -63,7 +60,7 @@ export default function UnwatermarkPage() {
         <button onClick={() => { setFile(null); setPageCount(0) }} className="btn-ghost">Change file</button>
       </div>
 
-      <div className="section-card p-5 mb-6">
+      <div className="p-5 mb-5" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
         <p className="text-sm text-gray-500 dark:text-gray-400">This will attempt to remove watermarks by:</p>
         <ul className="text-sm text-gray-400 dark:text-gray-500 mt-2 space-y-1 list-disc list-inside">
           <li>Stripping annotation-layer overlays</li>

@@ -153,7 +153,7 @@ export default function MergePage() {
         <FileUpload onFiles={addFiles} />
       ) : (
         <div className="space-y-5">
-          <div className="section-card p-3 flex items-center justify-between">
+          <div className="p-3 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
             <div className="flex items-center gap-2 flex-wrap">
               {files.map((f, fi) => (
                 <div key={f.id} draggable
