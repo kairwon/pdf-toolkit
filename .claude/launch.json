@@ -6,7 +6,7 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["vite", "--host"],
       "cwd": "/Users/kai/Desktop/pdf-toolkit",
-      "port": 5173
+      "port": 5174
     }
   ]
 }

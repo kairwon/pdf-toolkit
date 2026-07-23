@@ -50,20 +50,23 @@ body {
 
 /* Feature card */
 .feature-card {
-  background: white;
-  border: 1px solid #dde4d8;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(221, 228, 216, 0.4);
   border-radius: 14px;
   box-shadow: 0 1px 2px rgba(5, 150, 105, 0.04);
   transition: box-shadow 0.2s, transform 0.2s;
 }
 
 .feature-card:hover {
+  background: rgba(255, 255, 255, 0.65);
   box-shadow: 0 4px 16px rgba(5, 150, 105, 0.08);
   transform: translateY(-1px);
 }
 
 .dark .feature-card {
-  background: #15221a;
+  background: rgba(21, 34, 26, 0.7);
+  backdrop-filter: blur(8px);
   border-color: rgba(255, 255, 255, 0.06);
 }
 
@@ -73,14 +76,15 @@ body {
 
 /* Section card */
 .section-card {
-  background: white;
-  border: 1px solid #dde4d8;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(221, 228, 216, 0.6);
   border-radius: 12px;
   box-shadow: 0 1px 2px rgba(5, 150, 105, 0.04);
 }
 
 .dark .section-card {
-  background: #15221a;
+  background: rgba(21, 34, 26, 0.75);
   border-color: rgba(255, 255, 255, 0.06);
 }
 
@@ -181,4 +185,46 @@ body {
 .dark .pill-inactive {
   background: rgba(255, 255, 255, 0.05);
   color: #9ca3af;
+}
+
+/* ─── Panda scene animations ─── */
+
+@keyframes mst {
+  0%, 100% { transform: translateX(-20%); }
+  50% { transform: translateX(20%); }
+}
+
+@keyframes sw1 {
+  0%, 100% { transform: rotate(-0.3deg); }
+  50% { transform: rotate(0.3deg); }
+}
+
+@keyframes sw2 {
+  0%, 100% { transform: rotate(-0.5deg); }
+  50% { transform: rotate(0.5deg); }
+}
+
+@keyframes sw3 {
+  0%, 100% { transform: rotate(-0.8deg); }
+  50% { transform: rotate(0.8deg); }
+}
+
+@keyframes pq {
+  0%   { transform: translateY(100vh) translateX(0); opacity: 0; }
+  10%  { opacity: 0.5; }
+  90%  { opacity: 0.2; }
+  100% { transform: translateY(-10vh) translateX(30px); opacity: 0; }
+}
+
+@keyframes bnce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30%  { transform: translateY(-12px) scale(1.04); }
+  60%  { transform: translateY(-4px); }
+}
+
+@keyframes shke {
+  0%, 100% { transform: translateX(0); }
+  20%  { transform: translateX(-8px) rotate(-3deg); }
+  40%  { transform: translateX(8px) rotate(3deg); }
+  60%  { transform: translateX(-5px) rotate(-2deg); }
 }
