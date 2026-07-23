@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { ArrowRight, FileText, Combine, Split, Layers, Image, FileDown, Droplets, DropletOff, FileType } from 'lucide-react'
-import BambooScene from '../components/BambooScene'
 
 const defaultTools = [
   { path: '/merge', title: 'Merge PDF', desc: 'Combine multiple PDFs into one. Preview pages and pick exactly which ones to include.', icon: Combine },
@@ -31,7 +30,6 @@ export default function LandingPage() {
 
   return (
     <div className="relative">
-      <BambooScene />
 
       {/* Hero */}
       <div className="relative z-10 text-center pt-10 pb-6">

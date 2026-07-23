@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import ToolHeader from '../components/ui/ToolHeader'
 import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
+import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { removeWatermark, getPageCount } from '../lib/pdf'
 import { formatFileSize } from '../lib/utils'
 
@@ -41,18 +42,18 @@ export default function UnwatermarkPage() {
 
   if (!file) {
     return (
-      <div>
+      <ToolPageWrapper>
         <ToolHeader title="Remove Watermark" description="Strip overlay watermarks from PDF files online — free & browser-based." />
         <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-2.5 mb-5">
           ⚠ Watermarks embedded directly into page content cannot be fully removed. This tool works best on annotation-type watermarks and common edge / centre placements.
         </div>
         <FileUpload onFiles={handleFile} multiple={false} />
-      </div>
+      </ToolPageWrapper>
     )
   }
 
   return (
-    <div>
+    <ToolPageWrapper>
       <ToolHeader title="Remove Watermark" description="Strip overlay watermarks and cover common watermark regions — free online tool." />
       <div className="section-card p-4 mb-6 flex items-center justify-between">
         <div>
@@ -78,6 +79,6 @@ export default function UnwatermarkPage() {
         </button>
       </div>
       {processing && <ProcessingOverlay message="Removing watermark..." />}
-    </div>
+    </ToolPageWrapper>
   )
 }

@@ -6,6 +6,7 @@ import FileUpload from '../components/ui/FileUpload'
 import PdfViewer from '../components/ui/PdfViewer'
 import type { PreviewItem } from '../components/ui/PdfViewer'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
+import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { getPageCount, mergePdfs } from '../lib/pdf'
 import { PDFDocument } from 'pdf-lib'
 import { formatFileSize } from '../lib/utils'
@@ -146,7 +147,7 @@ export default function MergePage() {
   }
 
   return (
-    <div>
+    <ToolPageWrapper>
       <ToolHeader title="Merge PDF" description="Combine multiple PDF files into one document online — free & private." />
       {files.length === 0 ? (
         <FileUpload onFiles={addFiles} />
@@ -218,6 +219,6 @@ export default function MergePage() {
         </div>
       )}
       {processing && <ProcessingOverlay message="Merging PDFs..." />}
-    </div>
+    </ToolPageWrapper>
   )
 }

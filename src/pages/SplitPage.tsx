@@ -6,6 +6,7 @@ import FileUpload from '../components/ui/FileUpload'
 import PdfViewer from '../components/ui/PdfViewer'
 import type { PreviewItem } from '../components/ui/PdfViewer'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
+import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { renderPageToCanvas, extractPages, splitPdf, getPageCount } from '../lib/pdf'
 import { formatFileSize } from '../lib/utils'
 
@@ -114,15 +115,15 @@ export default function SplitPage() {
 
   if (!file) {
     return (
-      <div>
+      <ToolPageWrapper>
         <ToolHeader title="Split PDF" description="Extract specific pages from a PDF file online — free, no upload required." />
         <FileUpload onFiles={handleFile} multiple={false} />
-      </div>
+      </ToolPageWrapper>
     )
   }
 
   return (
-    <div>
+    <ToolPageWrapper>
       <ToolHeader title="Split PDF" description="Choose which PDF pages to keep, then extract or split." />
 
       <div className="section-card p-3 mb-5 flex items-center justify-between">
@@ -177,6 +178,6 @@ export default function SplitPage() {
         </button>
       </div>
       {processing && <ProcessingOverlay message={mode === 'extract' ? 'Extracting pages...' : 'Splitting PDF...'} />}
-    </div>
+    </ToolPageWrapper>
   )
 }

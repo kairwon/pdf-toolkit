@@ -6,6 +6,7 @@ import FileUpload from '../components/ui/FileUpload'
 import PdfViewer from '../components/ui/PdfViewer'
 import type { PreviewItem } from '../components/ui/PdfViewer'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
+import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { renderPageToCanvas, getPageCount } from '../lib/pdf'
 import { downloadBlob, downloadZip, formatFileSize } from '../lib/utils'
 
@@ -74,15 +75,15 @@ export default function ToImagePage() {
 
   if (!file) {
     return (
-      <div>
+      <ToolPageWrapper>
         <ToolHeader title="PDF to Image" description="Convert PDF pages to PNG or JPEG images online — free, no uploads." />
         <FileUpload onFiles={handleFile} multiple={false} />
-      </div>
+      </ToolPageWrapper>
     )
   }
 
   return (
-    <div>
+    <ToolPageWrapper>
       <ToolHeader title="PDF to Image" description="Choose PNG or JPEG format and quality — free online PDF to image converter." />
 
       <div className="section-card p-3 mb-5 flex items-center justify-between">
@@ -121,6 +122,6 @@ export default function ToImagePage() {
         </button>
       </div>
       {converting && <ProcessingOverlay message="Converting pages to images..." />}
-    </div>
+    </ToolPageWrapper>
   )
 }

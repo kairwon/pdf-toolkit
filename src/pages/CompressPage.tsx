@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import ToolHeader from '../components/ui/ToolHeader'
 import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
+import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { compressPdf, getPageCount } from '../lib/pdf'
 import { formatFileSize } from '../lib/utils'
 
@@ -52,15 +53,15 @@ export default function CompressPage() {
 
   if (!file) {
     return (
-      <div>
+      <ToolPageWrapper>
         <ToolHeader title="Compress PDF" description="Reduce PDF file size online — lossless compression, text stays selectable." />
         <FileUpload onFiles={handleFile} multiple={false} />
-      </div>
+        </ToolPageWrapper>
     )
   }
 
   return (
-    <div>
+    <ToolPageWrapper>
       <ToolHeader title="Compress PDF" description="All modes keep text selectable and searchable — free online PDF compression." />
       <div className="section-card p-4 mb-6 flex items-center justify-between">
         <div>
@@ -93,6 +94,6 @@ export default function CompressPage() {
         </button>
       </div>
       {processing && <ProcessingOverlay message="Compressing PDF..." />}
-    </div>
+    </ToolPageWrapper>
   )
 }

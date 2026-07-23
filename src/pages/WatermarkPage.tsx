@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import ToolHeader from '../components/ui/ToolHeader'
 import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
+import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { addWatermark, getPageCount } from '../lib/pdf'
 import { formatFileSize } from '../lib/utils'
 
@@ -47,15 +48,15 @@ export default function WatermarkPage() {
 
   if (!file) {
     return (
-      <div>
+      <ToolPageWrapper>
         <ToolHeader title="Add Watermark" description="Add a text watermark to every page of your PDF — free and private." />
         <FileUpload onFiles={handleFile} multiple={false} />
-      </div>
+      </ToolPageWrapper>
     )
   }
 
   return (
-    <div>
+    <ToolPageWrapper>
       <ToolHeader title="Add Watermark" description="Add a text watermark to every PDF page — free online tool." />
       <div className="section-card p-4 mb-6 flex items-center justify-between">
         <div>
@@ -86,6 +87,6 @@ export default function WatermarkPage() {
         </button>
       </div>
       {processing && <ProcessingOverlay message="Adding watermark..." />}
-    </div>
+    </ToolPageWrapper>
   )
 }

@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import ToolHeader from '../components/ui/ToolHeader'
 import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
+import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { classifyPdf, pdfToWord, getPageCount } from '../lib/pdf'
 import { formatFileSize } from '../lib/utils'
 
@@ -62,15 +63,15 @@ export default function ToWordPage() {
 
   if (!file) {
     return (
-      <div>
+      <ToolPageWrapper>
         <ToolHeader title="PDF to Word" description="Convert PDF to Word document — automatically detects text vs. scanned pages and uses OCR when needed." />
         <FileUpload onFiles={handleFile} multiple={false} />
-      </div>
+      </ToolPageWrapper>
     )
   }
 
   return (
-    <div>
+    <ToolPageWrapper>
       <ToolHeader title="PDF to Word" description="Convert PDF to Word — OCR applied automatically to scanned pages." />
       <div className="section-card p-4 mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -129,6 +130,6 @@ export default function ToWordPage() {
         </button>
       </div>
       {processing && <ProcessingOverlay message={progress || 'Processing...'} />}
-    </div>
+    </ToolPageWrapper>
   )
 }

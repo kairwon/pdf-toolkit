@@ -1,10 +1,12 @@
 import { Outlet, Link } from 'react-router-dom'
 import Header from './Header'
+import BambooScene from '../BambooScene'
 import { ShieldCheck } from 'lucide-react'
 
 export default function Layout() {
   return (
-    <div className="min-h-screen bg-scene flex flex-col">
+    <div className="min-h-screen bg-scene flex flex-col relative">
+      <BambooScene />
       <Header />
 
       {/* Privacy banner */}

@@ -6,6 +6,7 @@ import FileUpload from '../components/ui/FileUpload'
 import PdfViewer from '../components/ui/PdfViewer'
 import type { PreviewItem } from '../components/ui/PdfViewer'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
+import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { renderPageToCanvas, deletePages, extractPages, getPageCount } from '../lib/pdf'
 import { PDFDocument } from 'pdf-lib'
 import { formatFileSize } from '../lib/utils'
@@ -102,15 +103,15 @@ export default function ManagePage() {
 
   if (!file) {
     return (
-      <div>
+      <ToolPageWrapper>
         <ToolHeader title="Manage Pages" description="Delete, rotate, or extract PDF pages online — free & browser-based." />
         <FileUpload onFiles={handleFile} multiple={false} />
-      </div>
+      </ToolPageWrapper>
     )
   }
 
   return (
-    <div>
+    <ToolPageWrapper>
       <ToolHeader title="Manage Pages" description="Select PDF pages and perform actions — free online PDF page manager." />
 
       <div className="section-card p-3 mb-5 flex items-center justify-between">
@@ -159,6 +160,6 @@ export default function ManagePage() {
         </div>
       )}
       {processing && <ProcessingOverlay message="Processing..." />}
-    </div>
+    </ToolPageWrapper>
   )
 }
