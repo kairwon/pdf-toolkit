@@ -127,7 +127,7 @@ export default function PandaCard() {
           <div className="flex-1 min-w-0" style={{ maxWidth: '380px' }}>
             {/* Title — always one line */}
             <div style={{ whiteSpace: 'nowrap', fontSize: '20px', fontWeight: 800, color: '#1b5e20', lineHeight: 1.2, marginBottom: '10px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Let's raise the panda together 🐼
+              Let's raise the panda together
             </div>
 
             {/* Thanks to */}
@@ -140,8 +140,8 @@ export default function PandaCard() {
               <FlipNumber value={friendFormatted} />
             </div>
 
-            {/* friends from around the world */}
-            <div style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(58,90,64,0.4)', marginBottom: '14px' }}>
+            {/* friends from around the world — forced one line */}
+            <div style={{ whiteSpace: 'nowrap', fontSize: '12px', fontWeight: 500, color: 'rgba(58,90,64,0.4)', marginBottom: '14px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               friends from around the world
             </div>
 
@@ -165,55 +165,40 @@ export default function PandaCard() {
 
           {/* ─── RIGHT COLUMN ─── */}
           <div className="flex-1 min-w-0" style={{ maxWidth: '280px' }}>
-            {/* Name */}
-            <div style={{ textAlign: 'left', fontSize: '16px', fontWeight: 800, color: '#1b5e20', letterSpacing: '1px', marginBottom: '10px' }}>
-              HUA HUA 🐼
+            {/* Name badge */}
+            <div style={{
+              display: 'inline-block',
+              background: 'linear-gradient(135deg, #e8f5e9, #c8e6c9)',
+              border: '1px solid rgba(76,175,80,0.15)',
+              borderRadius: '10px',
+              padding: '4px 14px',
+              marginBottom: '12px',
+              fontSize: '14px',
+              fontWeight: 800,
+              color: '#1b5e20',
+              letterSpacing: '1px',
+            }}>
+              HUA HUA
             </div>
 
-            {/* Level progress bar */}
+            {/* Level */}
             <div style={{ marginBottom: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
-                <span style={{ fontSize: '10px', fontWeight: 600, color: '#2e7d32', letterSpacing: '2px', textTransform: 'uppercase' }}>
-                  Lv.{info.level}
-                </span>
-                <span style={{ fontSize: '10px', color: 'rgba(58,90,64,0.35)' }}>
-                  {info.current} / {info.next} 🎋
-                </span>
-              </div>
-              <div style={{ height: '6px', background: 'rgba(76,175,80,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${info.progress * 100}%`, background: 'linear-gradient(90deg, #a5d6a7, #43a047)', borderRadius: '3px', transition: 'width 0.6s ease' }} />
-              </div>
+              <span style={{ fontSize: '14px', fontWeight: 800, color: '#1b5e20', letterSpacing: '2px' }}>
+                Lv.{info.level}
+              </span>
             </div>
 
-            <div style={{ textAlign: 'left', fontSize: '10px', color: 'rgba(76,175,80,0.25)', marginBottom: '4px' }}>
-              {info.needed} 🎋 to next level
+            {/* Progress bar — dynamic */}
+            <div style={{ height: '8px', background: 'rgba(76,175,80,0.08)', borderRadius: '4px', overflow: 'hidden', marginBottom: '8px' }}>
+              <div style={{ height: '100%', width: `${info.progress * 100}%`, background: 'linear-gradient(90deg, #a5d6a7, #43a047)', borderRadius: '4px', transition: 'width 0.6s ease' }} />
             </div>
 
-            {/* Next level preview */}
-            <div style={{ textAlign: 'left', fontSize: '10px', fontWeight: 500, color: 'rgba(58,90,64,0.25)', marginBottom: '10px' }}>
-              <span style={{ color: '#2e7d32', fontWeight: 600, letterSpacing: '1px' }}>NEXT LEVEL</span> — needs {info.needed.toLocaleString()} 🎋
+            {/* Next level */}
+            <div style={{ textAlign: 'left', marginBottom: '2px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#2e7d32', letterSpacing: '1px', textTransform: 'uppercase' }}>NEXT LEVEL</span>
             </div>
-
-            {/* Feed button */}
-            <div style={{ textAlign: 'left' }}>
-              <button style={{
-                padding: '6px 18px',
-                borderRadius: '999px',
-                fontSize: '11px',
-                fontWeight: 600,
-                border: '1.5px solid rgba(76,175,80,0.2)',
-                background: 'linear-gradient(135deg, #43a047, #2e7d32)',
-                color: '#fff',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 2px 8px rgba(46,125,50,0.15)',
-                letterSpacing: '0.5px',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(46,125,50,0.25)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(46,125,50,0.15)' }}
-              >
-                🎋 Feed the Panda
-              </button>
+            <div style={{ textAlign: 'left', fontSize: '13px', fontWeight: 700, color: '#2e7d32' }}>
+              🎋 {info.needed.toLocaleString()} needed
             </div>
           </div>
 
