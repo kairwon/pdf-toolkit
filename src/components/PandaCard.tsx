@@ -106,13 +106,6 @@ export default function PandaCard() {
                 </span>
               </div>
 
-              {/* Divider with bamboo icon */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '16px 0' }}>
-                <div style={{ height: '2px', width: '80px', background: '#d8e6dd' }} />
-                <span style={{ margin: '0 10px', fontSize: '24px' }}>🎍</span>
-                <div style={{ height: '2px', width: '80px', background: '#d8e6dd' }} />
-              </div>
-
               <div style={{
                 marginTop: '12px',
                 padding: '12px 16px',
@@ -128,19 +121,6 @@ export default function PandaCard() {
           </div>
 
           {/* ─── CENTER — Panda ─── */}
-          <div className="shrink-0" style={{
-            width: '180px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <div style={{
-              width: '170px', height: '170px',
-              filter: 'drop-shadow(0 4px 20px rgba(76,175,80,0.1))',
-            }}>
-              <div id="panda-card-lottie" style={{ width: '100%', height: '100%' }} />
-            </div>
-          </div>
 
           {/* ─── RIGHT ─── */}
           <div style={{
