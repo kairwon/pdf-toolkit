@@ -70,25 +70,34 @@ export default function PandaCard() {
 
           {/* LEFT — Together we grow */}
           <div className="flex-1 min-w-0">
-            <div style={{ fontSize: '22px', fontWeight: 800, color: '#1b5e20', lineHeight: 1.2, marginBottom: '6px' }}>
+            {/* Title */}
+            <div style={{ fontSize: '20px', fontWeight: 800, color: '#1b5e20', lineHeight: 1.2, marginBottom: '12px' }}>
               Let's raise the panda together <span style={{ display: 'inline-block', animation: 'gentleWave 1.5s ease-in-out infinite' }}>🐼</span>
             </div>
 
-            <div style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(58,90,64,0.4)', letterSpacing: '0.3px', marginBottom: '10px' }}>
-              Thanks to <strong style={{ color: '#2e7d32' }}>{bamboo.toLocaleString()}</strong> friends from around the world
+            {/* 2,000 badge */}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '6px' }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                background: 'linear-gradient(135deg, #e8f5e9, #c8e6c9)',
+                border: '1px solid rgba(76,175,80,0.15)',
+                borderRadius: '12px',
+                padding: '6px 16px 6px 12px',
+              }}>
+                <span style={{ fontSize: '16px' }}>🎋</span>
+                <span style={{ fontSize: '26px', fontWeight: 800, color: '#1b5e20', lineHeight: 1, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.5px' }}>
+                  {bamboo.toLocaleString()}
+                </span>
+              </span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '4px' }}>
-              <span style={{ fontSize: '13px' }}>🎋</span>
-              <span className="text-[30px] font-extrabold tabular-nums" style={{ color: '#1b5e20', lineHeight: 1 }}>
-                {bamboo.toLocaleString()}
-              </span>
-              <span style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(58,90,64,0.35)' }}>
-                bamboos
-              </span>
+            {/* friends from around the world */}
+            <div style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(58,90,64,0.4)', marginBottom: '10px' }}>
+              friends from around the world
             </div>
 
-            <div style={{ fontSize: '10px', color: 'rgba(76,175,80,0.25)', letterSpacing: '2px' }}>
+            {/* Bottom line */}
+            <div style={{ fontSize: '11px', fontWeight: 600, color: '#2e7d32', letterSpacing: '1px' }}>
               Every conversion = 1 🎋 for the panda
             </div>
           </div>
