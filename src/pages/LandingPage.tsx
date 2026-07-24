@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { ArrowRight, FileText, Combine, Split, Layers, Image, FileDown, Droplets, DropletOff, FileType } from 'lucide-react'
+import PandaCard from '../components/PandaCard'
 
 const defaultTools = [
   { path: '/merge', title: 'Merge PDF', desc: 'Combine multiple PDFs into one. Preview pages and pick exactly which ones to include.', icon: Combine },
@@ -19,6 +20,8 @@ const futureTools = ['PDF to Excel', 'Edit PDF', 'Sign PDF']
 export default function LandingPage() {
   const navigate = useNavigate()
   const [tools, setTools] = useState(defaultTools)
+  const feedTimeRef = useRef(0)
+  const [feedCount, setFeedCount] = useState(0)
 
   const onDragEnd = useCallback((result: any) => {
     if (!result.destination) return
@@ -94,18 +97,20 @@ export default function LandingPage() {
               )}
             </Droppable>
           </DragDropContext>
+        </div>
+      </div>
 
-          {/* Upcoming */}
-          <div className="text-center mb-8">
-            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3.5">
-              More tools coming soon
-            </p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {futureTools.map((name) => (
-                <span key={name} className="text-sm text-gray-400 dark:text-gray-500 bg-white/70 dark:bg-[#1a1a30]/70 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700/50 backdrop-blur-sm">{name}</span>
-              ))}
-            </div>
-          </div>
+      <PandaCard />
+
+      {/* Upcoming */}
+      <div className="text-center mt-6 mb-4">
+        <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3.5">
+          More tools coming soon
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          {futureTools.map((name) => (
+            <span key={name} className="text-sm text-gray-400 dark:text-gray-500 bg-white/70 dark:bg-[#1a1a30]/70 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700/50 backdrop-blur-sm">{name}</span>
+          ))}
         </div>
       </div>
     </div>
