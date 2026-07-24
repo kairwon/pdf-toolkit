@@ -9,7 +9,7 @@ import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { getPageCount, mergePdfs } from '../lib/pdf'
 import { PDFDocument } from 'pdf-lib'
-import { formatFileSize } from '../lib/utils'
+import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 
 interface PdfFile {
   id: string
@@ -101,18 +101,17 @@ export default function MergePage() {
           flat++
         }
       }
+      const blobs: { blob: Blob; name: string }[] = []
       for (const { file: f, indices: idxs } of Object.values(byFile)) {
         const doc = await PDFDocument.load(await f.arrayBuffer())
         const newDoc = await PDFDocument.create()
         const pages = await newDoc.copyPages(doc, idxs)
         pages.forEach((p) => newDoc.addPage(p))
-        const blob = new Blob([await newDoc.save()], { type: 'application/pdf' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url; a.download = `extracted-${f.name}`; a.click()
-        URL.revokeObjectURL(url)
+        blobs.push({ blob: new Blob([await newDoc.save()], { type: 'application/pdf' }), name: `extracted-${f.name}` })
       }
-      toast.success('Extracted pages downloaded')
+      triggerDownloadOverlay('Pages extracted!', () => {
+        blobs.forEach(({ blob, name }) => downloadBlob(blob, name))
+      })
     } catch {
       toast.error('Failed to extract pages')
     } finally {
@@ -134,11 +133,9 @@ export default function MergePage() {
       }
       const result = await mergePdfs(finalSource.filter((s) => s.pageIndices.length > 0))
       const blob = new Blob([result], { type: 'application/pdf' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url; a.download = `merged-${Date.now()}.pdf`; a.click()
-      URL.revokeObjectURL(url)
-      toast.success('Download started!')
+      triggerDownloadOverlay('PDF merged!', () => {
+        downloadBlob(blob, `merged-${Date.now()}.pdf`)
+      })
     } catch {
       toast.error('Merge failed')
     } finally {

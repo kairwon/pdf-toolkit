@@ -6,7 +6,7 @@ import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { classifyPdf, pdfToWord, getPageCount } from '../lib/pdf'
-import { formatFileSize } from '../lib/utils'
+import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 
 export default function ToWordPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -46,11 +46,9 @@ export default function ToWordPage() {
         setProgress(statusText)
       })
 
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url; a.download = `${file.name.replace(/\.pdf$/i, '')}.doc`; a.click()
-      URL.revokeObjectURL(url)
-      toast.success(`Converted! PDF type: ${pdfType}`)
+      triggerDownloadOverlay('Converted! PDF to Word', () => {
+        downloadBlob(blob, `${file.name.replace(/\.pdf$/i, '')}.doc`)
+      })
     } catch (err) {
       toast.error('Conversion failed')
       console.error(err)

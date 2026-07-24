@@ -6,7 +6,7 @@ import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { compressPdf, getPageCount } from '../lib/pdf'
-import { formatFileSize } from '../lib/utils'
+import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 
 type Level = 'lossless' | 'balanced' | 'aggressive'
 
@@ -39,11 +39,9 @@ export default function CompressPage() {
       const result = await compressPdf(file, level)
       const blob = new Blob([result], { type: 'application/pdf' })
       const saved = ((before - blob.size) / before * 100).toFixed(1)
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url; a.download = `compressed-${file.name}`; a.click()
-      URL.revokeObjectURL(url)
-      toast.success(`Compressed! Reduced by ${saved}%`)
+      triggerDownloadOverlay(`Compressed! Reduced by ${saved}%`, () => {
+        downloadBlob(blob, `compressed-${file.name}`)
+      })
     } catch {
       toast.error('Compression failed')
     } finally {

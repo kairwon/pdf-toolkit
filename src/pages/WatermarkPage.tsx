@@ -6,7 +6,7 @@ import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { addWatermark, getPageCount } from '../lib/pdf'
-import { formatFileSize } from '../lib/utils'
+import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 
 export default function WatermarkPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -34,11 +34,9 @@ export default function WatermarkPage() {
         fontSize: 52,
       })
       const blob = new Blob([result], { type: 'application/pdf' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url; a.download = `watermarked-${file.name}`; a.click()
-      URL.revokeObjectURL(url)
-      toast.success('Watermark added')
+      triggerDownloadOverlay('Watermark added!', () => {
+        downloadBlob(blob, `watermarked-${file.name}`)
+      })
     } catch {
       toast.error('Failed to add watermark')
     } finally {

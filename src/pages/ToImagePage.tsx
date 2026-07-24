@@ -8,7 +8,7 @@ import type { PreviewItem } from '../components/ui/PdfViewer'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { renderPageToCanvas, getPageCount } from '../lib/pdf'
-import { downloadBlob, downloadZip, formatFileSize } from '../lib/utils'
+import { downloadBlob, downloadZip, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
 
 export default function ToImagePage() {
   const [file, setFile] = useState<File | null>(null)
@@ -63,9 +63,10 @@ export default function ToImagePage() {
           return { blob, name: `page-${idx + 1}.${format}` }
         }),
       )
-      if (blobs.length === 1) downloadBlob(blobs[0].blob, blobs[0].name)
-      else downloadZip(blobs, `${file.name.replace('.pdf', '')}-images.zip`)
-      toast.success(`Converted ${blobs.length} page${blobs.length !== 1 ? 's' : ''}`)
+      triggerDownloadOverlay(`Converted! ${blobs.length} page${blobs.length !== 1 ? 's' : ''}`, () => {
+        if (blobs.length === 1) downloadBlob(blobs[0].blob, blobs[0].name)
+        else downloadZip(blobs, `${file.name.replace('.pdf', '')}-images.zip`)
+      })
     } catch {
       toast.error('Conversion failed')
     } finally {

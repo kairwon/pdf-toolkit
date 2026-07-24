@@ -1,6 +1,7 @@
 import { Outlet, Link } from 'react-router-dom'
 import Header from './Header'
 import BambooScene from '../BambooScene'
+import DownloadOverlay from '../DownloadOverlay'
 import { ShieldCheck } from 'lucide-react'
 
 export default function Layout() {
@@ -8,6 +9,7 @@ export default function Layout() {
     <div className="min-h-screen bg-scene flex flex-col relative">
       <BambooScene />
       <Header />
+      <DownloadOverlay />
 
       {/* Privacy banner */}
       <div className="bg-jade/5 dark:bg-jade-dark/20 border-b border-jade/10 dark:border-jade-dark/30">

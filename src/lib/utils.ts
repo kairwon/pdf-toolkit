@@ -15,6 +15,10 @@ export function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+export function triggerDownloadOverlay(title: string, onDownload: () => void) {
+  window.dispatchEvent(new CustomEvent('show-download-overlay', { detail: { title, onDownload } }))
+}
+
 export function downloadZip(
   blobs: { blob: Blob; name: string }[],
   zipName: string

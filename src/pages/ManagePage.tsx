@@ -9,7 +9,7 @@ import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { renderPageToCanvas, deletePages, extractPages, getPageCount } from '../lib/pdf'
 import { PDFDocument } from 'pdf-lib'
-import { formatFileSize } from '../lib/utils'
+import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 
 export default function ManagePage() {
   const [file, setFile] = useState<File | null>(null)
@@ -64,11 +64,9 @@ export default function ManagePage() {
       const indices = [...selected].sort((a, b) => a - b)
       const result = await extractPages(file, indices)
       const blob = new Blob([result], { type: 'application/pdf' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url; a.download = `extracted-${file.name}`; a.click()
-      URL.revokeObjectURL(url)
-      toast.success('Extracted pages downloaded')
+      triggerDownloadOverlay('Pages extracted!', () => {
+        downloadBlob(blob, `extracted-${file.name}`)
+      })
     } catch {
       toast.error('Failed to extract pages')
     } finally {
@@ -86,11 +84,9 @@ export default function ManagePage() {
       })
       const result = await pdfDoc.save()
       const blob = new Blob([result], { type: 'application/pdf' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url; a.download = `rotated-${file.name}`; a.click()
-      URL.revokeObjectURL(url)
-      toast.success('Rotations saved')
+      triggerDownloadOverlay('Rotation saved!', () => {
+        downloadBlob(blob, `rotated-${file.name}`)
+      })
       setFile(null); setPreviewItems([]); setSelected(new Set())
     } catch {
       toast.error('Failed to rotate pages')

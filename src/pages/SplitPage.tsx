@@ -8,7 +8,7 @@ import type { PreviewItem } from '../components/ui/PdfViewer'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { renderPageToCanvas, extractPages, splitPdf, getPageCount } from '../lib/pdf'
-import { formatFileSize } from '../lib/utils'
+import { downloadBlob, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
 
 type SplitMode = 'extract' | 'split'
 
@@ -66,11 +66,9 @@ export default function SplitPage() {
       const indices = [...selected].sort((a, b) => a - b)
       const result = await extractPages(file, indices)
       const blob = new Blob([result], { type: 'application/pdf' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url; a.download = `extracted-${file.name}`; a.click()
-      URL.revokeObjectURL(url)
-      toast.success('Extracted pages downloaded')
+      triggerDownloadOverlay('Pages extracted!', () => {
+        downloadBlob(blob, `extracted-${file.name}`)
+      })
     } catch {
       toast.error('Failed to extract pages')
     } finally {
@@ -88,10 +86,9 @@ export default function SplitPage() {
       if (mode === 'extract') {
         const result = await extractPages(file, indices)
         const blob = new Blob([result], { type: 'application/pdf' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url; a.download = `extracted-${file.name}`; a.click()
-        URL.revokeObjectURL(url)
+        triggerDownloadOverlay('Pages extracted!', () => {
+          downloadBlob(blob, `extracted-${file.name}`)
+        })
       } else {
         const { kept, removed } = await splitPdf(file, indices)
         ;[
@@ -99,13 +96,10 @@ export default function SplitPage() {
           { data: removed, name: `removed-${file.name}` },
         ].forEach(({ data, name }) => {
           const blob = new Blob([data], { type: 'application/pdf' })
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url; a.download = name; a.click()
-          URL.revokeObjectURL(url)
+          downloadBlob(blob, name)
         })
+        toast.success('Download started!')
       }
-      toast.success('Download started!')
     } catch {
       toast.error('Operation failed')
     } finally {
