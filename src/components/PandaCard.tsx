@@ -24,30 +24,31 @@ export function addBamboo(count: number = 1) {
   window.dispatchEvent(new CustomEvent('bamboo-update', { detail: next }))
 }
 
-function FlipDigit({ digit, prevDigit }: { digit: string; prevDigit: string }) {
+function FlipDigit({ digit, prevDigit, isComma }: { digit: string; prevDigit: string; isComma?: boolean }) {
   const [flipping, setFlipping] = useState(false)
 
   useEffect(() => {
-    if (digit !== prevDigit) {
+    if (digit !== prevDigit && !isComma) {
       setFlipping(true)
       const t = setTimeout(() => setFlipping(false), 400)
       return () => clearTimeout(t)
     }
-  }, [digit, prevDigit])
+  }, [digit, prevDigit, isComma])
+
+  if (isComma) {
+    return <span style={{ color: '#2e7d32', fontWeight: 700, fontSize: '20px', width: '8px', textAlign: 'center' }}>{digit}</span>
+  }
 
   return (
-    <span style={{
-      display: 'inline-block',
-      perspective: '600px',
-    }}>
+    <span style={{ display: 'inline-block', perspective: '600px' }}>
       <span style={{
         display: 'inline-block',
-        minWidth: '22px',
+        minWidth: '24px',
         textAlign: 'center',
         background: 'linear-gradient(180deg, #e8f5e9, #c8e6c9)',
         border: '1px solid rgba(76,175,80,0.15)',
         borderRadius: '6px',
-        padding: '2px 3px',
+        padding: '3px 4px',
         fontVariantNumeric: 'tabular-nums',
         fontWeight: 700,
         fontSize: '22px',
@@ -64,11 +65,10 @@ function FlipDigit({ digit, prevDigit }: { digit: string; prevDigit: string }) {
 }
 
 function FlipNumber({ value }: { value: string }) {
-  const prev = value
   return (
-    <span style={{ display: 'inline-flex', gap: '3px', alignItems: 'center', flexWrap: 'wrap' }}>
+    <span style={{ display: 'inline-flex', gap: '2px', alignItems: 'center', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
       {value.split('').map((d, i) => (
-        <FlipDigit key={`${i}-${d}`} digit={d} prevDigit={d} />
+        <FlipDigit key={`${i}-${d}`} digit={d} prevDigit={d} isComma={d === ','} />
       ))}
     </span>
   )
@@ -124,26 +124,36 @@ export default function PandaCard() {
         <div className="flex items-center gap-6 sm:gap-10">
 
           {/* ─── LEFT COLUMN ─── */}
-          <div className="flex-1 min-w-0" style={{ maxWidth: '360px' }}>
+          <div className="flex-1 min-w-0" style={{ maxWidth: '380px' }}>
             {/* Title — always one line */}
-            <div style={{ whiteSpace: 'nowrap', fontSize: '20px', fontWeight: 800, color: '#1b5e20', lineHeight: 1.2, marginBottom: '14px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ whiteSpace: 'nowrap', fontSize: '20px', fontWeight: 800, color: '#1b5e20', lineHeight: 1.2, marginBottom: '10px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               Let's raise the panda together 🐼
             </div>
 
-            {/* Friends line */}
-            <div style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(58,90,64,0.4)', marginBottom: '12px', whiteSpace: 'nowrap' }}>
-              Thanks to <strong style={{ color: '#2e7d32' }}><FlipNumber value={friendFormatted} /></strong> friends from around the world
+            {/* Thanks to */}
+            <div style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(58,90,64,0.4)', marginBottom: '6px' }}>
+              Thanks to
             </div>
 
-            {/* Bamboo count — flip cards */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+            {/* 2,000 — forced single line, big */}
+            <div style={{ whiteSpace: 'nowrap', marginBottom: '4px' }}>
+              <FlipNumber value={friendFormatted} />
+            </div>
+
+            {/* friends from around the world */}
+            <div style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(58,90,64,0.4)', marginBottom: '14px' }}>
+              friends from around the world
+            </div>
+
+            {/* 🎋 2,000 bamboos — forced single line */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', whiteSpace: 'nowrap' }}>
               <span style={{ fontSize: '18px' }}>🎋</span>
               <FlipNumber value={bamboo.toLocaleString()} />
-              <span style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(58,90,64,0.35)', marginLeft: '2px' }}>bamboos</span>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: 'rgba(58,90,64,0.35)', marginLeft: '2px' }}>bamboos</span>
             </div>
 
             {/* Bottom line — always one row */}
-            <div style={{ whiteSpace: 'nowrap', fontSize: '11px', fontWeight: 600, color: '#2e7d32', letterSpacing: '1px', marginTop: '8px' }}>
+            <div style={{ whiteSpace: 'nowrap', fontSize: '11px', fontWeight: 600, color: '#2e7d32', letterSpacing: '1px' }}>
               Every conversion = 1 🎋 for the panda
             </div>
           </div>
@@ -156,7 +166,7 @@ export default function PandaCard() {
           {/* ─── RIGHT COLUMN ─── */}
           <div className="flex-1 min-w-0" style={{ maxWidth: '280px' }}>
             {/* Name */}
-            <div style={{ textAlign: 'right', fontSize: '16px', fontWeight: 800, color: '#1b5e20', letterSpacing: '1px', marginBottom: '8px' }}>
+            <div style={{ textAlign: 'left', fontSize: '16px', fontWeight: 800, color: '#1b5e20', letterSpacing: '1px', marginBottom: '10px' }}>
               HUA HUA 🐼
             </div>
 
@@ -175,17 +185,17 @@ export default function PandaCard() {
               </div>
             </div>
 
-            <div style={{ textAlign: 'right', fontSize: '10px', color: 'rgba(76,175,80,0.25)', marginBottom: '6px' }}>
-              {info.needed} 🎋 needed to level up
+            <div style={{ textAlign: 'left', fontSize: '10px', color: 'rgba(76,175,80,0.25)', marginBottom: '4px' }}>
+              {info.needed} 🎋 to next level
             </div>
 
             {/* Next level preview */}
-            <div style={{ textAlign: 'right', fontSize: '10px', fontWeight: 500, color: 'rgba(58,90,64,0.25)', marginBottom: '10px' }}>
-              <span style={{ color: '#2e7d32', fontWeight: 600, letterSpacing: '1px' }}>NEXT LEVEL</span> — the panda will grow bigger 🐼
+            <div style={{ textAlign: 'left', fontSize: '10px', fontWeight: 500, color: 'rgba(58,90,64,0.25)', marginBottom: '10px' }}>
+              <span style={{ color: '#2e7d32', fontWeight: 600, letterSpacing: '1px' }}>NEXT LEVEL</span> — needs {info.needed.toLocaleString()} 🎋
             </div>
 
             {/* Feed button */}
-            <div style={{ textAlign: 'right' }}>
+            <div style={{ textAlign: 'left' }}>
               <button style={{
                 padding: '6px 18px',
                 borderRadius: '999px',
