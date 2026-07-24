@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { FileText, Menu, X, ChevronDown } from 'lucide-react'
+import { Menu, X, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '../../lib/utils'
 
@@ -38,9 +38,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 nav-glass">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="bg-gradient-to-br from-jade to-jade-light rounded-xl p-2 text-white shadow-sm">
-            <FileText size={18} />
-          </div>
+          <img src="/logo.png" alt="Lab of PDF" className="w-8 h-8 rounded-lg" />
           <span className="font-semibold text-base text-gray-800 dark:text-white/90">
             Lab of PDF
           </span>

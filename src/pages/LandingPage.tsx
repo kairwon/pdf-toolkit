@@ -32,7 +32,7 @@ export default function LandingPage() {
     <div className="relative">
 
       {/* Hero */}
-      <div className="relative z-10 text-center pt-10 pb-6">
+      <div className="relative z-10 text-center pt-4 pb-2">
         <div className="inline-flex items-center gap-2 bg-jade/10 dark:bg-jade-dark/25 text-jade dark:text-jade-light text-xs font-medium px-3.5 py-1.5 rounded-full mb-4 tracking-wide">
           <FileText size={13} />
           All processing happens locally in your browser
@@ -40,8 +40,11 @@ export default function LandingPage() {
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white leading-tight tracking-tight">
           Free Online <span className="text-jade dark:text-jade-light">PDF Tools</span>
         </h1>
-        <p className="text-gray-400 dark:text-gray-500 mt-2 max-w-md mx-auto text-sm leading-relaxed">
-          Merge, split, compress, watermark, and convert PDFs — all in your browser. Free, private, no sign-up.
+        <p className="text-gray-400 dark:text-gray-500 mt-2 text-sm leading-relaxed whitespace-nowrap">
+          Merge, split, compress, watermark, and convert PDFs — all in your browser.
+        </p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm">
+          Free, private, no sign-up.
         </p>
       </div>
 
