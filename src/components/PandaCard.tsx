@@ -8,10 +8,13 @@ function getCount(): number {
   catch { return 2000 }
 }
 
-function getLevel(bamboo: number): { level: number; current: number; next: number; progress: number } {
-  const level = Math.floor(bamboo / 1000) || 1
-  const current = bamboo % 1000
-  return { level, current, next: 1000, progress: current / 1000 }
+function getLevel(bamboo: number): { level: number; current: number; next: number; progress: number; needed: number } {
+  const level = Math.max(1, Math.floor(bamboo / 1000))
+  const base = (level - 1) * 1000
+  const current = bamboo - base
+  const next = 1000
+  const progress = current / next
+  return { level, current, next, progress, needed: next - current }
 }
 
 export function addBamboo(count: number = 1) {
@@ -21,9 +24,60 @@ export function addBamboo(count: number = 1) {
   window.dispatchEvent(new CustomEvent('bamboo-update', { detail: next }))
 }
 
+function FlipDigit({ digit, prevDigit }: { digit: string; prevDigit: string }) {
+  const [flipping, setFlipping] = useState(false)
+
+  useEffect(() => {
+    if (digit !== prevDigit) {
+      setFlipping(true)
+      const t = setTimeout(() => setFlipping(false), 400)
+      return () => clearTimeout(t)
+    }
+  }, [digit, prevDigit])
+
+  return (
+    <span style={{
+      display: 'inline-block',
+      perspective: '600px',
+    }}>
+      <span style={{
+        display: 'inline-block',
+        minWidth: '22px',
+        textAlign: 'center',
+        background: 'linear-gradient(180deg, #e8f5e9, #c8e6c9)',
+        border: '1px solid rgba(76,175,80,0.15)',
+        borderRadius: '6px',
+        padding: '2px 3px',
+        fontVariantNumeric: 'tabular-nums',
+        fontWeight: 700,
+        fontSize: '22px',
+        color: '#1b5e20',
+        lineHeight: 1.3,
+        transform: flipping ? 'rotateX(90deg)' : 'rotateX(0)',
+        transition: 'transform 0.35s ease',
+        transformOrigin: '50% 50%',
+      }}>
+        {digit}
+      </span>
+    </span>
+  )
+}
+
+function FlipNumber({ value }: { value: string }) {
+  const prev = value
+  return (
+    <span style={{ display: 'inline-flex', gap: '3px', alignItems: 'center', flexWrap: 'wrap' }}>
+      {value.split('').map((d, i) => (
+        <FlipDigit key={`${i}-${d}`} digit={d} prevDigit={d} />
+      ))}
+    </span>
+  )
+}
+
 export default function PandaCard() {
   const [bamboo, setBamboo] = useState(getCount)
   const info = getLevel(bamboo)
+  const friendCount = Math.floor(bamboo / 10) * 10 || 1280
 
   useEffect(() => {
     const handler = (e: Event) => setBamboo((e as CustomEvent).detail)
@@ -50,6 +104,8 @@ export default function PandaCard() {
     })
   }, [])
 
+  const friendFormatted = friendCount.toLocaleString()
+
   return (
     <div className="mt-8">
       <div style={{
@@ -62,77 +118,74 @@ export default function PandaCard() {
         position: 'relative',
         overflow: 'hidden',
       }}>
-        {/* Subtle leaf accents */}
         <div style={{ position: 'absolute', top: -30, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'radial-gradient(circle, rgba(76,175,80,0.06), transparent)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: -40, left: -20, width: 140, height: 140, borderRadius: '50%', background: 'radial-gradient(circle, rgba(76,175,80,0.05), transparent)', pointerEvents: 'none' }} />
 
         <div className="flex items-center gap-6 sm:gap-10">
 
-          {/* LEFT — Together we grow */}
-          <div className="flex-1 min-w-0">
-            {/* Title */}
-            <div style={{ fontSize: '20px', fontWeight: 800, color: '#1b5e20', lineHeight: 1.2, marginBottom: '12px' }}>
-              Let's raise the panda together <span style={{ display: 'inline-block', animation: 'gentleWave 1.5s ease-in-out infinite' }}>🐼</span>
+          {/* ─── LEFT COLUMN ─── */}
+          <div className="flex-1 min-w-0" style={{ maxWidth: '360px' }}>
+            {/* Title — always one line */}
+            <div style={{ whiteSpace: 'nowrap', fontSize: '20px', fontWeight: 800, color: '#1b5e20', lineHeight: 1.2, marginBottom: '14px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              Let's raise the panda together 🐼
             </div>
 
-            {/* 2,000 badge */}
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '6px' }}>
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                background: 'linear-gradient(135deg, #e8f5e9, #c8e6c9)',
-                border: '1px solid rgba(76,175,80,0.15)',
-                borderRadius: '12px',
-                padding: '6px 16px 6px 12px',
-              }}>
-                <span style={{ fontSize: '16px' }}>🎋</span>
-                <span style={{ fontSize: '26px', fontWeight: 800, color: '#1b5e20', lineHeight: 1, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.5px' }}>
-                  {bamboo.toLocaleString()}
-                </span>
-              </span>
+            {/* Friends line */}
+            <div style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(58,90,64,0.4)', marginBottom: '12px', whiteSpace: 'nowrap' }}>
+              Thanks to <strong style={{ color: '#2e7d32' }}><FlipNumber value={friendFormatted} /></strong> friends from around the world
             </div>
 
-            {/* friends from around the world */}
-            <div style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(58,90,64,0.4)', marginBottom: '10px' }}>
-              friends from around the world
+            {/* Bamboo count — flip cards */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+              <span style={{ fontSize: '18px' }}>🎋</span>
+              <FlipNumber value={bamboo.toLocaleString()} />
+              <span style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(58,90,64,0.35)', marginLeft: '2px' }}>bamboos</span>
             </div>
 
-            {/* Bottom line */}
-            <div style={{ fontSize: '11px', fontWeight: 600, color: '#2e7d32', letterSpacing: '1px' }}>
+            {/* Bottom line — always one row */}
+            <div style={{ whiteSpace: 'nowrap', fontSize: '11px', fontWeight: 600, color: '#2e7d32', letterSpacing: '1px', marginTop: '8px' }}>
               Every conversion = 1 🎋 for the panda
             </div>
           </div>
 
-          {/* CENTER — Panda */}
-          <div className="shrink-0" style={{ width: '170px', height: '170px', filter: 'drop-shadow(0 4px 20px rgba(76,175,80,0.12))' }}>
+          {/* ─── CENTER — Panda (bigger) ─── */}
+          <div className="shrink-0" style={{ width: '200px', height: '200px', filter: 'drop-shadow(0 4px 20px rgba(76,175,80,0.12))' }}>
             <div id="panda-card-lottie" style={{ width: '100%', height: '100%' }} />
           </div>
 
-          {/* RIGHT — Level card */}
-          <div className="flex-1 min-w-0">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px', marginBottom: '4px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '2.5px', textTransform: 'uppercase', color: '#2e7d32' }}>
-                Level
-              </span>
-              <span style={{ fontSize: '16px' }}>⬆</span>
+          {/* ─── RIGHT COLUMN ─── */}
+          <div className="flex-1 min-w-0" style={{ maxWidth: '280px' }}>
+            {/* Name */}
+            <div style={{ textAlign: 'right', fontSize: '16px', fontWeight: 800, color: '#1b5e20', letterSpacing: '1px', marginBottom: '8px' }}>
+              HUA HUA 🐼
             </div>
 
-            <div style={{ textAlign: 'right' }}>
-              <span style={{ fontSize: '36px', fontWeight: 800, color: '#1b5e20', lineHeight: 1, letterSpacing: '-1px', fontVariantNumeric: 'tabular-nums' }}>
-                {info.level}
-              </span>
+            {/* Level progress bar */}
+            <div style={{ marginBottom: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                <span style={{ fontSize: '10px', fontWeight: 600, color: '#2e7d32', letterSpacing: '2px', textTransform: 'uppercase' }}>
+                  Lv.{info.level}
+                </span>
+                <span style={{ fontSize: '10px', color: 'rgba(58,90,64,0.35)' }}>
+                  {info.current} / {info.next} 🎋
+                </span>
+              </div>
+              <div style={{ height: '6px', background: 'rgba(76,175,80,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${info.progress * 100}%`, background: 'linear-gradient(90deg, #a5d6a7, #43a047)', borderRadius: '3px', transition: 'width 0.6s ease' }} />
+              </div>
             </div>
 
-            <div style={{ textAlign: 'right', marginTop: '4px' }}>
-              <div style={{ fontSize: '11px', color: 'rgba(58,90,64,0.3)' }}>
-                <span style={{ fontWeight: 600, color: '#2e7d32' }}>{info.current}</span> / {info.next} 🎋
-              </div>
-              <div style={{ fontSize: '10px', color: 'rgba(76,175,80,0.2)', marginTop: '1px' }}>
-                {info.next - info.current} to next level
-              </div>
+            <div style={{ textAlign: 'right', fontSize: '10px', color: 'rgba(76,175,80,0.25)', marginBottom: '6px' }}>
+              {info.needed} 🎋 needed to level up
+            </div>
+
+            {/* Next level preview */}
+            <div style={{ textAlign: 'right', fontSize: '10px', fontWeight: 500, color: 'rgba(58,90,64,0.25)', marginBottom: '10px' }}>
+              <span style={{ color: '#2e7d32', fontWeight: 600, letterSpacing: '1px' }}>NEXT LEVEL</span> — the panda will grow bigger 🐼
             </div>
 
             {/* Feed button */}
-            <div style={{ textAlign: 'right', marginTop: '10px' }}>
+            <div style={{ textAlign: 'right' }}>
               <button style={{
                 padding: '6px 18px',
                 borderRadius: '999px',
