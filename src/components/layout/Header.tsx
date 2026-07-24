@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Menu, X, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '../../lib/utils'
+import BambooCounter from '../BambooCounter'
 
 const navGroups = [
   {
@@ -38,7 +39,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 nav-glass">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <img src="/logo.png" alt="Lab of PDF" className="w-8 h-8 rounded-lg" />
+          <img src="/logo.png" alt="Lab of PDF" className="w-10 h-10 rounded-xl" />
           <span className="font-semibold text-base text-gray-800 dark:text-white/90">
             Lab of PDF
           </span>
@@ -81,9 +82,12 @@ export default function Header() {
           ))}
         </nav>
 
-        <button className="sm:hidden p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5" onClick={() => setMobileOpen(!mobileOpen)}>
-          {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-        </button>
+        <div className="flex items-center gap-0">
+          <BambooCounter />
+          <button className="sm:hidden p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5" onClick={() => setMobileOpen(!mobileOpen)}>
+            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
       </div>
 
       {mobileOpen && (
