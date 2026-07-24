@@ -2,12 +2,14 @@ import { Outlet, Link } from 'react-router-dom'
 import Header from './Header'
 import BambooScene from '../BambooScene'
 import LottiePanda from '../LottiePanda'
+import BambooCounter from '../BambooCounter'
 import { ShieldCheck } from 'lucide-react'
 
 export default function Layout() {
   return (
     <div className="min-h-screen bg-scene flex flex-col relative">
       <BambooScene />
+      <BambooCounter />
       <LottiePanda />
       <Header />
 

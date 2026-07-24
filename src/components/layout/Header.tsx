@@ -2,7 +2,6 @@ import { Link, useLocation } from 'react-router-dom'
 import { Menu, X, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '../../lib/utils'
-import BambooCounter from '../BambooCounter'
 
 const navGroups = [
   {
@@ -82,12 +81,9 @@ export default function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-0">
-          <BambooCounter />
-          <button className="sm:hidden p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-          </button>
-        </div>
+        <button className="sm:hidden p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5" onClick={() => setMobileOpen(!mobileOpen)}>
+          {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+        </button>
       </div>
 
       {mobileOpen && (
