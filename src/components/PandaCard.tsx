@@ -24,56 +24,6 @@ export function addBamboo(count: number = 1) {
   window.dispatchEvent(new CustomEvent('bamboo-update', { detail: next }))
 }
 
-function FlipDigit({ digit, prevDigit, isComma }: { digit: string; prevDigit: string; isComma?: boolean }) {
-  const [flipping, setFlipping] = useState(false)
-
-  useEffect(() => {
-    if (digit !== prevDigit && !isComma) {
-      setFlipping(true)
-      const t = setTimeout(() => setFlipping(false), 400)
-      return () => clearTimeout(t)
-    }
-  }, [digit, prevDigit, isComma])
-
-  if (isComma) {
-    return <span style={{ color: '#2e7d32', fontWeight: 700, fontSize: '20px', width: '8px', textAlign: 'center' }}>{digit}</span>
-  }
-
-  return (
-    <span style={{ display: 'inline-block', perspective: '600px' }}>
-      <span style={{
-        display: 'inline-block',
-        minWidth: '24px',
-        textAlign: 'center',
-        background: 'linear-gradient(180deg, #e8f5e9, #c8e6c9)',
-        border: '1px solid rgba(76,175,80,0.15)',
-        borderRadius: '6px',
-        padding: '3px 4px',
-        fontVariantNumeric: 'tabular-nums',
-        fontWeight: 700,
-        fontSize: '22px',
-        color: '#1b5e20',
-        lineHeight: 1.3,
-        transform: flipping ? 'rotateX(90deg)' : 'rotateX(0)',
-        transition: 'transform 0.35s ease',
-        transformOrigin: '50% 50%',
-      }}>
-        {digit}
-      </span>
-    </span>
-  )
-}
-
-function FlipNumber({ value }: { value: string }) {
-  return (
-    <span style={{ display: 'inline-flex', gap: '2px', alignItems: 'center', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
-      {value.split('').map((d, i) => (
-        <FlipDigit key={`${i}-${d}`} digit={d} prevDigit={d} isComma={d === ','} />
-      ))}
-    </span>
-  )
-}
-
 export default function PandaCard() {
   const [bamboo, setBamboo] = useState(getCount)
   const info = getLevel(bamboo)
@@ -92,125 +42,167 @@ export default function PandaCard() {
         .then(data => {
           const container = document.getElementById('panda-card-lottie')
           if (!container) return
-          Lottie.default.loadAnimation({
-            container,
-            renderer: 'svg',
-            loop: true,
-            autoplay: true,
-            animationData: data,
-          })
+          Lottie.default.loadAnimation({ container, renderer: 'svg', loop: true, autoplay: true, animationData: data })
         })
         .catch(() => {})
     })
   }, [])
 
-  const friendFormatted = friendCount.toLocaleString()
-
   return (
-    <div className="mt-8">
+    <div className="mt-8" style={{ width: '100%', maxWidth: '1150px', margin: '24px auto' }}>
       <div style={{
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.55), rgba(255,255,255,0.25))',
-        backdropFilter: 'blur(14px)',
-        WebkitBackdropFilter: 'blur(14px)',
-        border: '1px solid rgba(5, 150, 105, 0.15)',
-        borderRadius: '24px',
-        padding: '24px 28px',
-        position: 'relative',
-        overflow: 'hidden',
+        background: 'linear-gradient(180deg, #f8fbf9, #edf4ef)',
+        borderRadius: '28px',
+        padding: '30px',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), 0 25px 50px rgba(0,0,0,0.08)',
       }}>
-        <div style={{ position: 'absolute', top: -30, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'radial-gradient(circle, rgba(76,175,80,0.06), transparent)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -40, left: -20, width: 140, height: 140, borderRadius: '50%', background: 'radial-gradient(circle, rgba(76,175,80,0.05), transparent)', pointerEvents: 'none' }} />
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'stretch' }}>
 
-        <div className="flex items-center gap-6 sm:gap-10">
-
-          {/* ─── LEFT COLUMN ─── */}
-          <div className="flex-1 min-w-0" style={{ maxWidth: '380px' }}>
-            {/* Title — always one line */}
-            <div style={{ whiteSpace: 'nowrap', fontSize: '20px', fontWeight: 800, color: '#1b5e20', lineHeight: 1.2, marginBottom: '10px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Let's raise the panda together
-            </div>
-
-            {/* Thanks to */}
-            <div style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(58,90,64,0.4)', marginBottom: '6px' }}>
-              Thanks to
-            </div>
-
-            {/* 2,000 — forced single line, big */}
-            <div style={{ whiteSpace: 'nowrap', marginBottom: '4px' }}>
-              <FlipNumber value={friendFormatted} />
-            </div>
-
-            {/* friends from around the world — forced one line */}
-            <div style={{ whiteSpace: 'nowrap', fontSize: '12px', fontWeight: 500, color: 'rgba(58,90,64,0.4)', marginBottom: '14px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              friends from around the world
-            </div>
-
-            {/* 🎋 2,000 bamboos — forced single line */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', whiteSpace: 'nowrap' }}>
-              <span style={{ fontSize: '18px' }}>🎋</span>
-              <FlipNumber value={bamboo.toLocaleString()} />
-              <span style={{ fontSize: '12px', fontWeight: 600, color: 'rgba(58,90,64,0.35)', marginLeft: '2px' }}>bamboos</span>
-            </div>
-
-            {/* Bottom line — always one row */}
-            <div style={{ whiteSpace: 'nowrap', fontSize: '11px', fontWeight: 600, color: '#2e7d32', letterSpacing: '1px' }}>
-              Every conversion = 1 🎋 for the panda
-            </div>
-          </div>
-
-          {/* ─── CENTER — Panda (bigger) ─── */}
-          <div className="shrink-0" style={{ width: '200px', height: '200px', filter: 'drop-shadow(0 4px 20px rgba(76,175,80,0.12))' }}>
-            <div id="panda-card-lottie" style={{ width: '100%', height: '100%' }} />
-          </div>
-
-          {/* ─── RIGHT COLUMN ─── */}
-          <div className="flex-1 min-w-0" style={{ maxWidth: '280px' }}>
-            {/* Name badge */}
+          {/* ─── LEFT (no bg, shares outer bg) ─── */}
+          <div style={{
+            flex: 1,
+            position: 'relative',
+            padding: '24px 28px',
+            borderRadius: '26px',
+            overflow: 'hidden',
+          }}>
+            {/* Subtle bamboo bg */}
             <div style={{
-              display: 'inline-block',
-              background: 'linear-gradient(135deg, #e8f5e9, #c8e6c9)',
-              border: '1px solid rgba(76,175,80,0.15)',
-              borderRadius: '10px',
-              padding: '4px 14px',
-              marginBottom: '12px',
-              fontSize: '14px',
-              fontWeight: 800,
-              color: '#1b5e20',
-              letterSpacing: '1px',
+              position: 'absolute', inset: 0,
+              background: 'url(https://img.freepik.com/free-vector/bamboo-background_23-2147505699.jpg) no-repeat left bottom',
+              backgroundSize: '40%', opacity: 0.06, pointerEvents: 'none',
+            }} />
+
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ fontSize: '18px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Panda Bamboo Forest · Grow Together
+                <span style={{ marginLeft: '6px', background: '#eef2ef', borderRadius: '50%', padding: '2px 6px', fontSize: '11px' }}>?</span>
+              </div>
+
+              <div style={{ marginTop: '8px', color: '#6b7280', fontSize: '13px' }}>
+                Thanks <span style={{ color: '#2fa36b', fontWeight: 600 }}>{friendCount.toLocaleString()}</span> contributors
+              </div>
+
+              {/* Digit cards */}
+              <div style={{ margin: '14px 0', display: 'flex', flexWrap: 'nowrap', gap: '3px', whiteSpace: 'nowrap' }}>
+                {bamboo.toLocaleString().split('').map((d, i) => (
+                  <span key={i} style={{
+                    display: 'inline-block',
+                    padding: '8px 10px',
+                    borderRadius: '12px',
+                    fontSize: '24px',
+                    fontWeight: 'bold',
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.9), rgba(235,240,236,0.9))',
+                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05), inset 0 -2px 4px rgba(255,255,255,0.8)',
+                    color: d === ',' ? '#2fa36b' : '#1b5e20',
+                    minWidth: d === ',' ? '12px' : '24px',
+                    textAlign: 'center',
+                  }}>
+                    {d}
+                  </span>
+                ))}
+                <span style={{ fontSize: '13px', fontWeight: 500, color: '#6b7280', marginLeft: '8px', alignSelf: 'center' }}>
+                  bamboos
+                </span>
+              </div>
+
+              {/* Divider with bamboo icon */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '16px 0' }}>
+                <div style={{ height: '2px', width: '80px', background: '#d8e6dd' }} />
+                <span style={{ margin: '0 10px', fontSize: '24px' }}>🎍</span>
+                <div style={{ height: '2px', width: '80px', background: '#d8e6dd' }} />
+              </div>
+
+              <div style={{
+                marginTop: '12px',
+                padding: '12px 16px',
+                borderRadius: '14px',
+                background: 'rgba(240,250,245,0.9)',
+                color: '#4a8f6a',
+                fontSize: '13px',
+                boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.04)',
+              }}>
+                🌱 Complete one action to gain 1 bamboo
+              </div>
+            </div>
+          </div>
+
+          {/* ─── CENTER — Panda ─── */}
+          <div className="shrink-0" style={{
+            width: '180px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <div style={{
+              width: '170px', height: '170px',
+              filter: 'drop-shadow(0 4px 20px rgba(76,175,80,0.1))',
             }}>
-              HUA HUA
+              <div id="panda-card-lottie" style={{ width: '100%', height: '100%' }} />
+            </div>
+          </div>
+
+          {/* ─── RIGHT ─── */}
+          <div style={{
+            width: '280px',
+            padding: '20px',
+            borderRadius: '22px',
+            background: '#ffffff',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '50px', height: '50px', borderRadius: '50%',
+                background: '#f2f5f3', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', fontSize: '26px',
+              }}>
+                🐼
+              </div>
+              <div>
+                <div style={{ fontWeight: 600 }}>HUA HUA</div>
+                <div style={{
+                  display: 'inline-block', marginTop: '4px',
+                  background: '#e8f5ec', color: '#2fa36b',
+                  padding: '4px 10px', borderRadius: '12px', fontSize: '12px',
+                }}>
+                  Lv.{info.level}
+                </div>
+              </div>
             </div>
 
-            {/* Level */}
-            <div style={{ marginBottom: '6px' }}>
-              <span style={{ fontSize: '14px', fontWeight: 800, color: '#1b5e20', letterSpacing: '2px' }}>
-                Lv.{info.level}
-              </span>
+            {/* Progress bar */}
+            <div style={{ marginTop: '16px', height: '10px', borderRadius: '10px', background: '#edf1ee' }}>
+              <div style={{ height: '100%', width: `${info.progress * 100}%`, borderRadius: '10px', background: 'linear-gradient(90deg, #6bd18c, #2fa36b)', transition: 'width 0.6s ease' }} />
             </div>
 
-            {/* Progress bar — dynamic */}
-            <div style={{ height: '8px', background: 'rgba(76,175,80,0.08)', borderRadius: '4px', overflow: 'hidden', marginBottom: '8px' }}>
-              <div style={{ height: '100%', width: `${info.progress * 100}%`, background: 'linear-gradient(90deg, #a5d6a7, #43a047)', borderRadius: '4px', transition: 'width 0.6s ease' }} />
+            <div style={{ marginTop: '10px', color: '#6b7280', fontSize: '13px' }}>
+              <span style={{ color: '#2fa36b', fontWeight: 600 }}>{info.needed.toLocaleString()}</span> to next level ↑
             </div>
 
-            {/* Next level */}
-            <div style={{ textAlign: 'left', marginBottom: '2px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: '#2e7d32', letterSpacing: '1px', textTransform: 'uppercase' }}>NEXT LEVEL</span>
-            </div>
-            <div style={{ textAlign: 'left', fontSize: '13px', fontWeight: 700, color: '#2e7d32' }}>
-              🎋 {info.needed.toLocaleString()} needed
+            <div style={{ margin: '16px 0', borderTop: '1px dashed #e3e7e5' }} />
+
+            {/* Next Milestone */}
+            <div style={{
+              display: 'flex', gap: '12px', padding: '14px',
+              borderRadius: '16px',
+              background: 'linear-gradient(180deg, #f7f7f7, #f1f1f1)',
+            }}>
+              <div style={{ fontSize: '28px' }}>🎋</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600 }}>Next Milestone</div>
+                <div style={{ marginTop: '4px', fontSize: '13px', color: '#666' }}>
+                  Forest grows denser, pandas grow bigger
+                </div>
+                <div style={{ marginTop: '8px', fontWeight: 'bold', color: '#2fa36b', fontSize: '18px' }}>
+                  🎁 {info.needed.toLocaleString()}
+                </div>
+              </div>
             </div>
           </div>
 
         </div>
       </div>
-
-      <style>{`
-        @keyframes gentleWave {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-4px); }
-        }
-      `}</style>
     </div>
   )
 }
