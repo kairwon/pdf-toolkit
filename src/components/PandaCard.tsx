@@ -26,37 +26,87 @@ export function addBamboo(count: number = 1) {
 function getDetectedCountry(): { flag: string; name: string } {
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    if (!tz || tz === 'UTC') return { flag: '🇺🇸', name: 'United States' }
     const map: Record<string, [string, string]> = {
-      'Asia/Shanghai': ['🇨🇳', '中国'],
-      'Asia/Tokyo': ['🇯🇵', '日本'],
-      'Asia/Seoul': ['🇰🇷', '韩国'],
-      'America/New_York': ['🇺🇸', '美国'],
-      'America/Chicago': ['🇺🇸', '美国'],
-      'America/Los_Angeles': ['🇺🇸', '美国'],
-      'Europe/London': ['🇬🇧', '英国'],
-      'Europe/Paris': ['🇫🇷', '法国'],
-      'Europe/Berlin': ['🇩🇪', '德国'],
-      'Asia/Singapore': ['🇸🇬', '新加坡'],
-      'Asia/Kolkata': ['🇮🇳', '印度'],
-      'Australia/Sydney': ['🇦🇺', '澳大利亚'],
-      'America/Sao_Paulo': ['🇧🇷', '巴西'],
-      'America/Vancouver': ['🇨🇦', '加拿大'],
-      'Europe/Moscow': ['🇷🇺', '俄罗斯'],
+      'Africa/Cairo': ['🇪🇬', 'Egypt'],
+      'Africa/Casablanca': ['🇲🇦', 'Morocco'],
+      'Africa/Harare': ['🇿🇼', 'Zimbabwe'],
+      'Africa/Johannesburg': ['🇿🇦', 'South Africa'],
+      'Africa/Lagos': ['🇳🇬', 'Nigeria'],
+      'Africa/Nairobi': ['🇰🇪', 'Kenya'],
+      'Africa/Tunis': ['🇹🇳', 'Tunisia'],
+      'America/Argentina/Buenos_Aires': ['🇦🇷', 'Argentina'],
+      'America/Bogota': ['🇨🇴', 'Colombia'],
+      'America/Caracas': ['🇻🇪', 'Venezuela'],
+      'America/Chicago': ['🇺🇸', 'United States'],
+      'America/Denver': ['🇺🇸', 'United States'],
+      'America/Edmonton': ['🇨🇦', 'Canada'],
+      'America/Halifax': ['🇨🇦', 'Canada'],
+      'America/Lima': ['🇵🇪', 'Peru'],
+      'America/Los_Angeles': ['🇺🇸', 'United States'],
+      'America/Mexico_City': ['🇲🇽', 'Mexico'],
+      'America/New_York': ['🇺🇸', 'United States'],
+      'America/Phoenix': ['🇺🇸', 'United States'],
+      'America/Santiago': ['🇨🇱', 'Chile'],
+      'America/Sao_Paulo': ['🇧🇷', 'Brazil'],
+      'America/Toronto': ['🇨🇦', 'Canada'],
+      'America/Vancouver': ['🇨🇦', 'Canada'],
+      'Asia/Bangkok': ['🇹🇭', 'Thailand'],
+      'Asia/Dubai': ['🇦🇪', 'UAE'],
+      'Asia/Ho_Chi_Minh': ['🇻🇳', 'Vietnam'],
+      'Asia/Hong_Kong': ['🇭🇰', 'Hong Kong'],
+      'Asia/Jakarta': ['🇮🇩', 'Indonesia'],
+      'Asia/Kolkata': ['🇮🇳', 'India'],
+      'Asia/Kuala_Lumpur': ['🇲🇾', 'Malaysia'],
+      'Asia/Manila': ['🇵🇭', 'Philippines'],
+      'Asia/Seoul': ['🇰🇷', 'South Korea'],
+      'Asia/Shanghai': ['🇨🇳', 'China'],
+      'Asia/Singapore': ['🇸🇬', 'Singapore'],
+      'Asia/Taipei': ['🇹🇼', 'Taiwan'],
+      'Asia/Tokyo': ['🇯🇵', 'Japan'],
+      'Australia/Melbourne': ['🇦🇺', 'Australia'],
+      'Australia/Perth': ['🇦🇺', 'Australia'],
+      'Australia/Sydney': ['🇦🇺', 'Australia'],
+      'Europe/Amsterdam': ['🇳🇱', 'Netherlands'],
+      'Europe/Berlin': ['🇩🇪', 'Germany'],
+      'Europe/Brussels': ['🇧🇪', 'Belgium'],
+      'Europe/Copenhagen': ['🇩🇰', 'Denmark'],
+      'Europe/Dublin': ['🇮🇪', 'Ireland'],
+      'Europe/Helsinki': ['🇫🇮', 'Finland'],
+      'Europe/Istanbul': ['🇹🇷', 'Turkey'],
+      'Europe/Lisbon': ['🇵🇹', 'Portugal'],
+      'Europe/London': ['🇬🇧', 'United Kingdom'],
+      'Europe/Madrid': ['🇪🇸', 'Spain'],
+      'Europe/Moscow': ['🇷🇺', 'Russia'],
+      'Europe/Oslo': ['🇳🇴', 'Norway'],
+      'Europe/Paris': ['🇫🇷', 'France'],
+      'Europe/Prague': ['🇨🇿', 'Czech Republic'],
+      'Europe/Rome': ['🇮🇹', 'Italy'],
+      'Europe/Stockholm': ['🇸🇪', 'Sweden'],
+      'Europe/Vienna': ['🇦🇹', 'Austria'],
+      'Europe/Warsaw': ['🇵🇱', 'Poland'],
+      'Europe/Zurich': ['🇨🇭', 'Switzerland'],
+      'Pacific/Auckland': ['🇳🇿', 'New Zealand'],
+      'Pacific/Honolulu': ['🇺🇸', 'United States'],
     }
     if (map[tz]) return { flag: map[tz][0], name: map[tz][1] }
     const parts = tz.split('/')
     if (parts.length >= 2) {
       const regionMap: Record<string, [string, string]> = {
-        'America': ['🌎', '美洲'],
-        'Europe': ['🌍', '欧洲'],
-        'Asia': ['🌏', '亚洲'],
-        'Africa': ['🌍', '非洲'],
-        'Australia': ['🇦🇺', '澳大利亚'],
+        'Africa': ['🌍', 'Africa'],
+        'America': ['🌎', 'Americas'],
+        'Antarctica': ['🧊', 'Antarctica'],
+        'Asia': ['🌏', 'Asia'],
+        'Atlantic': ['🌎', 'Atlantic'],
+        'Australia': ['🇦🇺', 'Australia'],
+        'Europe': ['🌍', 'Europe'],
+        'Indian': ['🌏', 'Indian Ocean'],
+        'Pacific': ['🌏', 'Pacific'],
       }
       if (regionMap[parts[0]]) return regionMap[parts[0]]
     }
   } catch {}
-  return { flag: '🌏', name: '地球' }
+  return { flag: '🇺🇸', name: 'United States' }
 }
 
 function getLevelInfo(bamboo: number) {
@@ -88,35 +138,22 @@ export default function PandaCard() {
   const [bamboo, setBamboo] = useState(getBamboo)
   const info = getLevelInfo(bamboo)
   const [visitorCount, setVisitorCount] = useState(50)
-  const [lastFeeder, setLastFeeder] = useState<{ flag: string; name: string } | null>(getFeeder)
+  const [lastFeeder, setLastFeeder] = useState<{ flag: string; name: string } | null>(getFeeder() || getDetectedCountry())
   const [pendingFeed, setPendingFeed] = useState(false)
   const [feedDone, setFeedDone] = useState(false)
 
   useEffect(() => {
     const counted = sessionStorage.getItem('panda-visitor-counted')
-    if (!counted) {
-      try { sessionStorage.setItem('panda-visitor-counted', '1') } catch {}
-      fetch('https://api.countapi.xyz/hit/labofpdf.com/visitors')
-        .then(r => r.json())
-        .then(data => { if (data?.value) setVisitorCount(data.value) })
-        .catch(() => {
-          try {
-            const vc = Number(localStorage.getItem('panda-visitor-count')) || 50
-            localStorage.setItem('panda-visitor-count', String(vc + 1))
-            setVisitorCount(vc + 1)
-          } catch {}
-        })
-    } else {
-      fetch('https://api.countapi.xyz/get/labofpdf.com/visitors')
-        .then(r => r.json())
-        .then(data => { if (data?.value) setVisitorCount(data.value) })
-        .catch(() => {
-          try {
-            const vc = Number(localStorage.getItem('panda-visitor-count')) || 50
-            setVisitorCount(vc)
-          } catch {}
-        })
-    }
+    if (!counted) sessionStorage.setItem('panda-visitor-counted', '1')
+
+    const endpoint = counted
+      ? 'https://api.countapi.xyz/get/labofpdf.com/visitors'
+      : 'https://api.countapi.xyz/hit/labofpdf.com/visitors'
+
+    fetch(endpoint)
+      .then(r => r.json())
+      .then(data => { if (data?.value) setVisitorCount(data.value) })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {

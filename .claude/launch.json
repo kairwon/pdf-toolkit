@@ -2,11 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "dev",
+      "name": "pdf-toolkit",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["vite", "--host"],
       "cwd": "/Users/kai/Desktop/pdf-toolkit",
-      "port": 5174
+      "port": 5173,
+      "autoPort": true
     }
   ]
 }
