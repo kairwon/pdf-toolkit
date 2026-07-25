@@ -1,6 +1,7 @@
 import { ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import usePageTitle from '../hooks/usePageTitle'
+import ShareButtons from '../components/ui/ShareButtons'
 
 export default function PrivacyPage() {
   usePageTitle('/privacy')
@@ -8,9 +9,12 @@ export default function PrivacyPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <button onClick={() => navigate('/')} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-6">
-        <ArrowLeft size={14} /> Back to tools
-      </button>
+      <div className="flex items-start justify-between">
+        <button onClick={() => navigate('/')} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-6">
+          <ArrowLeft size={14} /> Back to tools
+        </button>
+        <ShareButtons path="/privacy" title="Privacy Policy | Lab of PDF" />
+      </div>
 
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Privacy Policy</h1>
       <p className="text-sm text-gray-400 dark:text-gray-500 mb-8">Last updated: July 2026</p>
@@ -43,6 +47,19 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">3. No Cookies or Tracking (GDPR Art. 5, ePrivacy)</h2>
           <p>We do not use cookies, localStorage, sessionStorage, or any form of persistent identifier for tracking. No analytics, advertising networks, or third-party scripts are loaded. Your visit is anonymous. This complies with the ePrivacy Directive and GDPR Article 5 (minimisation).</p>
+        </section>
+
+        <section>
+          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">3a. Advertising & Third-Party Cookies (Google AdSense)</h2>
+          <p>We may display advertisements via Google AdSense (an advertising service by Google LLC). If and when ads are served:</p>
+          <ul className="list-disc list-inside mt-1.5 space-y-0.5 text-gray-500 dark:text-gray-400">
+            <li>Google and its partners may use cookies and similar technologies to serve personalized ads based on your prior visits to this and other websites</li>
+            <li>The Google AdSense cookie ("_gads") enables interest-based advertising and frequency capping</li>
+            <li>Data collected via these cookies may be transferred to Google LLC in the United States under the EU-US Data Privacy Framework</li>
+            <li>You can opt out of personalized advertising at <a href="https://adssettings.google.com" className="underline" target="_blank" rel="noopener noreferrer">adssettings.google.com</a></li>
+            <li>You can manage cookie preferences via the cookie consent banner displayed on your first visit</li>
+          </ul>
+          <p className="mt-2">We display a cookie consent banner before any ad-related scripts load, in compliance with the ePrivacy Directive (Cookie Law) and GDPR Article 7. Your consent can be withdrawn at any time.</p>
         </section>
 
         <section>

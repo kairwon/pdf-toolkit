@@ -1,32 +1,55 @@
-# React + TypeScript + Vite
+# Lab of PDF
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+> Free online PDF tools — merge, split, compress, watermark, and convert PDFs entirely in your browser. No uploads, no sign-up, no limits.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Tool | Description |
+|---|---|
+| **Merge PDF** | Combine multiple PDFs into one. Preview pages and pick exactly which ones to include. |
+| **Split PDF** | Extract specific pages from a PDF or split it into two separate files. |
+| **Compress PDF** | Reduce PDF file size losslessly — text stays selectable. |
+| **PDF to Word** | Convert PDF to Word document. OCR applied automatically to scanned pages. |
+| **Add Watermark** | Add a text watermark to every page of your PDF. |
+| **Remove Watermark** | Strip overlay watermarks and cover common watermark regions. |
+| **Manage Pages** | Delete, rotate, or extract pages from your PDF with a visual preview. |
+| **PDF to Image** | Convert PDF pages to PNG or JPEG images. Download individually or as ZIP. |
 
-## React Compiler
+All processing happens **locally in your browser** using [pdf-lib](https://github.com/Hopding/pdf-lib) and [pdfjs-dist](https://github.com/mozilla/pdf.js). Your files never leave your device.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the Oxlint configuration
+- **React 19** + **TypeScript**
+- **Vite** (build tool)
+- **TailwindCSS 4** (styling)
+- **pdf-lib** / **pdfjs-dist** (PDF processing)
+- **Tesseract.js** (OCR)
+- **JSZip** (ZIP downloads)
+- **Zustand** (state management)
+- **lottie-web** (animations)
+- **Lucide** (icons)
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Getting Started
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+## Build
+
+```bash
+npm run build
+```
+
+Output goes to `dist/`.
+
+## Privacy
+
+All PDF processing runs entirely client-side. No files are uploaded to any server. Server-side features (planned) will be clearly marked.
+
+## License
+
+MIT

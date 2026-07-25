@@ -195,25 +195,20 @@ export default function MergePage() {
             />
           )}
 
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">{selected.size} page selected</span>
-            <div className="flex items-center gap-3">
-              <span className="text-[11px] font-medium text-gray-400 tracking-wide">BATCH ROTATE</span>
-              <div className="flex gap-1">
-                <button onClick={() => handleRotateSelected(-1)} disabled={selected.size === 0} className="btn-secondary text-xs py-1.5 px-2.5">↺</button>
-                <button onClick={() => handleRotateSelected(1)} disabled={selected.size === 0} className="btn-secondary text-xs py-1.5 px-2.5">↻</button>
+          <div className="sticky bottom-4 sticky-bar p-4 flex items-center justify-between gap-3 flex-wrap">
+            <span className="text-sm text-gray-400 whitespace-nowrap">{selected.size} page{selected.size !== 1 ? 's' : ''} selected</span>
+            <div className="flex items-center gap-2 shrink-0 flex-wrap">
+              <div className="flex items-center gap-1.5 mr-2">
+                <span className="text-[11px] font-medium text-gray-400 tracking-wide">ROTATE</span>
+                <button onClick={() => handleRotateSelected(-1)} disabled={selected.size === 0} className="btn-secondary text-xs py-1.5 px-2.5" title="Rotate selected counter-clockwise">↺</button>
+                <button onClick={() => handleRotateSelected(1)} disabled={selected.size === 0} className="btn-secondary text-xs py-1.5 px-2.5" title="Rotate selected clockwise">↻</button>
               </div>
-              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
               <button onClick={handleExtractSelected} disabled={selected.size === 0 || processing} className="btn-secondary flex items-center gap-1.5 text-xs py-1.5 px-3 text-jade border-[#dde4d8]"><Download size={13} /> Extract</button>
+              <button onClick={handleMerge} disabled={selected.size === 0 || processing} className="btn-primary flex items-center gap-2">
+                {processing ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+                {processing ? 'Merging...' : 'Merge & Download'}
+              </button>
             </div>
-          </div>
-
-          <div className="sticky bottom-4 sticky-bar p-4 flex items-center justify-between">
-            <span className="text-sm text-gray-400">{selected.size} page{selected.size !== 1 ? 's' : ''} selected</span>
-            <button onClick={handleMerge} disabled={selected.size === 0 || processing} className="btn-primary flex items-center gap-2">
-              {processing ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
-              {processing ? 'Merging...' : 'Merge & Download'}
-            </button>
           </div>
         </div>
       )}

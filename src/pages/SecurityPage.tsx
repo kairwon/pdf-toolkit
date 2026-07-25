@@ -2,6 +2,7 @@ import { ArrowLeft, ShieldCheck, Lock, WifiOff, Eye, FileCode, RefreshCw, Server
 import { useNavigate } from 'react-router-dom'
 
 import usePageTitle from '../hooks/usePageTitle'
+import ShareButtons from '../components/ui/ShareButtons'
 
 const measures = [
   {
@@ -42,9 +43,12 @@ export default function SecurityPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <button onClick={() => navigate('/')} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-6">
-        <ArrowLeft size={14} /> Back to tools
-      </button>
+      <div className="flex items-start justify-between">
+        <button onClick={() => navigate('/')} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-6">
+          <ArrowLeft size={14} /> Back to tools
+        </button>
+        <ShareButtons path="/security" title="Security | Lab of PDF" />
+      </div>
 
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Data Security Measures</h1>
       <p className="text-sm text-gray-400 dark:text-gray-500 mb-2">How Lab of PDF protects your documents</p>

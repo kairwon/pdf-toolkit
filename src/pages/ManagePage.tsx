@@ -120,19 +120,6 @@ export default function ManagePage() {
         <button onClick={() => { setFile(null); setPreviewItems([]); setSelected(new Set()) }} className="btn-ghost text-xs">Change file</button>
       </div>
 
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-xs text-gray-400">{selected.size > 0 ? `${selected.size} page selected` : 'Select pages'}</span>
-        <div className="flex items-center gap-3">
-          <span className="text-[11px] font-medium text-gray-400 tracking-wide">BATCH ROTATE</span>
-          <div className="flex gap-1">
-            <button onClick={() => handleRotateSelected(-1)} disabled={selected.size === 0} className="btn-secondary text-xs py-1.5 px-2.5">↺</button>
-            <button onClick={() => handleRotateSelected(1)} disabled={selected.size === 0} className="btn-secondary text-xs py-1.5 px-2.5">↻</button>
-          </div>
-          <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
-          <button onClick={handleExtractSelected} disabled={selected.size === 0 || processing} className="btn-secondary flex items-center gap-1.5 text-xs py-1.5 px-3 text-jade border-[#dde4d8]"><Download size={13} /> Extract</button>
-        </div>
-      </div>
-
       <PdfViewer
         pages={previewItems}
         selected={selected}
@@ -149,15 +136,41 @@ export default function ManagePage() {
         }}
       />
 
-      {rotatedByUser > 0 && (
-        <div className="sticky bottom-4 mt-5 sticky-bar p-4 flex items-center justify-between">
-          <span className="text-sm text-gray-400">{rotatedByUser} page(s) rotated</span>
-          <button onClick={handleApplyRotation} disabled={processing} className="btn-primary flex items-center gap-2">
-            {processing ? <Loader2 size={15} className="animate-spin" /> : <span>Save rotated PDF</span>}
-          </button>
-        </div>
-      )}
       {processing && <ProcessingOverlay message="Processing..." />}
+
+      {/* Sticky action bar */}
+      <div className="sticky bottom-4 mt-5 sticky-bar p-4 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="text-xs text-gray-400 whitespace-nowrap">{selected.size > 0 ? `${selected.size} page(s) selected` : 'Select pages to extract'}</span>
+          {rotatedByUser > 0 && (
+            <span className="text-xs text-amber-600 whitespace-nowrap">{rotatedByUser} page(s) rotated</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          <div className="flex items-center gap-1.5 mr-2">
+            <span className="text-[11px] font-medium text-gray-400 tracking-wide">ROTATE</span>
+            <button onClick={() => handleRotateSelected(-1)} disabled={selected.size === 0} className="btn-secondary text-xs py-1.5 px-2.5" title="Rotate selected counter-clockwise">↺</button>
+            <button onClick={() => handleRotateSelected(1)} disabled={selected.size === 0} className="btn-secondary text-xs py-1.5 px-2.5" title="Rotate selected clockwise">↻</button>
+          </div>
+          <button
+            onClick={handleExtractSelected}
+            disabled={selected.size === 0 || processing}
+            className="btn-primary flex items-center gap-2"
+          >
+            {processing ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+            Extract &amp; Download
+          </button>
+          {rotatedByUser > 0 && (
+            <button
+              onClick={handleApplyRotation}
+              disabled={processing}
+              className="btn-primary flex items-center gap-2"
+            >
+              {processing ? <Loader2 size={15} className="animate-spin" /> : <span>Save rotated PDF</span>}
+            </button>
+          )}
+        </div>
+      </div>
     </ToolPageWrapper>
   )
 }

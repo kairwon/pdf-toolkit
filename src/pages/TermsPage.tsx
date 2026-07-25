@@ -1,6 +1,7 @@
 import { ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import usePageTitle from '../hooks/usePageTitle'
+import ShareButtons from '../components/ui/ShareButtons'
 
 export default function TermsPage() {
   usePageTitle('/terms')
@@ -8,9 +9,12 @@ export default function TermsPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <button onClick={() => navigate('/')} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-6">
-        <ArrowLeft size={14} /> Back to tools
-      </button>
+      <div className="flex items-start justify-between">
+        <button onClick={() => navigate('/')} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-6">
+          <ArrowLeft size={14} /> Back to tools
+        </button>
+        <ShareButtons path="/terms" title="Terms of Service | Lab of PDF" />
+      </div>
 
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Terms of Service</h1>
       <p className="text-sm text-gray-400 dark:text-gray-500 mb-8">Last updated: July 2026</p>

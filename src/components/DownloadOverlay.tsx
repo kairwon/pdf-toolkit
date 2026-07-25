@@ -27,7 +27,7 @@ export default function DownloadOverlay() {
         if (!destroyedRef.current) {
           setPhase('download')
         }
-      }, 5000)
+      }, 3000)
     }
     window.addEventListener('show-download-overlay', handler)
     return () => window.removeEventListener('show-download-overlay', handler)
@@ -124,7 +124,7 @@ export default function DownloadOverlay() {
               <div style={{
                 height: '100%', width: '100%', borderRadius: '4px',
                 background: 'linear-gradient(90deg, #6bd18c, #2fa36b)',
-                animation: 'shrink 5s linear forwards',
+                animation: 'shrink 3s linear forwards',
               }} />
             </div>
           </>

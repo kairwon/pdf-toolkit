@@ -134,10 +134,12 @@ function getLevelInfo(bamboo: number) {
   return { level: 99, progress: 0, needed: 0, nextMilestone: thresholds[thresholds.length - 1], current: 0 }
 }
 
+  const API = window.location.hostname === 'localhost' ? '' : 'https://labofpdf.com'
+
 export default function PandaCard() {
-  const [bamboo, setBamboo] = useState(getBamboo)
-  const info = getLevelInfo(bamboo)
-  const [visitorCount, setVisitorCount] = useState(50)
+  const [bamboo, setBamboo] = useState<number | null>(null)
+  const info = getLevelInfo(bamboo ?? 0)
+  const [visitorCount, setVisitorCount] = useState<number | null>(null)
   const [lastFeeder, setLastFeeder] = useState<{ flag: string; name: string } | null>(getFeeder() || getDetectedCountry())
   const [pendingFeed, setPendingFeed] = useState(false)
   const [feedDone, setFeedDone] = useState(false)
@@ -145,15 +147,10 @@ export default function PandaCard() {
   useEffect(() => {
     const counted = sessionStorage.getItem('panda-visitor-counted')
     if (!counted) sessionStorage.setItem('panda-visitor-counted', '1')
-
-    const endpoint = counted
-      ? 'https://api.countapi.xyz/get/labofpdf.com/visitors'
-      : 'https://api.countapi.xyz/hit/labofpdf.com/visitors'
-
-    fetch(endpoint)
-      .then(r => r.json())
-      .then(data => { if (data?.value) setVisitorCount(data.value) })
-      .catch(() => {})
+    fetch(API + '/api/' + (counted ? 'visitors/get' : 'visitors/hit'))
+      .then(r => r.json()).then(data => { if (data?.value) setVisitorCount(data.value) }).catch(() => {})
+    fetch(API + '/api/bamboo/get')
+      .then(r => r.json()).then(data => { if (data?.value) setBamboo(data.value) }).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -182,36 +179,61 @@ export default function PandaCard() {
   }, [])
 
   useEffect(() => {
-    let anim: any
+    let animSleep: any
     let destroyed = false
     import('lottie-web').then(Lottie => {
       fetch('/panda-sleep.json')
         .then(r => r.json())
         .then(data => {
-          const container = document.getElementById('panda-card-lottie')
-          if (!container || destroyed) return
-          anim = Lottie.default.loadAnimation({ container, renderer: 'svg', loop: true, autoplay: true, animationData: data })
+          const c = document.getElementById('panda-card-lottie-sleep')
+          if (!c || destroyed) return
+          animSleep = Lottie.default.loadAnimation({ container: c, renderer: 'svg', autoplay: true, loop: true, animationData: data })
         })
         .catch(() => {})
     })
-    return () => {
-      destroyed = true
-      if (anim) anim.destroy()
-    }
+    return () => { destroyed = true; if (animSleep) animSleep.destroy() }
   }, [])
 
+  // When feedDone becomes true, load and play big panda once, then switch back
+  useEffect(() => {
+    if (!feedDone) return
+    let destroyed = false
+    let playedOnce = false
+    import('lottie-web').then(Lottie => {
+      fetch('/panda.json')
+        .then(r => r.json())
+        .then(data => {
+          const c = document.getElementById('panda-card-lottie-big')
+          if (!c || destroyed) return
+          c.innerHTML = ''
+          const a = Lottie.default.loadAnimation({ container: c, renderer: 'svg', autoplay: false, loop: false, animationData: data })
+          a.playSegments([180, data.op - 1], false)
+          a.addEventListener('complete', () => {
+            if (!destroyed && !playedOnce) {
+              playedOnce = true
+              setFeedDone(false)
+            }
+          })
+        })
+        .catch(() => { if (!destroyed) setFeedDone(false) })
+    })
+    return () => { destroyed = true }
+  }, [feedDone])
+
   const handleFeed = useCallback(() => {
-    addBamboo(1)
+    fetch(API + '/api/bamboo/feed')
+      .then(r => r.json())
+      .then(data => { if (data?.value) { setBamboo(data.value); window.dispatchEvent(new CustomEvent('bamboo-update', { detail: data.value })) } })
+      .catch(() => {})
     const country = getDetectedCountry()
     setLastFeeder(country)
     try { localStorage.setItem(FEEDER_KEY, JSON.stringify(country)) } catch {}
     window.dispatchEvent(new Event('feeder-update'))
     setPendingFeed(false)
     setFeedDone(true)
-    setTimeout(() => setFeedDone(false), 2000)
-  }, [])
+  }, [API])
 
-  const bambooDigits = bamboo.toLocaleString().split('')
+  const bambooDigits = (bamboo ?? 0).toLocaleString().split('')
 
   return (
     <div className="mt-8" style={{ width: '100%', maxWidth: '1150px', margin: '24px auto' }}>
@@ -240,28 +262,59 @@ export default function PandaCard() {
                 Let's raise the panda together!
               </div>
 
-              <div style={{ marginTop: '10px', fontSize: '22px' }}>
-                👋 <span style={{ color: '#1b5e20', fontWeight: 700, fontSize: '28px' }}>{visitorCount.toLocaleString()}</span> visitors
-              </div>
-
-              <div style={{ margin: '14px 0', display: 'flex', flexWrap: 'nowrap', gap: '3px', whiteSpace: 'nowrap' }}>
-                {bambooDigits.map((d, i) => (
-                  <span key={i} style={{
-                    display: 'inline-block',
-                    padding: '8px 10px',
-                    borderRadius: '12px',
-                    fontSize: '24px',
-                    fontWeight: 'bold',
-                    background: 'linear-gradient(180deg, rgba(200,230,200,0.95), rgba(160,200,160,0.95))',
-                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.08), inset 0 -2px 4px rgba(255,255,255,0.6)',
-                    color: d === ',' ? '#2fa36b' : '#1b5e20',
-                    minWidth: d === ',' ? '12px' : '24px',
-                    textAlign: 'center',
+              <div style={{
+                marginTop: '12px',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '10px',
+              }}>
+                {visitorCount !== null && (
+                  <div style={{
+                    padding: '14px',
+                    borderRadius: '16px',
+                    background: 'linear-gradient(180deg, #f7f7f7, #f1f1f1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '13px',
+                    color: '#666',
                   }}>
-                    {d}
+                    👋 <span style={{ color: '#2fa36b', fontWeight: 700, fontSize: '18px' }}>{visitorCount.toLocaleString()}</span> visitors
+                  </div>
+                )}
+                <div style={{
+                  padding: '14px',
+                  borderRadius: '16px',
+                  background: 'linear-gradient(180deg, #f7f7f7, #f1f1f1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '13px',
+                  color: '#666',
+                }}>
+                  <span style={{
+                    display: 'flex',
+                    gap: '3px',
+                  }}>
+                    {bambooDigits.map((d, i) => (
+                      <span key={i} style={{
+                        display: 'inline-block',
+                        padding: '8px 10px',
+                        borderRadius: '12px',
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        background: 'linear-gradient(180deg, rgba(200,230,200,0.95), rgba(160,200,160,0.95))',
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.08), inset 0 -2px 4px rgba(255,255,255,0.6)',
+                        color: d === ',' ? '#2fa36b' : '#1b5e20',
+                        minWidth: d === ',' ? '12px' : '24px',
+                        textAlign: 'center',
+                      }}>
+                        {d}
+                      </span>
+                    ))}
                   </span>
-                ))}
-                <span style={{ fontSize: '16px', marginLeft: '8px', alignSelf: 'center' }}>🎋</span>
+                  <span style={{ fontSize: '24px', fontWeight: 'bold' }}>🎋</span>
+                </div>
               </div>
 
               <div style={{ marginTop: '4px', fontSize: '14px', whiteSpace: 'nowrap' }}>
@@ -282,38 +335,123 @@ export default function PandaCard() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
-            gap: '16px',
-            padding: '10px 0',
+            marginLeft: '-100px',
+            position: 'relative',
           }}>
-            <div id="panda-card-lottie" style={{ width: 'min(390px, 100%)', height: 'min(390px, 36vw)', marginLeft: '-140px', marginTop: '-80px' }} />
+            <div id="panda-card-lottie" style={{
+              width: 'min(390px, 100%)',
+              height: 'min(390px, 36vw)',
+              marginTop: '-80px',
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+            }}>
+              {/* Sleep panda */}
+              <div style={{
+                position: 'absolute',
+                width: '86%',
+                height: '86%',
+                transform: 'translate(8px, 10px)',
+                opacity: feedDone ? 0 : 1,
+                transition: 'opacity 0.4s',
+                pointerEvents: 'none',
+              }}>
+                <div id="panda-card-lottie-sleep" style={{ width: '100%', height: '100%' }} />
+              </div>
+              {/* Big panda (thanks) */}
+              <div style={{
+                position: 'absolute',
+                width: '90%',
+                height: '90%',
+                transform: 'translate(-2px, 0px)',
+                opacity: feedDone ? 1 : 0,
+                transition: 'opacity 0.4s',
+                pointerEvents: 'none',
+              }}>
+                <div id="panda-card-lottie-big" style={{ width: '100%', height: '100%' }} />
+              </div>
+            </div>
 
-            {/* Feed button — only shows when user came from download */}
+            {/* Feed button — absolute positioned, doesn't affect layout */}
             {(pendingFeed || feedDone) && (
-              <button
-                onClick={handleFeed}
-                disabled={feedDone}
-                style={{
-                  padding: '10px 28px',
-                  borderRadius: '100px',
-                  border: 'none',
-                  background: feedDone
-                    ? 'linear-gradient(135deg, #ffb74d, #ff9800)'
-                    : 'linear-gradient(135deg, #4caf50, #2fa36b)',
-                  color: '#fff',
-                  fontSize: '15px',
-                  fontWeight: 600,
-                  cursor: feedDone ? 'default' : 'pointer',
-                  boxShadow: feedDone
-                    ? '0 4px 20px rgba(255,152,0,0.5)'
-                    : '0 4px 15px rgba(47,163,107,0.35)',
-                  transform: feedDone ? 'scale(1.08)' : 'scale(1)',
-                  transition: 'all 0.2s ease',
-                  animation: feedDone ? 'none' : 'popIn 0.5s ease',
-                }}
-              >
-                {feedDone ? '🎋 已喂！' : '🎋 喂熊猫 Feed'}
-              </button>
+              <div style={{
+                position: 'absolute',
+                bottom: '-8px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px',
+                zIndex: 10,
+                pointerEvents: 'none',
+              }}>
+                <div style={{ pointerEvents: 'auto' }}>
+                  <button
+                    onClick={handleFeed}
+                    disabled={feedDone}
+                    style={{
+                      padding: '10px 28px',
+                      borderRadius: '100px',
+                      border: 'none',
+                      background: feedDone
+                        ? 'linear-gradient(135deg, #ffb74d, #ff9800)'
+                        : 'linear-gradient(135deg, #4caf50, #2fa36b)',
+                      color: '#fff',
+                      fontSize: '15px',
+                      fontWeight: 600,
+                      cursor: feedDone ? 'default' : 'pointer',
+                      boxShadow: feedDone
+                        ? '0 4px 20px rgba(255,152,0,0.5)'
+                        : '0 4px 15px rgba(47,163,107,0.35)',
+                      transform: feedDone ? 'scale(1.08)' : 'scale(1)',
+                      transition: 'all 0.2s ease',
+                      animation: feedDone ? 'none' : 'popIn 0.5s ease',
+                    }}
+                  >
+                    {feedDone ? '🎋 已喂！' : '🎋 喂熊猫 Feed'}
+                  </button>
+                </div>
+
+                {feedDone && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', animation: 'popIn 0.4s ease', pointerEvents: 'auto' }}>
+                    <span style={{ fontSize: '12px', color: '#999' }}>Share</span>
+                    <button
+                      onClick={() => {
+                        const url = 'https://labofpdf.com'
+                        const text = `🐼 I just fed Hua Hua the panda on Lab of PDF! Help raise the panda 🎋`
+                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer,width=600,height=500')
+                      }}
+                      title="Share on X"
+                      style={{
+                        width: '28px', height: '28px', borderRadius: '8px', border: '1px solid #e3e7e5',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        background: '#fff', cursor: 'pointer', color: '#999',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const url = 'https://labofpdf.com'
+                        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer,width=600,height=500')
+                      }}
+                      title="Share on Facebook"
+                      style={{
+                        width: '28px', height: '28px', borderRadius: '8px', border: '1px solid #e3e7e5',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        background: '#fff', cursor: 'pointer', color: '#999',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 

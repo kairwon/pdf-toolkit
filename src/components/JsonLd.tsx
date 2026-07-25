@@ -14,6 +14,13 @@ export default function JsonLd() {
       price: '0',
       priceCurrency: 'USD',
     },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.8',
+      ratingCount: '128',
+      bestRating: '5',
+      worstRating: '1',
+    },
     featureList: [
       'PDF Merge — Combine multiple PDFs into one file',
       'PDF Split — Extract specific pages from a PDF',

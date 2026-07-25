@@ -15,8 +15,8 @@ interface PdfViewerProps {
   onToggle: (pageIndex: number) => void
   onSelectAll: () => void
   onDeselectAll: () => void
-  rotations: Record<number, number>
-  onRotatePage: (pageIndex: number, direction: 1 | -1) => void
+  rotations?: Record<number, number>
+  onRotatePage?: (pageIndex: number, direction: 1 | -1) => void
   onReorderPages?: (fromIndex: number, toIndex: number) => void
   headerRight?: React.ReactNode
   initialPage?: number
@@ -28,8 +28,8 @@ export default function PdfViewer({
   onToggle,
   onSelectAll,
   onDeselectAll,
-  rotations,
-  onRotatePage,
+  rotations = {},
+  onRotatePage = () => {},
   onReorderPages,
   headerRight,
   initialPage = 0,
