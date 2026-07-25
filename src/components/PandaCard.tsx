@@ -236,21 +236,21 @@ export default function PandaCard() {
   const bambooDigits = (bamboo ?? 0).toLocaleString().split('')
 
   return (
-    <div className="mt-8" style={{ width: '100%', maxWidth: '1150px', margin: '24px auto' }}>
+    <div className="mt-8" style={{ width: '100%', maxWidth: '960px', margin: '24px auto' }}>
       <div style={{
         background: 'linear-gradient(180deg, #f8fbf9, #edf4ef)',
         borderRadius: '28px',
-        padding: '30px',
+        padding: '24px',
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), 0 25px 50px rgba(0,0,0,0.08)',
       }}>
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'stretch', flexWrap: 'nowrap' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch', flexWrap: 'nowrap' }}>
 
           {/* ─── LEFT ─── */}
           <div style={{
             flex: '3 1 0',
             minWidth: 0,
             position: 'relative',
-            padding: '24px 28px',
+            padding: '20px 24px',
             borderRadius: '26px',
             overflow: 'hidden',
             display: 'flex',
@@ -270,27 +270,29 @@ export default function PandaCard() {
               }}>
                 {visitorCount !== null && (
                   <div style={{
-                    padding: '14px',
-                    borderRadius: '16px',
-                    background: 'linear-gradient(180deg, #f7f7f7, #f1f1f1)',
-                    display: 'flex',
+                    display: 'inline-flex',
                     alignItems: 'center',
                     gap: '6px',
                     fontSize: '13px',
                     color: '#666',
+                    padding: '6px 12px',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(180deg, #f7f7f7, #f1f1f1)',
+                    width: 'fit-content',
                   }}>
                     👋 <span style={{ color: '#2fa36b', fontWeight: 700, fontSize: '18px' }}>{visitorCount.toLocaleString()}</span> visitors
                   </div>
                 )}
                 <div style={{
-                  padding: '14px',
-                  borderRadius: '16px',
-                  background: 'linear-gradient(180deg, #f7f7f7, #f1f1f1)',
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
                   fontSize: '13px',
                   color: '#666',
+                  padding: '6px 12px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(180deg, #f7f7f7, #f1f1f1)',
+                  width: 'fit-content',
                 }}>
                   <span style={{
                     display: 'flex',
