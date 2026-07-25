@@ -161,7 +161,6 @@ export default function SplitPage() {
             <button onClick={() => handleRotateSelected(-1)} disabled={selected.size === 0} className="btn-secondary text-xs py-1.5 px-2.5" title="Rotate selected counter-clockwise">↺</button>
             <button onClick={() => handleRotateSelected(1)} disabled={selected.size === 0} className="btn-secondary text-xs py-1.5 px-2.5" title="Rotate selected clockwise">↻</button>
           </div>
-          <button onClick={handleExtractSelected} disabled={selected.size === 0 || processing} className="btn-secondary flex items-center gap-1.5 text-xs py-1.5 px-3 text-jade border-[#dde4d8]"><Download size={13} /> Extract</button>
           <button onClick={handleSplit} disabled={selected.size === 0 || processing} className="btn-primary flex items-center gap-2">
             {processing ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
             {processing ? 'Processing...' : mode === 'extract' ? 'Extract & Download' : 'Split & Download'}

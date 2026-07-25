@@ -265,8 +265,8 @@ export default function PandaCard() {
               <div style={{
                 marginTop: '12px',
                 display: 'flex',
-                flexWrap: 'wrap',
-                gap: '10px',
+                flexDirection: 'column',
+                gap: '8px',
               }}>
                 {visitorCount !== null && (
                   <div style={{
