@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { ArrowRight, FileText, Combine, Split, Layers, Image, FileDown, Droplets, DropletOff, FileType } from 'lucide-react'
 import PandaCard from '../components/PandaCard'
+import usePageTitle from '../hooks/usePageTitle'
 
 const defaultTools = [
   { path: '/merge', title: 'Merge PDF', desc: 'Combine multiple PDFs into one. Preview pages and pick exactly which ones to include.', icon: Combine },
@@ -18,6 +19,7 @@ const defaultTools = [
 const futureTools = ['PDF to Excel', 'Edit PDF', 'Sign PDF']
 
 export default function LandingPage() {
+  usePageTitle('/')
   const navigate = useNavigate()
   const [tools, setTools] = useState(defaultTools)
   const feedTimeRef = useRef(0)
@@ -51,7 +53,7 @@ export default function LandingPage() {
         </p>
       </div>
 
-      <div className="relative z-10 flex items-stretch gap-2 sm:gap-4">
+      <div className="relative z-10 flex items-stretch gap-2 sm:gap-3">
         {/* Tools */}
         <div className="flex-1 min-w-0">
           <DragDropContext onDragEnd={onDragEnd}>
@@ -60,7 +62,7 @@ export default function LandingPage() {
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 mb-10"
+                  className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 mb-4"
                 >
                   {tools.map((t, index) => (
                     <Draggable key={t.path} draggableId={t.path} index={index}>
@@ -79,8 +81,8 @@ export default function LandingPage() {
                           </div>
 
                           <div onClick={() => navigate(t.path)} className="cursor-pointer">
-                            <div className="bg-gradient-to-br from-jade to-jade-light rounded-lg p-2 text-white inline-flex shadow-sm mb-2.5">
-                              <t.icon size={16} />
+                            <div className="bg-gradient-to-br from-jade to-jade-light rounded-lg p-2.5 text-white inline-flex shadow-sm mb-2.5">
+                              <t.icon size={18} />
                             </div>
                             <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90 mb-0.5">{t.title}</h3>
                             <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed pr-5">{t.desc}</p>

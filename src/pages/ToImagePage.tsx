@@ -9,8 +9,10 @@ import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { renderPageToCanvas, getPageCount } from '../lib/pdf'
 import { downloadBlob, downloadZip, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
+import usePageTitle from '../hooks/usePageTitle'
 
 export default function ToImagePage() {
+  usePageTitle('/to-image')
   const [file, setFile] = useState<File | null>(null)
   const [previewItems, setPreviewItems] = useState<PreviewItem[]>([])
   const [selected, setSelected] = useState<Set<number>>(new Set())

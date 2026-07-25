@@ -10,6 +10,7 @@ import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { getPageCount, mergePdfs } from '../lib/pdf'
 import { PDFDocument } from 'pdf-lib'
 import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
+import usePageTitle from '../hooks/usePageTitle'
 
 interface PdfFile {
   id: string
@@ -18,6 +19,7 @@ interface PdfFile {
 }
 
 export default function MergePage() {
+  usePageTitle('/merge')
   const [files, setFiles] = useState<PdfFile[]>([])
   const [processing, setProcessing] = useState(false)
   const [dragIndex, setDragIndex] = useState<number | null>(null)

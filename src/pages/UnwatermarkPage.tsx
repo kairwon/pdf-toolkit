@@ -7,8 +7,10 @@ import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { removeWatermark, getPageCount } from '../lib/pdf'
 import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
+import usePageTitle from '../hooks/usePageTitle'
 
 export default function UnwatermarkPage() {
+  usePageTitle('/unwatermark')
   const [file, setFile] = useState<File | null>(null)
   const [pageCount, setPageCount] = useState(0)
   const [processing, setProcessing] = useState(false)

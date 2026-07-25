@@ -10,8 +10,10 @@ import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { renderPageToCanvas, deletePages, extractPages, getPageCount } from '../lib/pdf'
 import { PDFDocument } from 'pdf-lib'
 import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
+import usePageTitle from '../hooks/usePageTitle'
 
 export default function ManagePage() {
+  usePageTitle('/manage')
   const [file, setFile] = useState<File | null>(null)
   const [previewItems, setPreviewItems] = useState<PreviewItem[]>([])
   const [selected, setSelected] = useState<Set<number>>(new Set())

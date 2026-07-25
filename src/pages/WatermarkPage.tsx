@@ -7,8 +7,10 @@ import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { addWatermark, getPageCount } from '../lib/pdf'
 import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
+import usePageTitle from '../hooks/usePageTitle'
 
 export default function WatermarkPage() {
+  usePageTitle('/watermark')
   const [file, setFile] = useState<File | null>(null)
   const [pageCount, setPageCount] = useState(0)
   const [text, setText] = useState('CONFIDENTIAL')

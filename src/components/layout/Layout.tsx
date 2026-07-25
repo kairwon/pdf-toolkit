@@ -21,7 +21,7 @@ export default function Layout() {
         </div>
       </div>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 w-full">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 w-full">
         <Outlet />
       </main>
 

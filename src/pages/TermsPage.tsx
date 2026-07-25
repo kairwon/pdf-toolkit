@@ -1,7 +1,9 @@
 import { ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import usePageTitle from '../hooks/usePageTitle'
 
 export default function TermsPage() {
+  usePageTitle('/terms')
   const navigate = useNavigate()
 
   return (

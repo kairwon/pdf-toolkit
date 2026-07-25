@@ -236,12 +236,12 @@ export default function PandaCard() {
             justifyContent: 'space-between',
           }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ fontSize: '18px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                Panda Bamboo Forest · Grow Together
+              <div style={{ fontSize: '16px', fontWeight: 600 }}>
+                Let's raise the panda together!
               </div>
 
-              <div style={{ marginTop: '10px', fontSize: '15px' }}>
-                👋 <span style={{ color: '#1b5e20', fontWeight: 700 }}>{visitorCount.toLocaleString()}</span> visitors
+              <div style={{ marginTop: '10px', fontSize: '22px' }}>
+                👋 <span style={{ color: '#1b5e20', fontWeight: 700, fontSize: '28px' }}>{visitorCount.toLocaleString()}</span> visitors
               </div>
 
               <div style={{ margin: '14px 0', display: 'flex', flexWrap: 'nowrap', gap: '3px', whiteSpace: 'nowrap' }}>
@@ -286,7 +286,7 @@ export default function PandaCard() {
             gap: '16px',
             padding: '10px 0',
           }}>
-            <div id="panda-card-lottie" style={{ width: 'min(260px, 100%)', height: 'min(260px, 26vw)' }} />
+            <div id="panda-card-lottie" style={{ width: 'min(390px, 100%)', height: 'min(390px, 36vw)', marginLeft: '-140px', marginTop: '-80px' }} />
 
             {/* Feed button — only shows when user came from download */}
             {(pendingFeed || feedDone) && (

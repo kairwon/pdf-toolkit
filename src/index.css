@@ -18,6 +18,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Force Lottie SVGs to have transparent background */
+svg[viewBox] {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+svg image {
+  mix-blend-mode: normal;
+}
+
 html {
   overflow-y: scroll !important;
 }

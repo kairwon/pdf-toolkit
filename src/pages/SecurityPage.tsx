@@ -1,6 +1,8 @@
 import { ArrowLeft, ShieldCheck, Lock, WifiOff, Eye, FileCode, RefreshCw, Server, Download } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
+import usePageTitle from '../hooks/usePageTitle'
+
 const measures = [
   {
     icon: WifiOff,
@@ -35,6 +37,7 @@ const measures = [
 ]
 
 export default function SecurityPage() {
+  usePageTitle('/security')
   const navigate = useNavigate()
 
   return (

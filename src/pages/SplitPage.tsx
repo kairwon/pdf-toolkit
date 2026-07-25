@@ -9,10 +9,12 @@ import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { renderPageToCanvas, extractPages, splitPdf, getPageCount } from '../lib/pdf'
 import { downloadBlob, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
+import usePageTitle from '../hooks/usePageTitle'
 
 type SplitMode = 'extract' | 'split'
 
 export default function SplitPage() {
+  usePageTitle('/split')
   const [file, setFile] = useState<File | null>(null)
   const [previewItems, setPreviewItems] = useState<PreviewItem[]>([])
   const [selected, setSelected] = useState<Set<number>>(new Set())
