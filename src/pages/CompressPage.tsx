@@ -54,7 +54,7 @@ export default function CompressPage() {
   if (!file) {
     return (
       <ToolPageWrapper>
-        <ToolHeader title="Compress PDF" description="Reduce PDF file size online — lossless compression, text stays selectable." />
+        <ToolHeader title="Compress PDF" description="Compress PDF files online free without uploading — reduce PDF size losslessly in your browser. No file size limits, no sign-up, unlimited compressions. Text stays selectable and searchable. 100% private — files never leave your device." />
         <FileUpload onFiles={handleFile} multiple={false} />
         </ToolPageWrapper>
     )

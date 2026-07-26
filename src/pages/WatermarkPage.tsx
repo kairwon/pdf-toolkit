@@ -49,7 +49,7 @@ export default function WatermarkPage() {
   if (!file) {
     return (
       <ToolPageWrapper>
-        <ToolHeader title="Add Watermark" description="Add a text watermark to every page of your PDF — free and private." />
+        <ToolHeader title="Add Watermark" description="Add a text watermark to every page of your PDF online free — no upload needed, no sign-up. Browser-based processing with unlimited pages and no file size limits. Your files stay completely private." />
         <FileUpload onFiles={handleFile} multiple={false} />
       </ToolPageWrapper>
     )

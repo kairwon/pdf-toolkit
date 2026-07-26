@@ -102,7 +102,7 @@ export default function ManagePage() {
   if (!file) {
     return (
       <ToolPageWrapper>
-        <ToolHeader title="Manage Pages" description="Delete, rotate, or extract PDF pages online — free & browser-based." />
+        <ToolHeader title="Manage Pages" description="Delete, rotate, and extract PDF pages online free — no upload, no sign-up. Browser-based PDF page manager with visual preview. Unlimited pages, no file size limits. Your files never leave your device." />
         <FileUpload onFiles={handleFile} multiple={false} />
       </ToolPageWrapper>
     )

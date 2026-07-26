@@ -43,7 +43,7 @@ export default function UnwatermarkPage() {
   if (!file) {
     return (
       <ToolPageWrapper>
-        <ToolHeader title="Remove Watermark" description="Strip overlay watermarks from PDF files online — free & browser-based." />
+        <ToolHeader title="Remove Watermark" description="Remove watermarks from PDF files online free without uploading — browser-based watermark remover. No sign-up, no limits, no data leaves your computer. Your files never leave your device — 100% private." />
         <FileUpload onFiles={handleFile} multiple={false} />
       </ToolPageWrapper>
     )

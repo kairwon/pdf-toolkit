@@ -112,7 +112,7 @@ export default function SplitPage() {
   if (!file) {
     return (
       <ToolPageWrapper>
-        <ToolHeader title="Split PDF" description="Extract specific pages from a PDF file online — free, no upload required." />
+        <ToolHeader title="Split PDF" description="Split PDF or extract specific pages from a PDF file online free — no upload, no sign-up. Browser-based PDF splitter with unlimited pages, no file size limits. Your files stay private — nothing leaves your device." />
         <FileUpload onFiles={handleFile} multiple={false} />
       </ToolPageWrapper>
     )

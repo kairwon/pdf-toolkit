@@ -64,7 +64,7 @@ export default function ToWordPage() {
   if (!file) {
     return (
       <ToolPageWrapper>
-        <ToolHeader title="PDF to Word" description="Convert PDF to Word document — automatically detects text vs. scanned pages and uses OCR when needed." />
+        <ToolHeader title="PDF to Word" description="Convert PDF to Word document online free with no upload. Browser-based converter with automatic OCR for scanned pages — no limits on pages or file size, no sign-up. Complete privacy — your files never leave your device." />
         <FileUpload onFiles={handleFile} multiple={false} />
       </ToolPageWrapper>
     )

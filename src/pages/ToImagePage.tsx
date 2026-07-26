@@ -79,7 +79,7 @@ export default function ToImagePage() {
   if (!file) {
     return (
       <ToolPageWrapper>
-        <ToolHeader title="PDF to Image" description="Convert PDF pages to PNG or JPEG images online — free, no uploads." />
+        <ToolHeader title="PDF to Image" description="Convert PDF pages to PNG or JPEG images online free without uploading — browser-based converter. No page limits, no file size limits, no sign-up. Download individually or as ZIP. Complete privacy — files never leave your device." />
         <FileUpload onFiles={handleFile} multiple={false} />
       </ToolPageWrapper>
     )
