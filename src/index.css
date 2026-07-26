@@ -61,7 +61,7 @@ html {
   border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
-/* Feature card */
+/* Feature card — used for tools and scene cards */
 .feature-card {
   background: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(12px);
@@ -86,6 +86,50 @@ html {
 
 .dark .feature-card:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Sidebar nav */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+.sidebar-item:hover {
+  background: rgba(5, 150, 105, 0.08);
+  color: #059669;
+}
+.sidebar-item.active {
+  background: rgba(5, 150, 105, 0.12);
+  color: #059669;
+  font-weight: 600;
+}
+
+/* Scene card */
+.scene-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.scene-card:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(5, 150, 105, 0.5);
+  box-shadow: 0 4px 16px rgba(5, 150, 105, 0.08);
+  transform: translateY(-1px);
 }
 
 /* Section card */
