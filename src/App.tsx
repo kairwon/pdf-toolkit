@@ -24,6 +24,8 @@ const EditorialTeamPage = lazy(() => import('./pages/EditorialTeamPage'))
 const UniversityUploadGuidePage = lazy(() => import('./pages/UniversityUploadGuidePage'))
 const SearchableNotesGuidePage = lazy(() => import('./pages/SearchableNotesGuidePage'))
 const StudyPackGuidePage = lazy(() => import('./pages/StudyPackGuidePage'))
+const CompressWithoutQualityGuidePage = lazy(() => import('./pages/CompressWithoutQualityGuidePage'))
+const ReduceScannedPdfGuidePage = lazy(() => import('./pages/ReduceScannedPdfGuidePage'))
 
 export default function App() {
   const deferred = (page: ReactNode) => (
@@ -43,6 +45,8 @@ export default function App() {
         <Route path="/guides/compress-pdf-for-university-upload" element={deferred(<UniversityUploadGuidePage />)} />
         <Route path="/guides/make-scanned-notes-searchable" element={deferred(<SearchableNotesGuidePage />)} />
         <Route path="/guides/organize-pdf-study-notes" element={deferred(<StudyPackGuidePage />)} />
+        <Route path="/guides/compress-pdf-without-losing-quality" element={deferred(<CompressWithoutQualityGuidePage />)} />
+        <Route path="/guides/reduce-scanned-pdf-file-size" element={deferred(<ReduceScannedPdfGuidePage />)} />
         <Route path="/merge" element={deferred(<MergePage />)} />
         <Route path="/split" element={deferred(<SplitPage />)} />
         <Route path="/manage" element={deferred(<ManagePage />)} />

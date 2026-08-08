@@ -153,6 +153,18 @@ const seo: Record<string, SeoEntry> = {
     name: 'Organize PDF study notes',
     article: true,
   },
+  '/guides/compress-pdf-without-losing-quality': {
+    title: 'How to Compress a PDF Without Making It Unreadable',
+    description: 'Reduce PDF size while preserving readable text, diagrams and signatures. Choose the mildest useful compression and verify the downloaded copy.',
+    name: 'Compress a PDF without making it unreadable',
+    article: true,
+  },
+  '/guides/reduce-scanned-pdf-file-size': {
+    title: 'How to Reduce a Scanned PDF File Size',
+    description: 'Reduce a large scanned PDF by cleaning pages, choosing suitable image compression and checking small print, handwriting and signatures.',
+    name: 'Reduce a scanned PDF file size',
+    article: true,
+  },
   '/pdf-to-excel': { title: 'PDF to Excel — Coming Soon | Lab of PDF', description: 'PDF table extraction to Excel is currently in development.', name: 'PDF to Excel' },
   '/sign-pdf': { title: 'Sign PDF — Coming Soon | Lab of PDF', description: 'Browser-based PDF signing is currently in development.', name: 'Sign PDF' },
   '/unlock-pdf': { title: 'Unlock PDF — Coming Soon | Lab of PDF', description: 'Browser-based PDF password removal is currently in development.', name: 'Unlock PDF' },

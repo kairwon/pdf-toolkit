@@ -32,9 +32,18 @@ that its commit matches the intended Git release before and after switching
 Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
-Before each switch, the script stores the previous static site at
-`/var/backups/labofpdf/before-<commit>.tgz`. This directory is outside Nginx's
-enabled site roots and exists only for rollback; it does not run a second site.
+The release prepared by this handoff uses the immutable tag
+`production-2026-08-08-seo-deployment-standard`.
+
+The deployment script uses `/var/www/labofpdf-next` and
+`/var/www/labofpdf-prev` only during its atomic switch. Both are removed after
+online verification succeeds. The server keeps no permanent release archive;
+rollback means rebuilding and redeploying the previous immutable GitHub
+production tag.
+
+The deployment command requires a new immutable
+`production-YYYY-MM-DD-description` tag that identifies the current clean HEAD
+locally and on GitHub. Never move or reuse a production tag.
 
 ## Current product state
 
@@ -54,10 +63,10 @@ enabled site roots and exists only for rollback; it does not run a second site.
 ## SEO and production behavior
 
 - `npm run build` runs TypeScript, Vite, and `scripts/prerender-seo.mjs`.
-- The prerender step currently creates 24 indexable route HTML files, three
+- The prerender step currently creates 26 indexable route HTML files, three
   noindex route files, and a noindex 404 document.
 - Trust and discovery content now includes `/guides`, `/editorial-policy`,
-  `/about/editorial-team`, and three long-tail study/submission guides. The
+  `/about/editorial-team`, and five long-tail study/submission/compression guides. The
   guide HTML includes crawlable fallback copy plus canonical metadata and
   Article structured data; keep the fallback copy aligned with visible pages.
 - Do not replace the build command with plain `vite build`; that would remove
@@ -74,9 +83,9 @@ enabled site roots and exists only for rollback; it does not run a second site.
 
 ## Server disk-space policy
 
-Production should use one fixed Git working directory and one `dist/` directory,
-not a new full release directory on every deploy. Vite empties `dist/` before a
-successful build, so obsolete hashed assets do not accumulate.
+Production uses one fixed active directory, not a permanent directory per
+release. Vite empties local `dist/` before a successful build, and rsync uploads
+only that verified output, so obsolete hashed assets do not accumulate.
 
 The current server is `root@167.99.1.62`, Nginx serves
 `/var/www/labofpdf`, and its site configuration is
@@ -92,10 +101,10 @@ may be removed. The next deployment can recreate it with `npm ci`. Never remove
 `dist/`, the active Nginx document root, or the repository before a replacement
 build has succeeded.
 
-If the host currently creates timestamped release directories, keep the active
-release plus at most two rollback releases. Resolve the active symlink and make
-a backup before introducing automatic cleanup. Do not use a broad wildcard or
-an unresolved environment variable as a deletion target.
+Do not introduce timestamped server release directories or permanent archives.
+Use immutable GitHub production tags as the rollback record. Temporary switch
+directories must use the exact paths documented above and must be removed after
+successful verification.
 
 The repository's `.git` directory retains reachable history. `git gc` can
 compact it, but deleting old large files from Git history requires a coordinated
@@ -104,7 +113,7 @@ history rewrite and is not part of ordinary deployment.
 ## Verification checklist
 
 1. Run `npm ci` and `npm run build`.
-2. Confirm the build reports 24 indexable routes, 3 noindex routes, and 404.
+2. Confirm the build reports 26 indexable routes, 3 noindex routes, and 404.
 3. Confirm `dist/to-image.html` has its own title, description, and canonical.
 4. Deploy only after the build succeeds.
 5. Run `nginx -t` before any reload when Nginx configuration changed.

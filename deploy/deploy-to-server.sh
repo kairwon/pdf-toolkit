@@ -6,12 +6,27 @@ APP_ROOT="/var/www/labofpdf"
 NEXT_ROOT="/var/www/labofpdf-next"
 PREV_ROOT="/var/www/labofpdf-prev"
 NGINX_CONF="/etc/nginx/sites-enabled/labofpdf.conf"
+RELEASE_TAG="${1:-}"
 
 cd "$(dirname "$0")/.."
 
-RELEASE_COMMIT="${RELEASE_COMMIT:-$(git rev-parse --short=12 HEAD 2>/dev/null || true)}"
-if [[ -z "$RELEASE_COMMIT" ]]; then
-  echo "Set RELEASE_COMMIT to the Git commit being deployed." >&2
+if [[ ! "$RELEASE_TAG" =~ ^production-[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9-]+$ ]]; then
+  echo "Usage: $0 production-YYYY-MM-DD-description" >&2
+  exit 1
+fi
+
+git diff --quiet
+git diff --cached --quiet
+git fetch --tags origin
+
+RELEASE_COMMIT="$(git rev-parse "$RELEASE_TAG^{commit}")"
+HEAD_COMMIT="$(git rev-parse HEAD)"
+REMOTE_COMMIT="$(git ls-remote origin "refs/tags/$RELEASE_TAG^{}" | awk '{print $1}')"
+if [[ -z "$REMOTE_COMMIT" ]]; then
+  REMOTE_COMMIT="$(git ls-remote origin "refs/tags/$RELEASE_TAG" | awk '{print $1}')"
+fi
+if [[ "$RELEASE_COMMIT" != "$HEAD_COMMIT" || "$RELEASE_COMMIT" != "$REMOTE_COMMIT" ]]; then
+  echo "HEAD, the local tag and the remote production tag must identify the same commit." >&2
   exit 1
 fi
 
@@ -36,7 +51,6 @@ RELEASE_COMMIT="$1"
 APP_ROOT="/var/www/labofpdf"
 NEXT_ROOT="/var/www/labofpdf-next"
 PREV_ROOT="/var/www/labofpdf-prev"
-BACKUP_ROOT="/var/backups/labofpdf"
 NGINX_CONF="/etc/nginx/sites-enabled/labofpdf.conf"
 NGINX_BACKUP="/etc/nginx/labofpdf.conf.pre-deploy"
 
@@ -44,9 +58,6 @@ test -f "$NEXT_ROOT/index.html"
 test -f "$NEXT_ROOT/guides.html"
 test -f "$NEXT_ROOT/guides/compress-pdf-for-university-upload.html"
 grep -q "\"commit\": \"$RELEASE_COMMIT\"" "$NEXT_ROOT/release.json"
-
-mkdir -p "$BACKUP_ROOT"
-tar -C /var/www -czf "$BACKUP_ROOT/before-$RELEASE_COMMIT.tgz" labofpdf
 
 cp -a "$NGINX_CONF" "$NGINX_BACKUP"
 python3 - <<'PY'
@@ -157,9 +168,9 @@ fi
 rm -rf "$PREV_ROOT"
 rm -f "$NGINX_BACKUP"
 echo "Release is live and temporary files have been removed."
-echo "Rollback archive: $BACKUP_ROOT/before-$RELEASE_COMMIT.tgz"
 du -sh "$APP_ROOT"
 REMOTE
 
 echo "Deployment completed successfully."
+echo "Release tag: $RELEASE_TAG"
 echo "Release commit: $RELEASE_COMMIT"

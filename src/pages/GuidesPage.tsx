@@ -6,6 +6,8 @@ const guides = [
   { icon: FileDown, href: '/guides/compress-pdf-for-university-upload', label: 'UNIVERSITY UPLOADS', title: 'How to reduce a PDF for a university submission portal', text: 'A practical sequence for meeting an exact MB limit without sacrificing readable text or submitting the wrong file.' },
   { icon: ScanText, href: '/guides/make-scanned-notes-searchable', label: 'SCANNED NOTES', title: 'Make scanned lecture notes searchable for faster revision', text: 'Use OCR carefully, verify recognition errors, and turn a folder of scans into notes you can actually search.' },
   { icon: Files, href: '/guides/organize-pdf-study-notes', label: 'EXAM REVISION', title: 'Organize PDF study notes into one useful revision pack', text: 'Remove duplicate pages, arrange topics, add a predictable order, and create a smaller master PDF.' },
+  { icon: FileDown, href: '/guides/compress-pdf-without-losing-quality', label: 'READABLE COMPRESSION', title: 'Compress a PDF without making it unreadable', text: 'Find what makes the document large, reduce it deliberately, and inspect the downloaded copy before sending or submitting it.' },
+  { icon: ScanText, href: '/guides/reduce-scanned-pdf-file-size', label: 'LARGE SCANS', title: 'Reduce a scanned PDF file size', text: 'Clean the scan, choose reduction based on its content, and protect small print, handwriting, stamps and signatures.' },
 ]
 
 export default function GuidesPage() {
@@ -36,4 +38,3 @@ export default function GuidesPage() {
     </div>
   )
 }
-

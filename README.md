@@ -84,7 +84,8 @@ cross-agent verification checklist.
 `GitHub main` → canonical local worktree → `npm ci` → `npm run build` →
 validated `dist/` → atomic upload → Nginx `/var/www/labofpdf`.
 
-Run `deploy/deploy-to-server.sh` only from the canonical worktree. The build
+Run `deploy/deploy-to-server.sh production-YYYY-MM-DD-description` only from
+the canonical worktree after pushing that new immutable tag. The build
 writes `dist/release.json`, and deployment succeeds only when the online
 manifest reports the same Git commit. The visitor counter remains a separate
 systemd service on port 3001 behind `/api/`; static frontend deployment does not

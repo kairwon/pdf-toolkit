@@ -33,6 +33,8 @@ export default function Layout() {
     '/guides/compress-pdf-for-university-upload': 'University PDF upload guide',
     '/guides/make-scanned-notes-searchable': 'Searchable notes guide',
     '/guides/organize-pdf-study-notes': 'PDF revision pack guide',
+    '/guides/compress-pdf-without-losing-quality': 'Readable PDF compression guide',
+    '/guides/reduce-scanned-pdf-file-size': 'Scanned PDF size guide',
   }
   const toolPaths = new Set([
     '/merge', '/split', '/manage', '/edit-pdf', '/to-image', '/compress',
