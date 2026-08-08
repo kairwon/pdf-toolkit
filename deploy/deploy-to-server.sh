@@ -29,7 +29,7 @@ APP_ROOT="/var/www/labofpdf"
 NEXT_ROOT="/var/www/labofpdf-next"
 PREV_ROOT="/var/www/labofpdf-prev"
 NGINX_CONF="/etc/nginx/sites-enabled/labofpdf.conf"
-NGINX_BACKUP="/etc/nginx/sites-enabled/labofpdf.conf.pre-deploy"
+NGINX_BACKUP="/etc/nginx/labofpdf.conf.pre-deploy"
 
 test -f "$NEXT_ROOT/index.html"
 test -f "$NEXT_ROOT/guides.html"
@@ -119,4 +119,3 @@ du -sh "$APP_ROOT"
 REMOTE
 
 echo "Deployment completed successfully."
-
