@@ -56,9 +56,11 @@ path = Path('/etc/nginx/sites-enabled/labofpdf.conf')
 text = path.read_text()
 
 old_try = 'try_files $uri $uri/ /index.html;'
-new_try = 'try_files $uri $uri.html $uri/ =404;'
+new_try = 'try_files $uri.html $uri $uri/ =404;'
 if old_try in text:
     text = text.replace(old_try, new_try, 1)
+elif 'try_files $uri $uri.html $uri/ =404;' in text:
+    text = text.replace('try_files $uri $uri.html $uri/ =404;', new_try, 1)
 elif new_try not in text:
     raise SystemExit('Expected Lab of PDF try_files rule was not found')
 
@@ -73,8 +75,8 @@ text = text.replace(old_robots, new_robots)
 
 if 'error_page 404 /404.html;' not in text:
     text = text.replace(
-        '    location / {\n        try_files $uri $uri.html $uri/ =404;',
-        '    error_page 404 /404.html;\n\n    location = /404.html { internal; }\n\n    location / {\n        try_files $uri $uri.html $uri/ =404;',
+        '    location / {\n        try_files $uri.html $uri $uri/ =404;',
+        '    error_page 404 /404.html;\n\n    location = /404.html { internal; }\n\n    location / {\n        try_files $uri.html $uri $uri/ =404;',
         1,
     )
 
