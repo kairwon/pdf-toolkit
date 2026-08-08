@@ -67,6 +67,18 @@ Run `nginx -t` before reloading Nginx. Keep the CSP in report-only mode until
 PDF conversion, OCR, analytics, social sharing, and downloads have been tested
 on the deployed domain.
 
+### Server disk usage
+
+Deploy into one fixed working directory instead of creating a permanent copy
+for every release. Vite clears `dist/` before rebuilding, so old hashed assets
+do not accumulate. Once the build has succeeded and Nginx is serving `dist/`,
+`node_modules/` can be removed; restore it with `npm ci` for the next build.
+If release directories are used for rollback, retain the active release and at
+most two previous releases.
+
+See `PROJECT_HANDOFF.md` for the current deployment state and the complete
+cross-agent verification checklist.
+
 ## Privacy
 
 All PDF processing runs entirely client-side. No files are uploaded to any server. Server-side features (planned) will be clearly marked.
