@@ -27,31 +27,32 @@ export default function FileUpload({ onFiles, multiple = true, accept }: FileUpl
     <div
       {...getRootProps()}
       className={cn(
-        'relative cursor-pointer rounded-2xl border-2 border-dashed text-center transition-all duration-300 bg-white/60 dark:bg-[#1a1a2e]/60',
+        'tool-file-upload relative cursor-pointer text-center transition-all duration-300',
         isDragActive
           ? 'border-jade bg-jade/10 dark:bg-jade-dark/20 scale-[1.02]'
           : 'border-gray-200 dark:border-gray-700 hover:border-jade/50 dark:hover:border-jade/50 hover:bg-white/80 dark:hover:bg-white/10',
       )}
-      style={{ padding: '2.5rem', minHeight: '360px', width: '100%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      style={{ width: '100%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
     >
       <input {...getInputProps()} />
 
       <div className="flex flex-col items-center gap-3">
         {isDragActive ? (
           <div className="bg-gradient-to-br from-jade to-jade-light rounded-2xl p-4 text-white shadow-lg shadow-jade/30 animate-bounce">
-            <Upload size={32} />
+            <Upload size={36} />
           </div>
         ) : (
           <div className="bg-jade/10 dark:bg-jade-dark/20 rounded-2xl p-4 text-jade dark:text-jade-light">
-            <FileText size={32} />
+            <FileText size={36} />
           </div>
         )}
 
         <div>
-          <p className="text-base font-medium text-gray-700 dark:text-gray-200">
+          <p className="text-lg font-semibold text-gray-800 dark:text-gray-100">
             {isDragActive ? 'Drop your files here' : 'Drag & drop PDF files here'}
           </p>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">or click to browse</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">or click anywhere in this area to browse</p>
+          <p className="tool-upload-note">PDF files · processed on this device · no account required</p>
         </div>
 
         {!multiple && (

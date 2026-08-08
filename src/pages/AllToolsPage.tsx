@@ -1,0 +1,124 @@
+import { Link } from 'react-router-dom'
+import {
+  ArrowRight,
+  BriefcaseBusiness,
+  FileArchive,
+  FileCheck2,
+  FileImage,
+  FileOutput,
+  Files,
+  FileText,
+  GraduationCap,
+  Images,
+  Layers3,
+  LockKeyhole,
+  Scissors,
+  Stamp,
+} from 'lucide-react'
+import usePageTitle from '../hooks/usePageTitle'
+import PdfToolIcon, { pdfIconKindForPath } from '../components/ui/PdfToolIcon'
+
+const groups = [
+  {
+    title: 'Solve a real requirement',
+    description: 'Start with the result you need, not a technical operation.',
+    tools: [
+      { title: 'Thesis PDF check', note: 'Check submission readiness and common issues.', path: '/thesis-pdf-check', icon: GraduationCap },
+      { title: 'Visa application prep', note: 'Prepare documents for a visa upload workflow.', path: '/visa-prep', icon: BriefcaseBusiness },
+      { title: 'Portal-ready PDF', note: 'Make a PDF easier to upload to online portals.', path: '/portal-ready-pdf', icon: FileCheck2 },
+      { title: 'Visa photo PDF', note: 'Build a clean PDF from application photos.', path: '/compress/visa', icon: Images },
+    ],
+  },
+  {
+    title: 'Organize PDFs',
+    description: 'Combine, separate, and reorder documents.',
+    tools: [
+      { title: 'Merge PDFs', note: 'Combine files in the order you choose.', path: '/merge', icon: Files },
+      { title: 'Split PDF', note: 'Extract the pages you actually need.', path: '/split', icon: Scissors },
+      { title: 'Manage pages', note: 'Reorder, rotate, or remove PDF pages.', path: '/manage', icon: Layers3 },
+    ],
+  },
+  {
+    title: 'Compress and convert',
+    description: 'Meet size limits and move content into useful formats.',
+    tools: [
+      { title: 'Compress PDF', note: 'Reduce file size for email or upload.', path: '/compress', icon: FileArchive },
+      { title: 'Compress to exact size', note: 'Aim for a specific portal limit.', path: '/compress/exact', icon: FileOutput },
+      { title: 'PDF to Word', note: 'Turn a PDF into an editable document.', path: '/to-word', icon: FileText },
+      { title: 'PDF to images', note: 'Export PDF pages as image files.', path: '/to-image', icon: FileImage },
+    ],
+  },
+  {
+    title: 'Mark and clean',
+    description: 'Add ownership marks or remove simple overlays.',
+    tools: [
+      { title: 'Add watermark', note: 'Apply text or image marks to pages.', path: '/watermark', icon: Stamp },
+      { title: 'Remove watermark', note: 'Remove supported watermark layers.', path: '/unwatermark', icon: LockKeyhole },
+    ],
+  },
+]
+
+const commonRequirements = [
+  { title: 'Compress a PDF for a 5 MB upload limit', text: 'Enter the exact maximum shown by the portal and verify the finished file size.', path: '/compress/exact' },
+  { title: 'Check whether a thesis PDF has searchable text', text: 'Review text detection, page size, orientation and file size before university submission.', path: '/thesis-pdf-check' },
+  { title: 'Combine passport and supporting document PDFs', text: 'Organize sensitive visa files into one ordered PDF or a clearly named ZIP package.', path: '/visa-prep' },
+  { title: 'Reduce a PDF for an email attachment', text: 'Create the smallest practical copy without guessing which compression setting to use.', path: '/compress/exact' },
+  { title: 'Extract selected pages from a PDF', text: 'Preview a document and create a new PDF containing only the pages you choose.', path: '/split' },
+  { title: 'Convert a scanned PDF to editable Word text', text: 'Use browser-based OCR for scanned pages and direct extraction for text PDFs.', path: '/to-word' },
+]
+
+export default function AllToolsPage() {
+  usePageTitle('/tools')
+
+  return (
+    <div className="tools-directory">
+      <section className="tools-directory-hero">
+        <span className="lop-eyebrow"><FileCheck2 size={15} /> One toolkit, practical outcomes</span>
+        <h1>Every PDF tool, organized by what you need to finish.</h1>
+        <p>Choose a complete workflow for a real requirement, or open a focused utility for one specific task.</p>
+      </section>
+
+      <div className="tools-directory-groups">
+        {groups.map((group) => (
+          <section key={group.title} className="tools-directory-group">
+            <div className="tools-directory-heading">
+              <h2>{group.title}</h2>
+              <p>{group.description}</p>
+            </div>
+            <div className="tools-directory-grid">
+              {group.tools.map((tool) => {
+                const Icon = tool.icon
+                return (
+                  <Link key={tool.path} to={tool.path} className="tools-directory-card">
+                    <PdfToolIcon icon={Icon} label={tool.title} kind={pdfIconKindForPath(tool.path)} />
+                    <div>
+                      <h3>{tool.title}</h3>
+                      <p>{tool.note}</p>
+                    </div>
+                    <ArrowRight className="tools-directory-arrow" />
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
+
+      <section className="tools-use-cases">
+        <div className="tools-directory-heading">
+          <h2>Common PDF requirements</h2>
+          <p>Direct answers for the document problems people usually need to solve.</p>
+        </div>
+        <div>
+          {commonRequirements.map((item) => (
+            <Link to={item.path} key={item.title}>
+              <strong>{item.title}</strong>
+              <span>{item.text}</span>
+              <ArrowRight />
+            </Link>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}

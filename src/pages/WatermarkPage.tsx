@@ -8,6 +8,7 @@ import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { addWatermark, getPageCount } from '../lib/pdf'
 import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 import usePageTitle from '../hooks/usePageTitle'
+import usePendingFiles from '../hooks/usePendingFiles'
 
 export default function WatermarkPage() {
   usePageTitle('/watermark')
@@ -25,6 +26,7 @@ export default function WatermarkPage() {
     setPageCount(total)
     toast.success(`Loaded ${total} pages`)
   }, [])
+  usePendingFiles(handleFile)
 
   const handleAdd = async () => {
     if (!file || !text.trim()) return
@@ -35,7 +37,7 @@ export default function WatermarkPage() {
         angle: -35,
         fontSize: 52,
       })
-      const blob = new Blob([result], { type: 'application/pdf' })
+      const blob = new Blob([Uint8Array.from(result).buffer], { type: 'application/pdf' })
       triggerDownloadOverlay('Watermark added!', () => {
         downloadBlob(blob, `watermarked-${file.name}`)
       })
@@ -87,6 +89,18 @@ export default function WatermarkPage() {
         </button>
       </div>
       {processing && <ProcessingOverlay message="Adding watermark..." />}
+
+      {/* SEO content */}
+      <section className="portal-seo-copy" style={{ marginTop: '24px' }}>
+        <span>FREE ONLINE PDF WATERMARK TOOL</span>
+        <h2>Add watermark to PDF online free — private browser-based tool</h2>
+        <p>Add custom text watermarks to your PDF documents entirely in your browser. Choose your text, adjust opacity, and the watermark is applied to every page — no upload, no sign-up.</p>
+        <div>
+          <article><h3>How to add watermark to PDF for free?</h3><p>Upload your PDF, type the watermark text (e.g. CONFIDENTIAL, DRAFT), adjust the opacity slider, and download the watermarked PDF. Processing is done locally.</p></article>
+          <article><h3>Is it safe to add watermark to PDF online?</h3><p>Yes. Your PDF stays in your browser — it is never uploaded to any server. The watermark is applied locally using pdf-lib.</p></article>
+          <article><h3>Can I add watermark without uploading?</h3><p>Yes. All processing runs client-side in your browser. Choose a file, customize the watermark, and download the result directly.</p></article>
+        </div>
+      </section>
     </ToolPageWrapper>
   )
 }

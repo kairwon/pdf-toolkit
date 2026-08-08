@@ -68,7 +68,7 @@ export default function BambooScene() {
   const stalksRef2 = useRef(generateBamboo(2))
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden>
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-35" aria-hidden>
       {/* Sky gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#fff8e1] via-[#f1f8e9]/90 via-40% via-[#e8f5e9]/80 via-70% to-[#c8e6c9]/60" />
 

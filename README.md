@@ -46,6 +46,27 @@ npm run build
 
 Output goes to `dist/`.
 
+The production build also creates route-specific HTML files such as
+`dist/to-image.html`. Configure Nginx to resolve `$uri.html` before the SPA
+fallback so search engines and link-preview bots receive the correct title,
+description, canonical URL, and structured data without running JavaScript.
+
+## Nginx production configuration
+
+Use `deploy/nginx-labofpdf.conf` as the application portion of the HTTPS server
+block. It includes:
+
+- route-specific SEO HTML resolution;
+- one-year immutable caching for hashed assets;
+- no-cache handling for the application entry document;
+- gzip compression;
+- HSTS, permissions policy, MIME sniffing and framing protection;
+- a report-only Content Security Policy that can be monitored before enforcement.
+
+Run `nginx -t` before reloading Nginx. Keep the CSP in report-only mode until
+PDF conversion, OCR, analytics, social sharing, and downloads have been tested
+on the deployed domain.
+
 ## Privacy
 
 All PDF processing runs entirely client-side. No files are uploaded to any server. Server-side features (planned) will be clearly marked.

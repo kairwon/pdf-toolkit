@@ -1,34 +1,57 @@
+import { lazy, Suspense, type ReactNode } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import LandingPage from './pages/LandingPage'
-import MergePage from './pages/MergePage'
-import SplitPage from './pages/SplitPage'
-import ManagePage from './pages/ManagePage'
-import ToImagePage from './pages/ToImagePage'
-import CompressPage from './pages/CompressPage'
-import WatermarkPage from './pages/WatermarkPage'
-import UnwatermarkPage from './pages/UnwatermarkPage'
-import ToWordPage from './pages/ToWordPage'
-import PrivacyPage from './pages/PrivacyPage'
-import TermsPage from './pages/TermsPage'
-import SecurityPage from './pages/SecurityPage'
+
+const MergePage = lazy(() => import('./pages/MergePage'))
+const SplitPage = lazy(() => import('./pages/SplitPage'))
+const ManagePage = lazy(() => import('./pages/ManagePage'))
+const ToImagePage = lazy(() => import('./pages/ToImagePage'))
+const CompressPage = lazy(() => import('./pages/CompressPage'))
+const WatermarkPage = lazy(() => import('./pages/WatermarkPage'))
+const UnwatermarkPage = lazy(() => import('./pages/UnwatermarkPage'))
+const ToWordPage = lazy(() => import('./pages/ToWordPage'))
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
+const TermsPage = lazy(() => import('./pages/TermsPage'))
+const SecurityPage = lazy(() => import('./pages/SecurityPage'))
+const VisaPrepPage = lazy(() => import('./pages/VisaPrepPage'))
+const PortalReadyPage = lazy(() => import('./pages/PortalReadyPage'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
+const AllToolsPage = lazy(() => import('./pages/AllToolsPage'))
 
 export default function App() {
+  const deferred = (page: ReactNode) => (
+    <Suspense fallback={<div className="route-loading" role="status" aria-live="polite">Opening your private PDF workspace…</div>}>
+      {page}
+    </Suspense>
+  )
+
   return (
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/merge" element={<MergePage />} />
-        <Route path="/split" element={<SplitPage />} />
-        <Route path="/manage" element={<ManagePage />} />
-        <Route path="/to-image" element={<ToImagePage />} />
-        <Route path="/compress" element={<CompressPage />} />
-        <Route path="/watermark" element={<WatermarkPage />} />
-        <Route path="/unwatermark" element={<UnwatermarkPage />} />
-        <Route path="/to-word" element={<ToWordPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="/security" element={<SecurityPage />} />
+        <Route path="/tools" element={deferred(<AllToolsPage />)} />
+        <Route path="/merge" element={deferred(<MergePage />)} />
+        <Route path="/split" element={deferred(<SplitPage />)} />
+        <Route path="/manage" element={deferred(<ManagePage />)} />
+        <Route path="/to-image" element={deferred(<ToImagePage />)} />
+        <Route path="/compress" element={deferred(<CompressPage />)} />
+        <Route path="/compress/visa" element={deferred(<CompressPage forcedGoal="visa" />)} />
+        <Route path="/compress/exact" element={deferred(<CompressPage forcedGoal="exact" />)} />
+        <Route path="/thesis-pdf-check" element={deferred(<CompressPage forcedGoal="thesis" />)} />
+        <Route path="/watermark" element={deferred(<WatermarkPage />)} />
+        <Route path="/unwatermark" element={deferred(<UnwatermarkPage />)} />
+        <Route path="/to-word" element={deferred(<ToWordPage />)} />
+        <Route path="/privacy" element={deferred(<PrivacyPage />)} />
+        <Route path="/terms" element={deferred(<TermsPage />)} />
+        <Route path="/security" element={deferred(<SecurityPage />)} />
+        <Route path="/visa-prep" element={deferred(<VisaPrepPage />)} />
+        <Route path="/portal-ready-pdf" element={deferred(<PortalReadyPage />)} />
+        <Route path="/edit-pdf" element={deferred(<ManagePage />)} />
+        <Route path="/pdf-to-excel" element={deferred(<NotFoundPage />)} />
+        <Route path="/sign-pdf" element={deferred(<NotFoundPage />)} />
+        <Route path="/unlock-pdf" element={deferred(<NotFoundPage />)} />
+        <Route path="*" element={deferred(<NotFoundPage />)} />
       </Route>
     </Routes>
   )

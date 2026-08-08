@@ -52,7 +52,7 @@ export default function PandaPanel({ name, subtitle, levels, totalLevels, flippe
             color: isPurple ? '#9333ea' : 'rgba(58,90,64,0.45)',
           }}
         >
-          {moodEmojis.feed} 喂竹子
+          {moodEmojis.feed} Feed bamboo
         </button>
         <button
           onClick={pet}
@@ -63,7 +63,7 @@ export default function PandaPanel({ name, subtitle, levels, totalLevels, flippe
             color: isPurple ? '#9333ea' : 'rgba(58,90,64,0.45)',
           }}
         >
-          {moodEmojis.pet} {isPurple ? '挠痒痒' : '摸摸头'}
+          {moodEmojis.pet} {isPurple ? 'Tickle' : 'Pet panda'}
         </button>
       </div>
 
@@ -84,7 +84,7 @@ export default function PandaPanel({ name, subtitle, levels, totalLevels, flippe
       {/* Info */}
       <div className="text-center">
         <div className="text-xs font-semibold tracking-widest" style={{ color: 'rgba(58,90,64,0.5)' }}>
-          {mood === 'feed' ? '🎋 好吃！' : mood === 'pet' ? '😊 嘿嘿~' : `🌸 ${name}`}
+          {mood === 'feed' ? '🎋 Delicious!' : mood === 'pet' ? '😊 Happy panda!' : `🌸 ${name}`}
         </div>
         <div className="text-[10px] tracking-widest" style={{ color: 'rgba(76,175,80,0.3)' }}>
           {subtitle}

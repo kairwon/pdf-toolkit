@@ -1,13 +1,14 @@
-import { Share2, Mail } from 'lucide-react'
+import { useState } from 'react'
+import { Check, Link2, Mail, Share2 } from 'lucide-react'
 
 const BASE = 'https://labofpdf.com'
 
 const shareLinks = {
   twitter: (url: string, title: string) =>
     `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`,
-  facebook: (url: string) =>
+  facebook: (url: string, _title: string) =>
     `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-  linkedin: (url: string, title: string) =>
+  linkedin: (url: string, _title: string) =>
     `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
   email: (url: string, title: string) =>
     `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(url)}`,
@@ -47,6 +48,7 @@ const platforms = [
 export default function ShareButtons({ path, title }: { path?: string; title?: string }) {
   const url = BASE + (path || '/')
   const shareTitle = title || 'Lab of PDF — Free Online PDF Tools'
+  const [copied, setCopied] = useState(false)
 
   const handleShare = async (key: string) => {
     const link = shareLinks[key as keyof typeof shareLinks]
@@ -55,23 +57,47 @@ export default function ShareButtons({ path, title }: { path?: string; title?: s
     }
   }
 
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(url)
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1800)
+  }
+
+  const shareDirectly = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: shareTitle, url })
+        return
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+      }
+    }
+    await copyLink()
+  }
+
   return (
-    <div className="flex items-center gap-1.5">
-      <span className="text-xs text-gray-400 mr-1 hidden sm:inline">
-        <Share2 size={13} className="inline mr-1" />
+    <div className="share-buttons" aria-label="Share this page">
+      <button type="button" className="share-primary" onClick={shareDirectly}>
+        <Share2 size={15} />
         Share
-      </span>
+      </button>
       {platforms.map((p) => (
         <button
+          type="button"
           key={p.key}
           onClick={() => handleShare(p.key)}
           title={p.label}
-          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-[var(--share-color)] transition-all duration-150"
+          aria-label={`Share on ${p.label}`}
+          className="share-platform"
           style={{ '--share-color': p.color } as React.CSSProperties}
         >
-          <p.icon size={14} />
+          <p.icon size={15} />
         </button>
       ))}
+      <button type="button" className={`share-copy ${copied ? 'is-copied' : ''}`} onClick={copyLink} aria-label="Copy page link">
+        {copied ? <Check size={15} /> : <Link2 size={15} />}
+        <span>{copied ? 'Copied' : 'Copy link'}</span>
+      </button>
     </div>
   )
 }

@@ -1,42 +1,87 @@
-import { Outlet, Link } from 'react-router-dom'
+import { useEffect } from 'react'
+import { ArrowLeft, ChevronRight, Home } from 'lucide-react'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Header from './Header'
-import BambooScene from '../BambooScene'
 import DownloadOverlay from '../DownloadOverlay'
 import CookieConsent from '../ui/CookieConsent'
-import { ShieldCheck } from 'lucide-react'
 
 export default function Layout() {
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const routeLabels: Record<string, string> = {
+    '/tools': 'All PDF tools',
+    '/merge': 'Merge PDF',
+    '/split': 'Split PDF',
+    '/manage': 'Manage PDF pages',
+    '/edit-pdf': 'Manage PDF pages',
+    '/to-image': 'PDF to images',
+    '/compress': 'Compress PDF',
+    '/compress/visa': 'Visa PDF compressor',
+    '/compress/exact': 'Compress to exact size',
+    '/thesis-pdf-check': 'Thesis PDF check',
+    '/watermark': 'Add watermark',
+    '/unwatermark': 'Remove watermark',
+    '/to-word': 'PDF to Word',
+    '/visa-prep': 'Visa document pack',
+    '/portal-ready-pdf': 'Portal-ready PDF',
+    '/privacy': 'Privacy',
+    '/terms': 'Terms',
+    '/security': 'Security',
+  }
+  const toolPaths = new Set([
+    '/merge', '/split', '/manage', '/edit-pdf', '/to-image', '/compress',
+    '/compress/visa', '/compress/exact', '/thesis-pdf-check', '/watermark',
+    '/unwatermark', '/to-word', '/visa-prep', '/portal-ready-pdf',
+  ])
+  const goBack = () => {
+    if (window.history.length > 1) navigate(-1)
+    else navigate('/')
+  }
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 })
+  }, [pathname])
+
   return (
-    <div className="min-h-screen bg-scene flex flex-col relative">
-      <BambooScene />
+    <div className="site-shell">
+      <a className="skip-link" href="#main-content">Skip to content</a>
       <Header />
       <DownloadOverlay />
       <CookieConsent />
-
-      {/* Privacy banner */}
-      <div className="bg-jade/5 dark:bg-jade-dark/20 border-b border-jade/10 dark:border-jade-dark/30">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-center gap-2 text-xs sm:text-sm text-jade dark:text-jade-light">
-          <ShieldCheck size={14} />
-          <span>
-            Client-side features process files locally in your browser. Server-side features are clearly marked — see our <Link to="/privacy" className="underline underline-offset-2 hover:no-underline">Privacy Policy</Link> for details.
-          </span>
-        </div>
-      </div>
-
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 w-full">
+      <main className="site-main" id="main-content">
+        {pathname !== '/' && (
+          <nav className="site-breadcrumb" aria-label="Breadcrumb">
+            <Link to="/" aria-label="Home"><Home /></Link>
+            <ChevronRight />
+            {toolPaths.has(pathname) && (
+              <>
+                <button type="button" className="site-back-link" onClick={goBack} aria-label="Go back to the previous page">
+                  <ArrowLeft /> Previous page
+                </button>
+                <ChevronRight />
+              </>
+            )}
+            <span aria-current="page">{routeLabels[pathname] || 'Page'}</span>
+          </nav>
+        )}
         <Outlet />
       </main>
-
-      {/* Footer */}
-      <footer className="border-t border-gray-200 dark:border-gray-700/30 bg-white/50 dark:bg-black/10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-600 dark:text-gray-300">
-          <p className="text-gray-600 dark:text-gray-300">&copy; {new Date().getFullYear()} Lab of PDF. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            <span>Any suggestions? <a href="mailto:labofpdf@gmail.com" className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white underline underline-offset-2 transition-colors">Contact us</a></span>
-            <Link to="/privacy" className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors">Privacy</Link>
-            <Link to="/terms" className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors">Terms</Link>
-            <Link to="/security" className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors">Security</Link>
+      <footer className="site-footer">
+        <div className="site-footer-inner">
+          <div>
+            <strong>Lab of PDF</strong>
+            <p>Practical PDF help, processed locally in your browser whenever possible.</p>
           </div>
+          <nav aria-label="Footer navigation">
+            <Link to="/tools">All tools</Link>
+            <Link to="/privacy">Privacy</Link>
+            <Link to="/terms">Terms</Link>
+            <Link to="/security">Security</Link>
+            <button type="button" onClick={() => window.dispatchEvent(new Event('open-privacy-settings'))}>
+              Privacy choices
+            </button>
+            <a href="mailto:labofpdf@gmail.com">Contact</a>
+          </nav>
         </div>
       </footer>
     </div>

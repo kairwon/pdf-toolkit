@@ -1,6 +1,5 @@
-import { PDFDocument, rgb, StandardFonts, degrees } from 'pdf-lib'
+import { PDFDocument, rgb, StandardFonts, degrees, PDFName, PDFArray, PDFDict, PDFRef } from 'pdf-lib'
 import * as pdfjsLib from 'pdfjs-dist'
-import { createWorker } from 'tesseract.js'
 
 // Set up the worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -39,7 +38,7 @@ export async function renderPageToCanvas(
   canvas.width = viewport.width
   canvas.height = viewport.height
   const ctx = canvas.getContext('2d')!
-  await page.render({ canvasContext: ctx, viewport }).promise
+  await page.render({ canvas, canvasContext: ctx, viewport }).promise
 
   return canvas.toDataURL('image/jpeg', 0.85)
 }
@@ -48,6 +47,70 @@ export async function getPageCount(file: File): Promise<number> {
   const buffer = await file.arrayBuffer()
   const pdf = await pdfjsLib.getDocument({ data: buffer }).promise
   return pdf.numPages
+}
+
+export interface SubmissionAnalysis {
+  pageCount: number
+  textStatus: 'searchable' | 'mixed' | 'scanned'
+  sampledPages: number
+  pageFormat: 'A4' | 'Letter' | 'Mixed / custom'
+  landscapePages: number
+}
+
+/**
+ * Inspect technical properties used by submission portals.
+ * Text detection is sampled across the document to keep large theses responsive.
+ */
+export async function analyzePdfForSubmission(file: File): Promise<SubmissionAnalysis> {
+  const buffer = await file.arrayBuffer()
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise
+  const pageCount = pdf.numPages
+  const sampleCount = Math.min(pageCount, 24)
+  const sampleNumbers = Array.from(
+    new Set(Array.from({ length: sampleCount }, (_, index) =>
+      Math.max(1, Math.round(1 + index * (pageCount - 1) / Math.max(sampleCount - 1, 1))),
+    )),
+  )
+
+  let searchableSamples = 0
+  let landscapePages = 0
+  let a4Pages = 0
+  let letterPages = 0
+
+  for (const pageNumber of sampleNumbers) {
+    const page = await pdf.getPage(pageNumber)
+    const viewport = page.getViewport({ scale: 1 })
+    const shortSide = Math.min(viewport.width, viewport.height)
+    const longSide = Math.max(viewport.width, viewport.height)
+    if (viewport.width > viewport.height) landscapePages++
+
+    if (Math.abs(shortSide - 595) < 20 && Math.abs(longSide - 842) < 24) a4Pages++
+    else if (Math.abs(shortSide - 612) < 20 && Math.abs(longSide - 792) < 24) letterPages++
+
+    const textContent = await page.getTextContent()
+    const text = textContent.items.map((item: any) => item.str).join('').trim()
+    if (text.length > 20) searchableSamples++
+  }
+
+  const textStatus = searchableSamples === sampleNumbers.length
+    ? 'searchable'
+    : searchableSamples === 0
+      ? 'scanned'
+      : 'mixed'
+  const dominantThreshold = sampleNumbers.length * 0.9
+  const pageFormat = a4Pages >= dominantThreshold
+    ? 'A4'
+    : letterPages >= dominantThreshold
+      ? 'Letter'
+      : 'Mixed / custom'
+
+  return {
+    pageCount,
+    textStatus,
+    sampledPages: sampleNumbers.length,
+    pageFormat,
+    landscapePages,
+  }
 }
 
 export async function mergePdfs(
@@ -112,7 +175,7 @@ export async function rotatePages(
   pageIndices.forEach((i) => {
     const page = pdfDoc.getPage(i)
     const current = page.getRotation().angle
-    page.setRotation({ angle: (current + rotation) % 360 })
+    page.setRotation(degrees((current + rotation) % 360))
   })
   return pdfDoc.save()
 }
@@ -134,8 +197,36 @@ export async function compressPdf(
   file: File,
   mode: 'lossless' | 'balanced' | 'aggressive' = 'lossless',
 ): Promise<Uint8Array> {
-  const pdfDoc = await PDFDocument.load(await file.arrayBuffer())
+  const sourceBuffer = await file.arrayBuffer()
+  const pdfDoc = await PDFDocument.load(sourceBuffer.slice(0))
   const newDoc = await PDFDocument.create()
+  if (mode !== 'lossless') {
+    const renderedPdf = await pdfjsLib.getDocument({ data: sourceBuffer.slice(0) }).promise
+    const settings = mode === 'balanced'
+      ? { scale: 1.35, quality: .72 }
+      : { scale: .95, quality: .52 }
+
+    for (let pageNumber = 1; pageNumber <= renderedPdf.numPages; pageNumber++) {
+      const sourcePage = await renderedPdf.getPage(pageNumber)
+      const original = sourcePage.getViewport({ scale: 1 })
+      const viewport = sourcePage.getViewport({ scale: settings.scale })
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.ceil(viewport.width)
+      canvas.height = Math.ceil(viewport.height)
+      const canvasContext = canvas.getContext('2d', { alpha: false })!
+      canvasContext.fillStyle = '#fff'
+      canvasContext.fillRect(0, 0, canvas.width, canvas.height)
+      await sourcePage.render({ canvas, canvasContext, viewport }).promise
+      const jpegBytes = await fetch(canvas.toDataURL('image/jpeg', settings.quality)).then((response) => response.arrayBuffer())
+      const image = await newDoc.embedJpg(jpegBytes)
+      const page = newDoc.addPage([original.width, original.height])
+      page.drawImage(image, { x: 0, y: 0, width: original.width, height: original.height })
+      canvas.width = 1
+      canvas.height = 1
+    }
+    return newDoc.save({ useObjectStreams: true })
+  }
+
   const pages = await newDoc.copyPages(pdfDoc, pdfDoc.getPageIndices())
   pages.forEach((p) => newDoc.addPage(p))
   return newDoc.save({ useObjectStreams: true })
@@ -180,27 +271,58 @@ export async function addWatermark(
 }
 
 /**
- * Remove annotation-type watermarks and attempt to hide
- * content-layer watermarks by drawing white rectangles over
- * common positions (edges, centre).
+ * Remove watermark annotations from a PDF.
  *
- * For true "burned-in" watermarks that are part of the content
- * stream, there is no reliable way to remove them — this function
- * at least strips annotation overlays and covers obvious spots.
+ * Only removes annotation-layer watermarks (Stamp / Watermark subtype).
+ * Does NOT modify content-layer watermark content (burned-in text/images),
+ * and does NOT cover anything with white rectangles (which would hide
+ * legitimate content).
+ *
+ * Limitations:
+ *  - Watermarks baked into the page content stream (e.g. "DRAFT" text
+ *    rendered as regular content) cannot be removed without re-rendering
+ *    the page, which destroys text selectability.
+ *  - Only annotation-type watermarks added as PDF Stamp/Watermark objects
+ *    can be removed here.
  */
 export async function removeWatermark(file: File): Promise<Uint8Array> {
-  const pdfDoc = await PDFDocument.load(await file.arrayBuffer())
+  const buffer = await file.arrayBuffer()
+  const pdfDoc = await PDFDocument.load(buffer)
 
   const pages = pdfDoc.getPages()
   for (const page of pages) {
-    const { width, height } = page.getSize()
-    const white = rgb(1, 1, 1)
+    // Access the raw page dictionary
+    const pageNode = (page as any).node as { get: (key: PDFName) => any; set: (key: PDFName, ref: any) => void; context: any }
+    const annotsRef = pageNode.get(PDFName.of('Annots'))
+    if (!annotsRef) continue
 
-    page.drawRectangle({ x: 0, y: height - 60, width: 180, height: 60, color: white })
-    page.drawRectangle({ x: width - 180, y: height - 60, width: 180, height: 60, color: white })
-    page.drawRectangle({ x: 0, y: 0, width: 180, height: 60, color: white })
-    page.drawRectangle({ x: width - 180, y: 0, width: 180, height: 60, color: white })
-    page.drawRectangle({ x: width * 0.2, y: height * 0.4, width: width * 0.6, height: height * 0.2, color: white })
+    const annotsArray = pdfDoc.context.lookup(annotsRef) as PDFArray | null
+    if (!(annotsArray instanceof PDFArray)) continue
+
+    // Filter out Stamp and Watermark annotations
+    const kept: PDFRef[] = []
+    for (let i = 0; i < annotsArray.size(); i++) {
+      const annotRef = annotsArray.get(i)
+      const annotDict = pdfDoc.context.lookup(annotRef) as PDFDict | null
+      if (!annotDict || !(annotDict instanceof Object)) { kept.push(annotRef as PDFRef); continue }
+
+      try {
+        const subtype = annotDict.get(PDFName.of('Subtype'))
+        if (subtype) {
+          const resolved = pdfDoc.context.lookup(subtype) as any
+          const typeName = String(resolved.encodedName ?? resolved)
+          if (typeName === 'Stamp' || typeName === 'Watermark') continue
+        }
+      } catch { /* skip unreadable annotations */ }
+      kept.push(annotRef as PDFRef)
+    }
+
+    // Update the page's annotation list
+    if (kept.length === 0) {
+      pageNode.set(PDFName.of('Annots'), pdfDoc.context.obj([]))
+    } else if (kept.length < annotsArray.size()) {
+      pageNode.set(PDFName.of('Annots'), pdfDoc.context.obj(kept))
+    }
   }
 
   return pdfDoc.save()
@@ -291,6 +413,7 @@ export async function pdfToWord(
   const pdf = await pdfjsLib.getDocument({ data: buffer }).promise
   const total = pdf.numPages
   const pages: string[] = []
+  let ocrWorker: any = null
 
   for (let i = 1; i <= total; i++) {
     const isText = await pageIsText(pdf, i)
@@ -301,16 +424,20 @@ export async function pdfToWord(
       const tc = await page.getTextContent()
       pages.push(tc.items.map((item: any) => item.str).join(' '))
     } else {
-      // OCR path
+      // OCR path — create worker once and reuse
+      if (!ocrWorker) {
+        const { createWorker } = await import('tesseract.js')
+        ocrWorker = await createWorker('eng')
+      }
       const dataUrl = await renderPageForOcr(file, i, 2.5)
       const imgBlob = await (await fetch(dataUrl)).blob()
-      const worker = await createWorker('eng')
-      const { data } = await worker.recognize(imgBlob)
+      const { data } = await ocrWorker.recognize(imgBlob)
       pages.push(data.text)
-      await worker.terminate()
     }
     onProgress?.(i, total, `Page ${i} done`)
   }
+
+  if (ocrWorker) await ocrWorker.terminate()
 
   // Build a simple Word-compatible HTML document
   const html = `<!DOCTYPE html>

@@ -11,7 +11,7 @@ export default function LottiePanda() {
         .then(r => r.json())
         .then(data => {
           setAnimData(data)
-          // 闪现进入：延迟一小会儿后弹出
+          // Reveal the animation with a short pop-in delay.
           setTimeout(() => setVisible(true), 300)
         })
         .catch(() => setError(true))

@@ -7,21 +7,22 @@ export default function CookieConsent() {
 
   useEffect(() => {
     const decided = localStorage.getItem(COOKIE_CONSENT_KEY)
+    let timer: number | undefined
     if (!decided) {
-      // Delay showing so page renders first
-      const t = setTimeout(() => setVisible(true), 500)
-      return () => clearTimeout(t)
+      timer = window.setTimeout(() => setVisible(true), 500)
+    }
+    const reopen = () => setVisible(true)
+    window.addEventListener('open-privacy-settings', reopen)
+    return () => {
+      if (timer) window.clearTimeout(timer)
+      window.removeEventListener('open-privacy-settings', reopen)
     }
   }, [])
 
   const accept = (level: 'all' | 'necessary') => {
     localStorage.setItem(COOKIE_CONSENT_KEY, level)
     setVisible(false)
-    // If user accepted all, we could load AdSense here
-    if (level === 'all') {
-      // Placeholder for AdSense script load
-      console.log('Ad consent granted')
-    }
+    window.dispatchEvent(new CustomEvent('privacy-choice-changed', { detail: level }))
   }
 
   if (!visible) return null
@@ -40,10 +41,10 @@ export default function CookieConsent() {
       }}>
         <div className="text-sm text-gray-600 leading-relaxed" style={{ marginBottom: '18px' }}>
           <strong className="text-gray-800" style={{ display: 'block', marginBottom: '6px' }}>
-            🍪 We value your privacy
+            Privacy choices
           </strong>
-          This site may use cookies and similar technologies to improve your experience and serve personalized ads via Google AdSense.
-          You can choose which cookies to allow.{' '}
+          Necessary browser storage remembers this choice and essential site preferences. Advertising and analytics scripts are currently disabled.
+          If they are introduced, optional technologies will remain off unless you allow them.{' '}
           <a href="/privacy" className="underline text-jade hover:text-jade-dark" target="_blank" rel="noopener noreferrer">
             Learn more
           </a>
@@ -53,7 +54,7 @@ export default function CookieConsent() {
             onClick={() => accept('necessary')}
             className="btn-secondary text-sm flex-1 sm:flex-none"
           >
-            Necessary only
+            Keep optional off
           </button>
           <button
             onClick={() => accept('all')}
@@ -62,16 +63,16 @@ export default function CookieConsent() {
               padding: '10px 24px',
               borderRadius: '100px',
               border: 'none',
-              background: 'linear-gradient(135deg, #4caf50, #2fa36b)',
+              background: 'linear-gradient(135deg, #159669, #087f5b)',
               color: '#fff',
               fontSize: '14px',
               fontWeight: 600,
               cursor: 'pointer',
-              boxShadow: '0 4px 15px rgba(47,163,107,0.35)',
+              boxShadow: '0 4px 15px rgba(8,127,91,0.28)',
               transition: 'all 0.2s ease',
             }}
           >
-            Accept all cookies
+            Allow optional
           </button>
         </div>
       </div>

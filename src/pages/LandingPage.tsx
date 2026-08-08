@@ -1,266 +1,432 @@
-import { useState, useCallback } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, FileText, Combine, Split, Layers, Image, FileDown, Droplets, DropletOff, FileType, GraduationCap, Briefcase, FileSignature, Mail, BookOpen, FileCheck } from 'lucide-react'
-import PandaCard from '../components/PandaCard'
+import { useDropzone } from 'react-dropzone'
+import {
+  ArrowRight, BadgeCheck, BookOpenCheck, BriefcaseBusiness, Combine, FileDown,
+  FileType, Gift, Image, Layers, LockKeyhole, Mail, ScanLine, Stamp,
+  ShieldCheck, Split, Target, Upload, WifiOff, Eraser,
+  type LucideIcon,
+} from 'lucide-react'
 import usePageTitle from '../hooks/usePageTitle'
+import { setPendingFiles } from '../lib/fileHandoff'
+import { formatFileSize } from '../lib/utils'
+import ShareButtons from '../components/ui/ShareButtons'
+import PdfToolIcon, { pdfIconKindForPath } from '../components/ui/PdfToolIcon'
 
-const categories = [
-  { key: 'merge', label: 'Merge', icon: Combine },
-  { key: 'split', label: 'Split', icon: Split },
-  { key: 'compress', label: 'Compress', icon: FileDown },
-  { key: 'to-word', label: 'To Word', icon: FileType },
-  { key: 'watermark', label: 'Watermark', icon: Droplets },
-  { key: 'unwatermark', label: 'Un-Watermark', icon: DropletOff },
-  { key: 'manage', label: 'Manage', icon: Layers },
-  { key: 'to-image', label: 'To Image', icon: Image },
-]
-
-const scenes: Record<string, { title: string; icon: any; desc: string; path: string; badge?: string }[]> = {
-  merge: [
-    { title: 'Merge All Pages', icon: Combine, desc: 'Combine multiple PDFs into one document', path: '/merge' },
-    { title: 'Contract Merge', icon: FileSignature, desc: 'Merge signed contract pages into one PDF', path: '/merge', badge: 'Popular' },
-    { title: 'Lecture Notes', icon: BookOpen, desc: 'Combine course handouts into a study guide', path: '/merge' },
-    { title: 'Invoice Merge', icon: FileCheck, desc: 'Merge multiple invoices for submission', path: '/merge' },
-  ],
-  split: [
-    { title: 'Extract Pages', icon: Split, desc: 'Extract specific pages from a PDF', path: '/split' },
-    { title: 'Thesis Chapters', icon: GraduationCap, desc: 'Split a thesis into individual chapters', path: '/split', badge: 'Hot' },
-    { title: 'Bank Statement', icon: Briefcase, desc: 'Extract specific months from a statement', path: '/split' },
-    { title: 'Email Attachment', icon: Mail, desc: 'Split large PDFs for email size limits', path: '/split' },
-  ],
-  compress: [
-    { title: 'Standard Compress', icon: FileDown, desc: 'Reduce PDF file size losslessly', path: '/compress' },
-    { title: 'Thesis & Paper', icon: GraduationCap, desc: 'Compress to ≤5MB for university submission', path: '/compress', badge: 'Popular' },
-    { title: 'Visa Application', icon: Briefcase, desc: 'Meet embassy file size requirements', path: '/compress' },
-    { title: 'Email Attachment', icon: Mail, desc: 'Shrink PDF for Gmail/Outlook limits', path: '/compress' },
-  ],
-  'to-word': [
-    { title: 'PDF to Word', icon: FileType, desc: 'Convert PDF to editable Word document', path: '/to-word' },
-    { title: 'Scanned Document', icon: FileText, desc: 'OCR conversion for scanned PDF pages', path: '/to-word', badge: 'OCR' },
-  ],
-  watermark: [
-    { title: 'Add Watermark', icon: Droplets, desc: 'Add text watermark to every page', path: '/watermark' },
-    { title: 'Draft Stamp', icon: FileSignature, desc: 'Mark document as "DRAFT — NOT FINAL"', path: '/watermark' },
-    { title: 'Copyright', icon: FileCheck, desc: 'Add © copyright notice to your work', path: '/watermark' },
-  ],
-  unwatermark: [
-    { title: 'Remove Watermark', icon: DropletOff, desc: 'Strip overlay watermarks from PDF', path: '/unwatermark' },
-  ],
-  manage: [
-    { title: 'Manage Pages', icon: Layers, desc: 'Delete, rotate, reorder PDF pages', path: '/manage' },
-    { title: 'Delete Pages', icon: Layers, desc: 'Remove unwanted pages from your PDF', path: '/manage' },
-    { title: 'Rotate Pages', icon: Layers, desc: 'Fix scanned pages with wrong orientation', path: '/manage' },
-  ],
-  'to-image': [
-    { title: 'PDF to Image', icon: Image, desc: 'Convert PDF pages to PNG or JPEG', path: '/to-image' },
-    { title: 'Slides to Images', icon: Image, desc: 'Convert presentation slides to images', path: '/to-image' },
-  ],
+type Card = {
+  title: string
+  description: string
+  path: string
+  icon: LucideIcon
+  tone: 'blue' | 'green' | 'purple' | 'orange' | 'cyan' | 'rose'
 }
 
-const popularScenes = [
-  { title: 'Compress for Thesis', icon: GraduationCap, desc: 'Under 5MB for university submission', path: '/compress', color: '#059669' },
-  { title: 'Merge Contracts', icon: FileSignature, desc: 'Combine signed pages into one file', path: '/merge', color: '#10b981' },
-  { title: 'Split Bank Statement', icon: Briefcase, desc: 'Extract specific months', path: '/split', color: '#0ea5e9' },
-  { title: 'PDF to Word OCR', icon: FileType, desc: 'Convert scanned documents', path: '/to-word', color: '#8b5cf6' },
-  { title: 'Visa PDF Compress', icon: Briefcase, desc: 'Meet embassy requirements', path: '/compress', color: '#f59e0b' },
-  { title: 'Email Attachment', icon: Mail, desc: 'Shrink PDF for Gmail', path: '/compress', color: '#ef4444' },
+const outcomes: Card[] = [
+  {
+    title: 'Submit my thesis under a limit',
+    description: 'Check pages and searchable text, then meet the university file-size requirement.',
+    path: '/thesis-pdf-check',
+    icon: BookOpenCheck,
+    tone: 'blue',
+  },
+  {
+    title: 'Prepare a visa application pack',
+    description: 'Organize, combine, and size documents for the relevant embassy portal.',
+    path: '/visa-prep',
+    icon: BriefcaseBusiness,
+    tone: 'cyan',
+  },
+  {
+    title: 'Make a PDF fit an upload portal',
+    description: 'Choose the exact portal limit and verify the finished file before submitting.',
+    path: '/portal-ready-pdf',
+    icon: Target,
+    tone: 'green',
+  },
+  {
+    title: 'Email a PDF that is too large',
+    description: 'Set a practical attachment target without guessing between compression levels.',
+    path: '/compress/exact',
+    icon: Mail,
+    tone: 'orange',
+  },
+  {
+    title: 'Combine signed documents',
+    description: 'Put separate files and signed pages into one final PDF in the right order.',
+    path: '/merge',
+    icon: Combine,
+    tone: 'purple',
+  },
+  {
+    title: 'Fix and organize PDF pages',
+    description: 'Reorder, rotate, or remove pages in a visual workspace before sharing.',
+    path: '/manage',
+    icon: ScanLine,
+    tone: 'rose',
+  },
 ]
 
-const futureTools = ['PDF to Excel', 'Edit PDF', 'Sign PDF']
+const popularTools: Card[] = [
+  { title: 'Compress PDF', description: 'Reduce size privately in your browser.', path: '/compress', icon: FileDown, tone: 'blue' },
+  { title: 'Merge PDF', description: 'Combine files and reorder their pages.', path: '/merge', icon: Combine, tone: 'purple' },
+  { title: 'Split PDF', description: 'Extract a range or separate selected pages.', path: '/split', icon: Split, tone: 'green' },
+  { title: 'PDF to Word', description: 'Create an editable document with OCR.', path: '/to-word', icon: FileType, tone: 'blue' },
+  { title: 'PDF to Images', description: 'Export pages as PNG or JPEG files.', path: '/to-image', icon: Image, tone: 'purple' },
+  { title: 'Manage Pages', description: 'Delete, rotate, and reorder visually.', path: '/manage', icon: Layers, tone: 'cyan' },
+]
+
+const featuredSingleWorkflows = [
+  { label: 'Thesis check', detail: 'Check submission readiness', path: '/thesis-pdf-check', icon: BookOpenCheck, tone: 'blue' },
+  { label: 'Visa pack', detail: 'Organize application documents', path: '/visa-prep', icon: BriefcaseBusiness, tone: 'cyan' },
+  { label: 'Portal ready', detail: 'Meet the upload limit', path: '/portal-ready-pdf', icon: Target, tone: 'green' },
+] as const
+
+const featuredMultiWorkflows = [
+  { label: 'Visa pack', detail: 'Organize application documents', path: '/visa-prep', icon: BriefcaseBusiness, tone: 'cyan' },
+] as const
+
+const singleFileShortcuts = [
+  { label: 'Compress', path: '/compress', icon: FileDown },
+  { label: 'Exact size', path: '/compress/exact', icon: Target },
+  { label: 'Split / extract', path: '/split', icon: Split },
+  { label: 'Manage pages', path: '/manage', icon: Layers },
+  { label: 'PDF to images', path: '/to-image', icon: Image },
+  { label: 'PDF to Word', path: '/to-word', icon: FileType },
+  { label: 'Add watermark', path: '/watermark', icon: Stamp },
+  { label: 'Remove watermark', path: '/unwatermark', icon: Eraser },
+] as const
+
+const multiFileShortcuts = [
+  { label: 'Merge PDFs', path: '/merge', icon: Combine },
+] as const
+
+const feedback = [
+  {
+    quote: 'Finally, I can enter the university limit instead of trying several compression levels.',
+    author: 'Anonymous postgraduate',
+    context: 'Thesis submission workflow',
+    country: 'Germany',
+    countryCode: 'DE',
+    persona: 'Master’s student',
+    avatar: '/testimonials/germany-postgraduate.webp',
+  },
+  {
+    quote: 'Keeping visa documents on my own device removes the part I worry about most.',
+    author: 'Anonymous applicant',
+    context: 'Visa document workflow',
+    country: 'Australia',
+    countryCode: 'AU',
+    persona: 'Graduate applicant',
+    avatar: '/testimonials/australia-applicant.webp',
+  },
+  {
+    quote: 'I do not want to learn PDF terminology. I just need the portal to accept my file.',
+    author: 'Anonymous researcher',
+    context: 'Outcome-first navigation',
+    country: 'United States',
+    countryCode: 'US',
+    persona: 'Research assistant',
+    avatar: '/testimonials/us-researcher.webp',
+  },
+]
+
+const faqs = [
+  {
+    question: 'Can I compress a PDF to a specific size, such as 5 MB?',
+    answer: 'Yes. Choose the exact-size workflow, enter the upload limit, and Lab of PDF will create a smaller copy and verify whether the result meets your target.',
+  },
+  {
+    question: 'Can I check a thesis PDF before university submission?',
+    answer: 'Yes. The thesis workflow checks practical submission details such as file size, page count, searchable text, page format, and orientation before you upload.',
+  },
+  {
+    question: 'Are visa and passport PDFs uploaded to a server?',
+    answer: 'Supported workflows process document contents locally in your browser. Your files stay on your device unless a feature clearly tells you otherwise.',
+  },
+  {
+    question: 'Do I need an account to merge, split, or convert a PDF?',
+    answer: 'No account is required for the currently available browser-based PDF tools.',
+  },
+]
 
 export default function LandingPage() {
   usePageTitle('/')
   const navigate = useNavigate()
-  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [files, setFiles] = useState<File[]>([])
+
+  const onDrop = useCallback((accepted: File[]) => {
+    if (accepted.length > 0) setFiles(accepted)
+  }, [])
+
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
+    onDrop,
+    multiple: true,
+    accept: { 'application/pdf': ['.pdf'] },
+  })
+
+  const recommendation = useMemo(() => {
+    if (files.length > 1) {
+      return {
+        title: 'Combine these PDFs',
+        copy: 'Multiple files detected. Review their order and merge them in one private workflow.',
+        action: 'Open Merge PDF',
+        path: '/merge',
+      }
+    }
+    if (files[0]?.size > 10 * 1024 * 1024) {
+      return {
+        title: 'This PDF may be too large to share',
+        copy: 'Enter the exact maximum and use the highest-quality compression that can meet it.',
+        action: 'Set a size target',
+        path: '/compress/exact',
+      }
+    }
+    return {
+      title: 'What do you need to accomplish?',
+      copy: 'Start with the portal requirement, or choose a more specific workflow below.',
+      action: 'Prepare for a portal',
+      path: '/portal-ready-pdf',
+    }
+  }, [files])
+
+  const navigateWithFiles = (path: string) => {
+    setPendingFiles(files)
+    navigate(path)
+  }
 
   return (
-    <div className="relative">
-
-      {/* Hero */}
-      <div className="relative z-10 text-center pt-4 pb-4">
-        <div className="inline-flex items-center gap-2 bg-jade/10 dark:bg-jade-dark/25 text-jade dark:text-jade-light text-xs font-medium px-3.5 py-1.5 rounded-full mb-4 tracking-wide">
-          <FileText size={13} />
-          All processing happens locally in your browser
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white leading-tight tracking-tight">
-          Free Online <span className="text-jade dark:text-jade-light">PDF Tools</span>
-        </h1>
-        <p className="text-gray-400 dark:text-gray-500 mt-1 text-sm leading-relaxed">
-          No upload, no sign-up, no limits — private &amp; free.
-        </p>
-      </div>
-
-      {/* Main layout: sidebar + content */}
-      <div className="relative z-10 flex gap-4 items-start">
-
-        {/* ─── LEFT SIDEBAR ─── */}
-        <div className="shrink-0 w-[120px] sm:w-[140px] pt-1">
-          <div style={{
-            background: 'rgba(255,255,255,0.5)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            border: '1px solid rgba(5,150,105,0.15)',
-            borderRadius: '16px',
-            padding: '8px 6px',
-            position: 'sticky',
-            top: '80px',
-          }}>
-            <div className="flex flex-col gap-0.5">
-            {categories.map((cat) => {
-              const Icon = cat.icon
-              const isActive = activeCategory === cat.key
-              return (
-                <button
-                  key={cat.key}
-                  onClick={() => setActiveCategory(isActive ? null : cat.key)}
-                  className={`sidebar-item ${isActive ? 'active' : ''}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '10px 10px',
-                    borderRadius: '10px',
-                    fontSize: '13px',
-                    fontWeight: isActive ? 600 : 500,
-                    color: isActive ? '#fff' : '#6b7280',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    border: 'none',
-                    background: isActive
-                      ? 'linear-gradient(135deg, #059669, #10b981)'
-                      : 'transparent',
-                    width: '100%',
-                    textAlign: 'left',
-                  }}
-                >
-                  <Icon size={15} style={{ color: isActive ? '#fff' : '#9ca3af' }} />
-                  <span>{cat.label}</span>
-                </button>
-              )
-            })}
-            </div>
+    <div className="lop-landing">
+      <section className="lop-hero">
+        <div className="lop-hero-copy">
+          <div className="lop-eyebrow">
+            <span><Target size={16} /></span>
+            Outcome-first PDF tools
+          </div>
+          <h1>Stop guessing.<br />Hit your PDF <em>target.</em></h1>
+          <p>
+            Most PDF tools give you settings. Tell us what you actually need to achieve—we
+            will guide you to a finished file that meets the requirement.
+          </p>
+          <div className="lop-hero-actions">
+            <button className="lop-primary" onClick={() => document.getElementById('home-upload')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
+              <Upload size={18} /> Choose or drop a PDF
+            </button>
+            <button className="lop-secondary" onClick={() => document.getElementById('real-world-tasks')?.scrollIntoView({ behavior: 'smooth' })}>
+              Tell us your goal <ArrowRight size={17} />
+            </button>
+          </div>
+          <div className="lop-trust-row">
+            <span><ShieldCheck size={16} /> 100% on-device</span>
+            <span><WifiOff size={16} /> Works offline</span>
+            <span><Gift size={16} /> Free to use</span>
+          </div>
+          <div className="lop-home-share">
+            <ShareButtons path="/" title="Lab of PDF — private PDF tools for real document requirements" />
           </div>
         </div>
 
-        {/* ─── RIGHT CONTENT ─── */}
-        <div className="flex-1 min-w-0">
-
-          {activeCategory ? (
-            /* Scene cards for selected category */
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90 capitalize">
-                  {activeCategory.replace('-', ' ')} PDF
-                </h2>
-                <button
-                  onClick={() => {
-                    const cat = categories.find(c => c.key === activeCategory)
-                    if (cat) navigate('/' + activeCategory)
-                  }}
-                  className="text-xs text-jade font-medium hover:underline"
-                >
-                  Open generic tool →
-                </button>
+        <div className="lop-upload-card" id="home-upload">
+          <div className="lop-window-head">
+            <span className="lop-window-dots"><i /><i /><i /></span>
+            <span><LockKeyhole size={13} /> LOCAL ONLY</span>
+          </div>
+          <div
+            {...getRootProps({
+              onClick: (event) => {
+                if ((event.target as HTMLElement).closest('button')) event.stopPropagation()
+              },
+              'aria-label': files.length > 0
+                ? 'PDF loaded. Click an empty area or drop another PDF to replace it.'
+                : 'Click anywhere or drop PDF files here to load them.',
+            })}
+            className={`lop-dropzone ${isDragActive ? 'dragging' : ''} ${files.length > 0 ? 'has-files' : ''}`}
+          >
+            <input {...getInputProps()} />
+            {files.length === 0 ? (
+              <div className="lop-drop-empty">
+                <span className="lop-upload-icon"><Upload size={28} /></span>
+                <h2>{isDragActive ? 'Drop your PDF here' : 'Drop a PDF. Tell us the goal.'}</h2>
+                <p>Click anywhere in this box or drop PDF files here—your documents stay local.</p>
+                <button type="button" onClick={open}>Choose PDF</button>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {(scenes[activeCategory] || []).map((scene, i) => {
-                  const Icon = scene.icon
-                  return (
-                    <div
-                      key={i}
-                      onClick={() => navigate(scene.path)}
-                      className="scene-card flex items-start gap-3"
-                    >
-                      <div className="bg-gradient-to-br from-jade to-jade-light rounded-lg p-2 text-white shrink-0 shadow-sm">
-                        <Icon size={16} />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">{scene.title}</h3>
-                          {scene.badge && (
-                            <span className="text-[10px] bg-jade/10 text-jade px-1.5 py-0.5 rounded font-medium">{scene.badge}</span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{scene.desc}</p>
-                      </div>
-                    </div>
-                  )
-                })}
+            ) : (
+              <div className="lop-file-ready">
+                <div className="lop-selected-file">
+                  <span><BadgeCheck size={22} /></span>
+                  <div>
+                    <strong>{files.length > 1 ? `${files.length} PDF files selected` : files[0].name}</strong>
+                    <small>{formatFileSize(files.reduce((total, file) => total + file.size, 0))} · Ready on this device</small>
+                  </div>
+                </div>
+                <div className="lop-suggestion">
+                  <span>SUGGESTED NEXT STEP</span>
+                  <h3>{recommendation.title}</h3>
+                  <p>{recommendation.copy}</p>
+                  <div>
+                    <button type="button" onClick={() => navigateWithFiles(recommendation.path)}>{recommendation.action}</button>
+                    <button type="button" onClick={open}>Change file</button>
+                  </div>
+                </div>
+                <div className="lop-featured-shortcuts">
+                  <span className="lop-shortcuts-label">LAB OF PDF WORKFLOWS</span>
+                  <div>
+                    {(files.length > 1 ? featuredMultiWorkflows : featuredSingleWorkflows).map(({ label, detail, path, icon, tone }) => (
+                      <button key={path} type="button" onClick={() => navigateWithFiles(path)}>
+                        <PdfToolIcon icon={icon} label={label} tone={tone} size="compact" kind={pdfIconKindForPath(path)} />
+                        <span><strong>{label}</strong><small>{detail}</small></span>
+                        <ArrowRight size={15} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="lop-file-shortcuts">
+                  <span className="lop-shortcuts-label">QUICK PDF TOOLS</span>
+                  <div>
+                    {(files.length > 1 ? multiFileShortcuts : singleFileShortcuts).map(({ label, path, icon: Icon }) => (
+                      <button key={path} type="button" onClick={() => navigateWithFiles(path)}>
+                        <PdfToolIcon icon={Icon} label={label} size="compact" kind={pdfIconKindForPath(path)} />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          ) : (
-            /* Popular / default view — scene cards + tool grid */
-            <div>
-              <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 tracking-wide">
-                🔥 Popular Use Cases
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-6">
-                {popularScenes.map((scene, i) => {
-                  const Icon = scene.icon
-                  return (
-                    <div
-                      key={i}
-                      onClick={() => navigate(scene.path)}
-                      className="scene-card flex items-center gap-3"
-                    >
-                      <div
-                        className="rounded-lg p-2 text-white shrink-0 shadow-sm"
-                        style={{ background: scene.color }}
-                      >
-                        <Icon size={15} />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="text-xs font-semibold text-gray-800 dark:text-white/90">{scene.title}</h3>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{scene.desc}</p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 tracking-wide">
-                🔧 All Tools
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 mb-4">
-                {categories.map((cat, index) => {
-                  const Icon = cat.icon
-                  return (
-                    <div
-                      key={cat.key}
-                      onClick={() => navigate('/' + cat.key)}
-                      className="feature-card p-3 text-left group relative cursor-pointer"
-                    >
-                      <div className="bg-gradient-to-br from-jade to-jade-light rounded-lg p-2.5 text-white inline-flex shadow-sm mb-2.5">
-                        <Icon size={18} />
-                      </div>
-                      <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90 mb-0.5 capitalize">{cat.label} PDF</h3>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed pr-4">Free, private, no upload</p>
-                      <div className="flex items-center gap-1 mt-2 text-xs font-medium text-jade opacity-0 group-hover:opacity-100 transition-opacity">
-                        Open tool <ArrowRight size={11} />
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
+            )}
+          </div>
+          <div className="lop-upload-foot">
+            <span><ShieldCheck size={14} /> Private processing</span>
+            <span>PDF · multiple files supported</span>
+          </div>
         </div>
-      </div>
+        <div className="lop-mobile-share">
+          <ShareButtons path="/" title="Lab of PDF — private PDF tools for real document requirements" />
+        </div>
+      </section>
 
-      <PandaCard />
-
-      {/* Upcoming */}
-      <div className="text-center mt-6 mb-4">
-        <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3.5">
-          More tools coming soon
-        </p>
-        <div className="flex flex-wrap justify-center gap-2">
-          {futureTools.map((name) => (
-            <span key={name} className="text-sm text-gray-400 dark:text-gray-500 bg-white/70 dark:bg-[#1a1a30]/70 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700/50 backdrop-blur-sm">{name}</span>
+      <section className="lop-outcomes" id="real-world-tasks">
+        <div className="lop-section-heading">
+          <div>
+            <span>START WITH THE REAL PROBLEM</span>
+            <h2>What are you trying to get done?</h2>
+          </div>
+          <p>You do not need to know which operation or compression setting to choose. Pick the result you need.</p>
+        </div>
+        <div className="lop-outcome-grid">
+          {outcomes.map(({ title, description, path, icon: Icon, tone }) => (
+            <button key={title} className="lop-outcome-card" onClick={() => navigate(path)}>
+              <PdfToolIcon icon={Icon} label={title} tone={tone} kind={pdfIconKindForPath(path)} />
+              <span><strong>{title}</strong><small>{description}</small></span>
+              <ArrowRight size={15} />
+            </button>
           ))}
         </div>
-      </div>
+
+        <div className="lop-difference">
+          <div>
+            <span>GENERIC PDF TOOLS</span>
+            <strong>“Choose a compression level.”</strong>
+            <p>You pick an operation, adjust settings, and hope the output works.</p>
+          </div>
+          <i><ArrowRight size={18} /></i>
+          <div>
+            <span>LAB OF PDF</span>
+            <strong>“Make my thesis smaller than 5 MB.”</strong>
+            <p>You give us the requirement. We guide the process and confirm the result.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="lop-story">
+        <div className="lop-story-card">
+          <span className="lop-section-label">WHY WE BUILT LAB OF PDF</span>
+          <h2>PDF tools should understand the requirement.</h2>
+          <p>
+            People rarely wake up wanting to “compress a PDF.” They need a university portal
+            to accept a thesis, an embassy to accept a document pack, or a client to receive
+            a final contract.
+          </p>
+          <div className="lop-principles">
+            <div><span><Target size={17} /></span><p><strong>Outcome first</strong><small>Start with the real-world goal, then choose the operation.</small></p></div>
+            <div><span><ShieldCheck size={17} /></span><p><strong>Private by default</strong><small>Documents stay on this device during supported workflows.</small></p></div>
+            <div><span><Gift size={17} /></span><p><strong>Respectful funding</strong><small>Ads may support free tools, but never inside the processing workspace.</small></p></div>
+          </div>
+        </div>
+
+        <div className="lop-feedback">
+          <div className="lop-feedback-head">
+            <h2>What people want from us</h2>
+            <span>ANONYMOUS USER NEEDS</span>
+          </div>
+          {feedback.map((item) => (
+            <article key={item.context}>
+              <div className="lop-feedback-meta">
+                <span className="lop-country"><b>{item.countryCode}</b>{item.country}</span>
+                <span className="lop-persona">{item.persona}</span>
+              </div>
+              <blockquote>“{item.quote}”</blockquote>
+              <div className="lop-feedback-author">
+                <span className="lop-anonymous-avatar" aria-hidden="true">
+                  <img src={item.avatar} alt="" loading="lazy" />
+                  <span />
+                </span>
+                <p><strong>{item.author}</strong><small>{item.context}</small></p>
+                <span className="lop-anonymous-status">Identity protected</span>
+              </div>
+            </article>
+          ))}
+          <p className="lop-feedback-note">Illustrative anonymized user scenarios. Published testimonials will only use permission-cleared feedback.</p>
+        </div>
+      </section>
+
+      <section className="lop-tools" id="popular-tools">
+        <div className="lop-section-heading">
+          <div>
+            <span>KNOW EXACTLY WHAT YOU NEED?</span>
+            <h2>Popular PDF tools</h2>
+          </div>
+          <p>Jump straight into familiar operations. Every tool below already runs locally in this app.</p>
+        </div>
+        <div className="lop-tools-grid">
+          {popularTools.map(({ title, description, path, icon: Icon, tone }) => (
+            <button key={title} onClick={() => navigate(path)}>
+              <PdfToolIcon icon={Icon} label={title} tone={tone} kind={pdfIconKindForPath(path)} />
+              <strong>{title}</strong>
+              <small>{description}</small>
+              <i><ArrowRight size={14} /></i>
+            </button>
+          ))}
+        </div>
+        <button className="lop-all-tools" onClick={() => navigate('/tools')}>
+          View all PDF tools <ArrowRight size={16} />
+        </button>
+      </section>
+
+      <section className="lop-faq" aria-labelledby="faq-title">
+        <div className="lop-section-heading">
+          <div>
+            <span>COMMON PDF QUESTIONS</span>
+            <h2 id="faq-title">Practical answers before you start</h2>
+          </div>
+          <p>Clear answers about file limits, private processing, university submissions, and everyday PDF tasks.</p>
+        </div>
+        <div className="lop-faq-grid">
+          {faqs.map((item) => (
+            <details key={item.question}>
+              <summary>{item.question}</summary>
+              <p>{item.answer}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <section className="lop-privacy">
+        <span><ShieldCheck size={24} /></span>
+        <div>
+          <h2>Your documents stay yours.</h2>
+          <p>Supported PDF operations run locally in your browser. No account is required.</p>
+        </div>
+        <button onClick={() => navigate('/privacy')}>How privacy works <ArrowRight size={14} /></button>
+      </section>
     </div>
   )
 }

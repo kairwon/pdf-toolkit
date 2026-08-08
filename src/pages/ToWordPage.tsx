@@ -8,6 +8,7 @@ import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { classifyPdf, pdfToWord, getPageCount } from '../lib/pdf'
 import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 import usePageTitle from '../hooks/usePageTitle'
+import usePendingFiles from '../hooks/usePendingFiles'
 
 export default function ToWordPage() {
   usePageTitle('/to-word')
@@ -25,6 +26,7 @@ export default function ToWordPage() {
     setPageCount(total)
     toast.success(`Loaded ${total} pages`)
   }, [])
+  usePendingFiles(handleFile)
 
   const handleConvert = async () => {
     if (!file) return
@@ -130,6 +132,18 @@ export default function ToWordPage() {
         </button>
       </div>
       {processing && <ProcessingOverlay message={progress || 'Processing...'} />}
+
+      {/* SEO content */}
+      <section className="portal-seo-copy" style={{ marginTop: '24px' }}>
+        <span>FREE ONLINE PDF TO WORD CONVERTER</span>
+        <h2>Convert PDF to Word document with OCR — browser-based converter</h2>
+        <p>Convert PDF to an editable Word document entirely in your browser. Text PDFs are extracted directly; scanned PDFs use OCR (Optical Character Recognition) to recognize text. No file upload, no limits, no sign-up.</p>
+        <div>
+          <article><h3>How to convert PDF to Word for free?</h3><p>Upload your PDF, and the tool automatically detects whether pages contain text or scanned images. Text is extracted directly; scanned pages are processed with OCR. Download the result as a .doc file.</p></article>
+          <article><h3>Does this PDF to Word converter work with scanned documents?</h3><p>Yes. Scanned pages are processed with Tesseract.js OCR running locally in your browser. No server upload is needed.</p></article>
+          <article><h3>Is it safe to convert PDF to Word online?</h3><p>Yes. The conversion runs in your browser. PDF contents are never uploaded — they stay private on your device.</p></article>
+        </div>
+      </section>
     </ToolPageWrapper>
   )
 }

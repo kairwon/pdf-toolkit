@@ -10,6 +10,7 @@ import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { renderPageToCanvas, extractPages, splitPdf, getPageCount } from '../lib/pdf'
 import { downloadBlob, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
 import usePageTitle from '../hooks/usePageTitle'
+import usePendingFiles from '../hooks/usePendingFiles'
 
 type SplitMode = 'extract' | 'split'
 
@@ -40,6 +41,7 @@ export default function SplitPage() {
       setProcessing(false)
     }
   }, [])
+  usePendingFiles(handleFile)
 
   const togglePage = useCallback((pageIndex: number) => {
     setSelected((prev) => {
@@ -67,7 +69,7 @@ export default function SplitPage() {
     try {
       const indices = [...selected].sort((a, b) => a - b)
       const result = await extractPages(file, indices)
-      const blob = new Blob([result], { type: 'application/pdf' })
+      const blob = new Blob([Uint8Array.from(result).buffer], { type: 'application/pdf' })
       triggerDownloadOverlay('Pages extracted!', () => {
         downloadBlob(blob, `extracted-${file.name}`)
       })
@@ -87,20 +89,19 @@ export default function SplitPage() {
       const indices = [...selected].sort((a, b) => a - b)
       if (mode === 'extract') {
         const result = await extractPages(file, indices)
-        const blob = new Blob([result], { type: 'application/pdf' })
+        const blob = new Blob([Uint8Array.from(result).buffer], { type: 'application/pdf' })
         triggerDownloadOverlay('Pages extracted!', () => {
           downloadBlob(blob, `extracted-${file.name}`)
         })
       } else {
         const { kept, removed } = await splitPdf(file, indices)
-        ;[
+        const outputs = [
           { data: kept, name: `selected-${file.name}` },
           { data: removed, name: `removed-${file.name}` },
-        ].forEach(({ data, name }) => {
-          const blob = new Blob([data], { type: 'application/pdf' })
-          downloadBlob(blob, name)
-        })
-        toast.success('Download started!')
+        ]
+        triggerDownloadOverlay('Split files ready!', () => outputs.forEach(({ data, name }) => {
+          downloadBlob(new Blob([Uint8Array.from(data).buffer], { type: 'application/pdf' }), name)
+        }))
       }
     } catch {
       toast.error('Operation failed')
@@ -168,6 +169,18 @@ export default function SplitPage() {
         </div>
       </div>
       {processing && <ProcessingOverlay message={mode === 'extract' ? 'Extracting pages...' : 'Splitting PDF...'} />}
+
+      {/* SEO content */}
+      <section className="portal-seo-copy" style={{ marginTop: '24px' }}>
+        <span>FREE ONLINE PDF SPLITTER</span>
+        <h2>Split PDF files or extract pages — no upload, no limits</h2>
+        <p>Split a large PDF into separate documents or extract only the pages you need. Choose from extract mode (get selected pages) or split mode (keep selected, remove the rest). Entirely browser-based with no file upload.</p>
+        <div>
+          <article><h3>How to split a PDF online free?</h3><p>Upload your PDF, select the pages you want to keep or extract, choose Extract or Split mode, and download. Both original and extracted files are created locally.</p></article>
+          <article><h3>Is splitting a PDF safe?</h3><p>Yes. The PDF never leaves your browser. All splitting and extraction runs locally with no server upload.</p></article>
+          <article><h3>Can I split a PDF with unlimited pages?</h3><p>Yes. There is no page limit or file size limit. Split any PDF regardless of size, completely free.</p></article>
+        </div>
+      </section>
     </ToolPageWrapper>
   )
 }

@@ -131,10 +131,10 @@ export default function PdfViewer({
         </span>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400">{selected.size} / {pages.length} selected</span>
-          <div onClick={allSelected ? onDeselectAll : onSelectAll}
+          <button type="button" onClick={allSelected ? onDeselectAll : onSelectAll}
                className="cursor-pointer bg-jade/10 dark:bg-jade-dark/20 text-jade dark:text-jade-light text-xs font-medium px-2.5 py-1 rounded-md border border-[#dde4d8] dark:border-jade-dark/40 hover:bg-jade/20 dark:hover:bg-jade-dark/30 transition-colors">
             {allSelected ? 'Deselect all' : 'Select all'}
-          </div>
+          </button>
           {headerRight}
         </div>
       </div>
@@ -222,14 +222,14 @@ export default function PdfViewer({
 
                 <div className="flex items-center justify-between mt-1 px-0.5">
                   <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500">{p.index + 1}</span>
-                  <div onClick={(e) => { e.stopPropagation(); onToggle(p.index) }}
+                  <button type="button" aria-label={`${isSelected ? 'Deselect' : 'Select'} page ${p.index + 1}`} onClick={(e) => { e.stopPropagation(); onToggle(p.index) }}
                     className={`w-4 h-4 rounded flex items-center justify-center transition-all cursor-pointer shrink-0 ${
                       isSelected
                         ? 'bg-gradient-to-br from-jade to-jade-light text-white'
                         : 'border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-jade/50'
                     }`}>
                     {isSelected && <Check size={10} strokeWidth={3} />}
-                  </div>
+                  </button>
                 </div>
               </div>
             )

@@ -8,9 +8,10 @@ import type { PreviewItem } from '../components/ui/PdfViewer'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { renderPageToCanvas, deletePages, extractPages, getPageCount } from '../lib/pdf'
-import { PDFDocument } from 'pdf-lib'
+import { PDFDocument, degrees } from 'pdf-lib'
 import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 import usePageTitle from '../hooks/usePageTitle'
+import usePendingFiles from '../hooks/usePendingFiles'
 
 export default function ManagePage() {
   usePageTitle('/manage')
@@ -38,6 +39,7 @@ export default function ManagePage() {
       setProcessing(false)
     }
   }, [])
+  usePendingFiles(handleFile)
 
   const togglePage = useCallback((pageIndex: number) => {
     setSelected((prev) => {
@@ -65,12 +67,33 @@ export default function ManagePage() {
     try {
       const indices = [...selected].sort((a, b) => a - b)
       const result = await extractPages(file, indices)
-      const blob = new Blob([result], { type: 'application/pdf' })
+      const blob = new Blob([Uint8Array.from(result).buffer], { type: 'application/pdf' })
       triggerDownloadOverlay('Pages extracted!', () => {
         downloadBlob(blob, `extracted-${file.name}`)
       })
     } catch {
       toast.error('Failed to extract pages')
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  const handleDeleteSelected = async () => {
+    if (!file || selected.size === 0) return
+    if (selected.size === previewItems.length) {
+      toast.error('Keep at least one page in the document')
+      return
+    }
+    setProcessing(true)
+    try {
+      const indices = [...selected].sort((a, b) => a - b)
+      const result = await deletePages(file, indices)
+      const blob = new Blob([Uint8Array.from(result).buffer], { type: 'application/pdf' })
+      triggerDownloadOverlay('Pages removed!', () => {
+        downloadBlob(blob, `edited-${file.name}`)
+      })
+    } catch {
+      toast.error('Failed to remove pages')
     } finally {
       setProcessing(false)
     }
@@ -82,10 +105,10 @@ export default function ManagePage() {
     try {
       const pdfDoc = await PDFDocument.load(await file.arrayBuffer())
       Object.entries(rotations).filter(([, v]) => v !== 0).forEach(([idx, angle]) => {
-        pdfDoc.getPage(Number(idx)).setRotation({ angle })
+        pdfDoc.getPage(Number(idx)).setRotation(degrees(angle))
       })
       const result = await pdfDoc.save()
-      const blob = new Blob([result], { type: 'application/pdf' })
+      const blob = new Blob([Uint8Array.from(result).buffer], { type: 'application/pdf' })
       triggerDownloadOverlay('Rotation saved!', () => {
         downloadBlob(blob, `rotated-${file.name}`)
       })
@@ -160,6 +183,13 @@ export default function ManagePage() {
             {processing ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
             Extract &amp; Download
           </button>
+          <button
+            onClick={handleDeleteSelected}
+            disabled={selected.size === 0 || processing}
+            className="btn-secondary"
+          >
+            Remove selected
+          </button>
           {rotatedByUser > 0 && (
             <button
               onClick={handleApplyRotation}
@@ -171,6 +201,18 @@ export default function ManagePage() {
           )}
         </div>
       </div>
+
+      {/* SEO content */}
+      <section className="portal-seo-copy" style={{ marginTop: '24px' }}>
+        <span>FREE ONLINE PDF PAGE MANAGER</span>
+        <h2>Edit PDF pages online free — delete, rotate, reorder, and extract</h2>
+        <p>Manage PDF pages entirely in your browser: delete unwanted pages, rotate pages, reorder them by dragging, and extract selected pages into a new PDF. No upload required, no limits, no sign-up.</p>
+        <div>
+          <article><h3>How to edit PDF pages online for free?</h3><p>Upload your PDF, then use the visual page thumbnails to select, rotate, or reorder pages. Delete unwanted pages and download the edited PDF — all in your browser.</p></article>
+          <article><h3>Is this PDF editor safe to use?</h3><p>Yes. Page management runs entirely in your browser. Files are never uploaded. Your documents stay private on your device.</p></article>
+          <article><h3>Can I edit PDF pages without uploading?</h3><p>Yes. Uploading in this context means selecting a file from your device. The file content is processed in browser memory and never sent to any server.</p></article>
+        </div>
+      </section>
     </ToolPageWrapper>
   )
 }

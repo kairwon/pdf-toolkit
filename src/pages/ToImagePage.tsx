@@ -10,6 +10,7 @@ import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { renderPageToCanvas, getPageCount } from '../lib/pdf'
 import { downloadBlob, downloadZip, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
 import usePageTitle from '../hooks/usePageTitle'
+import usePendingFiles from '../hooks/usePendingFiles'
 
 export default function ToImagePage() {
   usePageTitle('/to-image')
@@ -43,6 +44,7 @@ export default function ToImagePage() {
       setLoading(false)
     }
   }, [])
+  usePendingFiles(handleFile)
 
   const togglePage = useCallback((pageIndex: number) => {
     setSelected((prev) => {
@@ -125,6 +127,18 @@ export default function ToImagePage() {
         </button>
       </div>
       {converting && <ProcessingOverlay message="Converting pages to images..." />}
+
+      {/* SEO content */}
+      <section className="portal-seo-copy" style={{ marginTop: '24px' }}>
+        <span>FREE ONLINE PDF TO IMAGE CONVERTER</span>
+        <h2>Convert PDF to PNG or JPEG images — browser-based PDF converter</h2>
+        <p>Convert PDF pages to high-quality PNG or JPEG images in your browser. Choose resolution from 1x to 3x, select specific pages, and download individually or as a ZIP file. No upload, no limits.</p>
+        <div>
+          <article><h3>How to convert PDF to image for free?</h3><p>Upload a PDF, choose PNG or JPEG format, select the resolution (1x, 1.5x, 2x, or 3x), pick the pages to convert, and download as individual images or a ZIP archive.</p></article>
+          <article><h3>Is PDF to image conversion safe?</h3><p>Yes. Conversion runs entirely in your browser using PDF.js rendering. Your PDF never leaves your device.</p></article>
+          <article><h3>Can I convert PDF to image without uploading?</h3><p>Yes. All rendering happens client-side. Your file is processed in browser memory and never sent to any server.</p></article>
+        </div>
+      </section>
     </ToolPageWrapper>
   )
 }

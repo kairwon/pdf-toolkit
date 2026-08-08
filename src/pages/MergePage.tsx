@@ -11,6 +11,7 @@ import { getPageCount, mergePdfs } from '../lib/pdf'
 import { PDFDocument } from 'pdf-lib'
 import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 import usePageTitle from '../hooks/usePageTitle'
+import usePendingFiles from '../hooks/usePendingFiles'
 
 interface PdfFile {
   id: string
@@ -42,6 +43,7 @@ export default function MergePage() {
     setPreviewItems((prev) => [...prev, ...items])
     setSelected((prev) => new Set([...prev, ...items.map((p) => p.index)]))
   }, [])
+  usePendingFiles(addFiles)
 
   const rebuildPreview = useCallback((updatedFiles: PdfFile[]) => {
     const items: PreviewItem[] = []
@@ -109,7 +111,7 @@ export default function MergePage() {
         const newDoc = await PDFDocument.create()
         const pages = await newDoc.copyPages(doc, idxs)
         pages.forEach((p) => newDoc.addPage(p))
-        blobs.push({ blob: new Blob([await newDoc.save()], { type: 'application/pdf' }), name: `extracted-${f.name}` })
+        blobs.push({ blob: new Blob([Uint8Array.from(await newDoc.save()).buffer], { type: 'application/pdf' }), name: `extracted-${f.name}` })
       }
       triggerDownloadOverlay('Pages extracted!', () => {
         blobs.forEach(({ blob, name }) => downloadBlob(blob, name))
@@ -134,7 +136,7 @@ export default function MergePage() {
         }
       }
       const result = await mergePdfs(finalSource.filter((s) => s.pageIndices.length > 0))
-      const blob = new Blob([result], { type: 'application/pdf' })
+      const blob = new Blob([Uint8Array.from(result).buffer], { type: 'application/pdf' })
       triggerDownloadOverlay('PDF merged!', () => {
         downloadBlob(blob, `merged-${Date.now()}.pdf`)
       })
@@ -212,6 +214,18 @@ export default function MergePage() {
         </div>
       )}
       {processing && <ProcessingOverlay message="Merging PDFs..." />}
+
+      {/* SEO content */}
+      <section className="portal-seo-copy" style={{ marginTop: '24px' }}>
+        <span>FREE ONLINE PDF MERGER</span>
+        <h2>Merge PDF files without uploading — private browser-based tool</h2>
+        <p>Merge PDF files in any order directly in your browser. Preview thumbnails, select individual pages, and create one combined document — no server upload required. Your documents stay on your device 100% privately.</p>
+        <div>
+          <article><h3>How to merge PDF files online?</h3><p>Drag and drop your PDF files, reorder them by dragging, select the pages you want to include, and click Merge & Download. The process runs entirely in your browser.</p></article>
+          <article><h3>Is it safe to merge PDF files online?</h3><p>Yes. Merging happens locally in your browser memory. Files are never uploaded to Lab of PDF servers. Your documents remain private.</p></article>
+          <article><h3>Can I merge PDF files for free without limits?</h3><p>Yes. There is no limit on file size, number of pages, or number of files you can merge. The tool is completely free with no sign-up required.</p></article>
+        </div>
+      </section>
     </ToolPageWrapper>
   )
 }

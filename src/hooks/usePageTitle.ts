@@ -2,114 +2,226 @@ import { useEffect } from 'react'
 
 const BASE = 'https://labofpdf.com'
 
-const titles: Record<string, string> = {
-  '/': 'Free Online PDF Tools — No Upload, No Sign-Up, Unlimited Use | Lab of PDF',
-  '/merge': 'Merge PDF Files Online Free — No Upload, Browser-Based PDF Merger | Lab of PDF',
-  '/split': 'Split PDF Online Free — Extract Pages from PDF Without Uploading | Lab of PDF',
-  '/compress': 'Compress PDF Online Free — Reduce PDF Size Without Uploading, No Limits | Lab of PDF',
-  '/to-word': 'Convert PDF to Word Online Free — No Upload, Browser-Based OCR | Lab of PDF',
-  '/watermark': 'Add Watermark to PDF Online Free — No Upload, No Sign-Up | Lab of PDF',
-  '/unwatermark': 'Remove Watermark from PDF Online Free — Browser-Based, No Upload | Lab of PDF',
-  '/manage': 'Delete, Rotate & Extract PDF Pages Online Free — No Upload Required | Lab of PDF',
-  '/to-image': 'Convert PDF to Image Online Free — PNG/JPEG, No Upload, Unlimited Pages | Lab of PDF',
-  '/privacy': 'Privacy Policy — No Upload, No Tracking PDF Tools | Lab of PDF',
-  '/terms': 'Terms of Service | Lab of PDF',
-  '/security': 'Security — Browser-Based PDF Processing, Files Never Leave Your Device | Lab of PDF',
+type SeoEntry = {
+  title: string
+  description: string
+  name: string
+  tool?: boolean
 }
 
-const descriptions: Record<string, string> = {
-  '/': 'Free online PDF tools that process entirely in your browser. Merge, split, compress, watermark, and convert PDFs with no upload, no sign-up, no file size limits, and no privacy risk. Your files never leave your device — 100% private and secure.',
-  '/merge': 'Merge multiple PDF files into one document online for free — no upload required. Combine PDFs directly in your browser with zero privacy risk. Unlimited pages, no file size limit, no sign-up. Preview, reorder, and select pages before merging.',
-  '/split': 'Split PDF or extract specific pages from a PDF online for free without uploading. Browser-based PDF splitter with complete privacy — your files never leave your device. Unlimited pages, no file size limit, no registration needed.',
-  '/compress': 'Compress PDF files online free without uploading. Reduce PDF size losslessly in your browser — text stays selectable and searchable. No file size limits, no sign-up, unlimited compressions. Your files remain 100% private.',
-  '/to-word': 'Convert PDF to Word document online free with no upload. Browser-based converter with automatic OCR for scanned pages. No limits on pages or file size, no sign-up required, complete privacy — your files never leave your device.',
-  '/watermark': 'Add a text watermark to every page of your PDF online free — no upload needed. Customize text, opacity, and angle. Browser-based processing ensures your files stay private. Unlimited pages, no file size limit, no sign-up.',
-  '/unwatermark': 'Remove watermarks from PDF files online free without uploading. Browser-based watermark remover strips overlay watermarks while keeping your files private. No sign-up, no limits, no data leaves your computer.',
-  '/manage': 'Delete, rotate, and extract PDF pages online free with no upload. Visual preview makes page management easy. Browser-based processing means zero privacy risk — your files never leave your device. No limits, no sign-up.',
-  '/to-image': 'Convert PDF pages to PNG or JPEG images online free without uploading. Download individually or as ZIP. Browser-based converter with no page limits, no file size limits, no sign-up. Complete privacy — files never leave your device.',
-  '/privacy': 'Lab of PDF processes all files locally in your browser. No files are uploaded, no cookies track you, no personal data collected. Your documents never leave your device.',
-  '/terms': 'Terms of service for Lab of PDF. Free online PDF tools with browser-based processing.',
-  '/security': 'Lab of PDF processes everything in your browser. Files never leave your device. No uploads, no servers, no data retention. Open-source architecture auditable by anyone.',
+const seo: Record<string, SeoEntry> = {
+  '/': {
+    title: 'Free Private PDF Tools: Compress, Merge & Convert | Lab of PDF',
+    description: 'Compress, merge, split and convert PDFs for visa portals, thesis submissions and exact upload limits. Free private tools that run in your browser.',
+    name: 'Lab of PDF',
+  },
+  '/tools': {
+    title: 'All Private Browser-Based PDF Tools | Lab of PDF',
+    description: 'Browse PDF tools for compression, merging, splitting, page management, Word conversion, images, watermarks, visa packs and upload portals.',
+    name: 'All PDF tools',
+  },
+  '/merge': {
+    title: 'Merge PDF Files Without Uploading | Lab of PDF',
+    description: 'Combine PDF files, reorder pages and choose exactly what to include. The complete merge runs locally in your browser with no account required.',
+    name: 'Merge PDF',
+    tool: true,
+  },
+  '/split': {
+    title: 'Split PDF or Extract Selected Pages Privately | Lab of PDF',
+    description: 'Split a PDF into separate files or extract selected pages without uploading the document. Preview and process every page in your browser.',
+    name: 'Split PDF',
+    tool: true,
+  },
+  '/manage': {
+    title: 'Reorder, Rotate, Remove and Extract PDF Pages | Lab of PDF',
+    description: 'Visually manage PDF pages in your browser. Reorder, rotate, remove or extract selected pages without sending the file to a server.',
+    name: 'Manage PDF pages',
+    tool: true,
+  },
+  '/edit-pdf': {
+    title: 'Edit PDF Pages Without Uploading | Lab of PDF',
+    description: 'Edit PDF pages locally in your browser: reorder, rotate, remove and extract pages while keeping the original file untouched.',
+    name: 'Edit PDF pages',
+    tool: true,
+  },
+  '/to-image': {
+    title: 'Convert PDF Pages to PNG or JPEG Privately | Lab of PDF',
+    description: 'Turn selected PDF pages into high-quality PNG or JPEG images and download them individually or in a ZIP file. No document upload required.',
+    name: 'PDF to images',
+    tool: true,
+  },
+  '/compress': {
+    title: 'Compress PDF Without Uploading the File | Lab of PDF',
+    description: 'Reduce PDF file size locally with lossless, balanced or maximum-reduction modes. Compare the result and keep the original document unchanged.',
+    name: 'Compress PDF',
+    tool: true,
+  },
+  '/compress/visa': {
+    title: 'Compress Visa PDF for Embassy Upload Limits | Lab of PDF',
+    description: 'Prepare passport, bank statement and supporting PDFs for strict visa portal size limits while processing sensitive documents on your device.',
+    name: 'Visa PDF compressor',
+    tool: true,
+  },
+  '/compress/exact': {
+    title: 'Compress PDF to a Specific MB Size Target | Lab of PDF',
+    description: 'Enter the PDF file-size limit shown by an upload portal, create a smaller copy and verify whether the finished file meets that target.',
+    name: 'Target-size PDF compressor',
+    tool: true,
+  },
+  '/thesis-pdf-check': {
+    title: 'Check a Thesis PDF Before University Submission | Lab of PDF',
+    description: 'Check thesis PDF size, page count, searchable text, page format and orientation before submitting it to a university portal.',
+    name: 'Thesis PDF check',
+    tool: true,
+  },
+  '/watermark': {
+    title: 'Add a Text Watermark to PDF Pages Privately | Lab of PDF',
+    description: 'Add a custom text watermark to every PDF page in your browser. Choose the text and opacity without uploading the source document.',
+    name: 'Add PDF watermark',
+    tool: true,
+  },
+  '/unwatermark': {
+    title: 'Remove Supported PDF Watermark Annotations | Lab of PDF',
+    description: 'Remove supported Stamp and Watermark annotations from an authorized PDF locally. Page content is not uploaded or covered with white boxes.',
+    name: 'Remove PDF watermark',
+    tool: true,
+  },
+  '/to-word': {
+    title: 'Convert PDF to Word with Browser-Based OCR | Lab of PDF',
+    description: 'Convert text PDFs and scanned pages into an editable Word-compatible document. Text extraction and OCR run locally in your browser.',
+    name: 'PDF to Word',
+    tool: true,
+  },
+  '/visa-prep': {
+    title: 'Organize a Visa Document PDF Pack Privately | Lab of PDF',
+    description: 'Label, reorder, combine and size visa application PDFs for government portals. Passport and financial documents stay on your device.',
+    name: 'Visa document pack',
+    tool: true,
+  },
+  '/portal-ready-pdf': {
+    title: 'Make a PDF Fit an Online Upload Portal Limit | Lab of PDF',
+    description: 'Prepare a PDF for government, visa, university, job application or email size limits and verify the finished file before submitting.',
+    name: 'Portal-ready PDF',
+    tool: true,
+  },
+  '/privacy': {
+    title: 'Privacy Policy and Local PDF Processing | Lab of PDF',
+    description: 'Learn how Lab of PDF processes document contents in browser memory, what website requests may contain and how privacy choices work.',
+    name: 'Privacy policy',
+  },
+  '/terms': {
+    title: 'Terms of Service | Lab of PDF',
+    description: 'Read the terms for using Lab of PDF browser-based document preparation and PDF processing tools.',
+    name: 'Terms of service',
+  },
+  '/security': {
+    title: 'How Local PDF Processing Protects Your Files | Lab of PDF',
+    description: 'Understand the browser-based security model, local file processing, temporary memory and practical limitations of Lab of PDF.',
+    name: 'Security',
+  },
+  '/pdf-to-excel': { title: 'PDF to Excel — Coming Soon | Lab of PDF', description: 'PDF table extraction to Excel is currently in development.', name: 'PDF to Excel' },
+  '/sign-pdf': { title: 'Sign PDF — Coming Soon | Lab of PDF', description: 'Browser-based PDF signing is currently in development.', name: 'Sign PDF' },
+  '/unlock-pdf': { title: 'Unlock PDF — Coming Soon | Lab of PDF', description: 'Browser-based PDF password removal is currently in development.', name: 'Unlock PDF' },
+  '/404': { title: 'Page Not Found | Lab of PDF', description: 'The requested Lab of PDF page could not be found.', name: 'Page not found' },
 }
 
-const ogImageLabels: Record<string, string> = {
-  '/': 'Free Online PDF Tools — No Upload',
-  '/merge': 'Merge PDF — No Upload',
-  '/split': 'Split PDF — No Upload',
-  '/compress': 'Compress PDF — No Upload',
-  '/to-word': 'PDF to Word — No Upload',
-  '/watermark': 'Add Watermark — No Upload',
-  '/unwatermark': 'Remove Watermark — No Upload',
-  '/manage': 'Manage Pages — No Upload',
-  '/to-image': 'PDF to Image — No Upload',
-}
+const noIndexPaths = new Set(['/404', '/pdf-to-excel', '/sign-pdf', '/unlock-pdf'])
 
-function makeOgImageDataUrl(label: string): string {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-    <defs>
-      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#f0faf4"/>
-        <stop offset="100%" stop-color="#e6f0ea"/>
-      </linearGradient>
-    </defs>
-    <rect width="1200" height="630" fill="url(#bg)" rx="0"/>
-    <rect x="40" y="40" width="1120" height="550" rx="24" fill="#fff" opacity="0.7"/>
-    <text x="80" y="240" font-family="system-ui,-apple-system,sans-serif" font-size="52" font-weight="700" fill="#111">${label}</text>
-    <text x="80" y="310" font-family="system-ui,-apple-system,sans-serif" font-size="28" fill="#666">
-      All processing happens locally in your browser
-    </text>
-    <text x="80" y="540" font-family="system-ui,-apple-system,sans-serif" font-size="22" font-weight="600" fill="#2fa36b">Lab of PDF</text>
-    <circle cx="1060" cy="340" r="160" fill="#e8f5ec"/>
-    <text x="1060" y="370" font-family="system-ui,-apple-system,sans-serif" font-size="120" text-anchor="middle">🐼</text>
-  </svg>`
-  return 'data:image/svg+xml,' + encodeURIComponent(svg)
+function setMeta(selector: string, attribute: string, value: string) {
+  document.querySelector(selector)?.setAttribute(attribute, value)
 }
 
 export default function usePageTitle(path: string) {
   useEffect(() => {
-    document.title = titles[path] || 'Lab of PDF — Free Online PDF Tools'
-    const url = BASE + path
+    const entry = seo[path] || seo['/404']
+    const url = `${BASE}${path === '/' ? '/' : path}`
 
-    // Meta description
-    const metaDesc = document.querySelector('meta[name="description"]')
-    if (metaDesc && descriptions[path]) {
-      metaDesc.setAttribute('content', descriptions[path])
+    document.title = entry.title
+    document.documentElement.lang = 'en'
+    setMeta('meta[name="description"]', 'content', entry.description)
+    setMeta('meta[property="og:title"]', 'content', entry.title)
+    setMeta('meta[property="og:description"]', 'content', entry.description)
+    setMeta('meta[property="og:url"]', 'content', url)
+    setMeta('meta[name="twitter:title"]', 'content', entry.title)
+    setMeta('meta[name="twitter:description"]', 'content', entry.description)
+    setMeta('meta[name="robots"]', 'content', noIndexPaths.has(path) ? 'noindex, follow' : 'index, follow')
+    setMeta('link[rel="canonical"]', 'href', url)
+    setMeta('meta[property="og:image"]', 'content', `${BASE}/og-v3.jpg`)
+    setMeta('meta[name="twitter:image"]', 'content', `${BASE}/og-v3.jpg`)
+
+    const graph: Record<string, unknown>[] = []
+    if (path === '/') {
+      graph.push({
+        '@type': 'WebSite',
+        '@id': `${BASE}/#website`,
+        name: 'Lab of PDF',
+        url: `${BASE}/`,
+        description: entry.description,
+        publisher: { '@id': `${BASE}/#organization` },
+      })
+      graph.push({
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: 'Can I compress a PDF to a specific size, such as 5 MB?',
+            acceptedAnswer: { '@type': 'Answer', text: 'Yes. Enter the exact upload limit and Lab of PDF will create a smaller copy and verify whether it meets the target.' },
+          },
+          {
+            '@type': 'Question',
+            name: 'Can I check a thesis PDF before university submission?',
+            acceptedAnswer: { '@type': 'Answer', text: 'Yes. The thesis workflow checks file size, page count, searchable text, page format, and orientation before upload.' },
+          },
+          {
+            '@type': 'Question',
+            name: 'Are visa and passport PDFs uploaded to a server?',
+            acceptedAnswer: { '@type': 'Answer', text: 'Supported workflows process document contents locally in the browser, so files stay on the user’s device.' },
+          },
+        ],
+      })
+      graph.push({
+        '@type': 'Organization',
+        '@id': `${BASE}/#organization`,
+        name: 'Lab of PDF',
+        url: `${BASE}/`,
+        logo: `${BASE}/logo-google.png`,
+      })
+    }
+    if (entry.tool) {
+      graph.push({
+        '@type': 'SoftwareApplication',
+        name: entry.name,
+        url,
+        description: entry.description,
+        applicationCategory: 'UtilitiesApplication',
+        operatingSystem: 'Any operating system with a modern web browser',
+        browserRequirements: 'JavaScript enabled',
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      })
+    }
+    if (path !== '/' && !noIndexPaths.has(path)) {
+      const items = [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${BASE}/` },
+      ]
+      if (entry.tool) {
+        items.push({ '@type': 'ListItem', position: 2, name: 'PDF tools', item: `${BASE}/tools` })
+        items.push({ '@type': 'ListItem', position: 3, name: entry.name, item: url })
+      } else {
+        items.push({ '@type': 'ListItem', position: 2, name: entry.name, item: url })
+      }
+      graph.push({ '@type': 'BreadcrumbList', itemListElement: items })
     }
 
-    // OG description
-    const ogDesc = document.querySelector('meta[property="og:description"]')
-    if (ogDesc && descriptions[path]) {
-      ogDesc.setAttribute('content', descriptions[path])
+    document.getElementById('page-structured-data')?.remove()
+    if (graph.length > 0) {
+      const script = document.createElement('script')
+      script.id = 'page-structured-data'
+      script.type = 'application/ld+json'
+      script.textContent = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })
+      document.head.appendChild(script)
     }
 
-    // OG title
-    const ogTitle = document.querySelector('meta[property="og:title"]')
-    if (ogTitle && titles[path]) {
-      ogTitle.setAttribute('content', titles[path])
-    }
-
-    // Canonical link
-    const canonical = document.querySelector('link[rel="canonical"]')
-    if (canonical) {
-      canonical.setAttribute('href', url)
-    }
-
-    // OG url
-    const ogUrl = document.querySelector('meta[property="og:url"]')
-    if (ogUrl) {
-      ogUrl.setAttribute('content', url)
-    }
-
-    // OG image — per page
-    const label = ogImageLabels[path] || 'Free Online PDF Tools'
-    const ogImageDataUrl = makeOgImageDataUrl(label)
-    const ogImage = document.querySelector('meta[property="og:image"]')
-    if (ogImage) {
-      ogImage.setAttribute('content', ogImageDataUrl)
-    }
-    const twitterImage = document.querySelector('meta[name="twitter:image"]')
-    if (twitterImage) {
-      twitterImage.setAttribute('content', ogImageDataUrl)
-    }
+    return () => document.getElementById('page-structured-data')?.remove()
   }, [path])
 }

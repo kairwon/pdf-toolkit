@@ -1,96 +1,24 @@
-import { ArrowLeft } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import usePageTitle from '../hooks/usePageTitle'
-import ShareButtons from '../components/ui/ShareButtons'
+
+const tools = ['Merge, split, and manage pages', 'Compress and Portal‑Ready PDF', 'Visa document pack', 'PDF to image and PDF to Word', 'Add and remove supported watermark overlays']
 
 export default function PrivacyPage() {
   usePageTitle('/privacy')
-  const navigate = useNavigate()
-
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="flex items-start justify-between">
-        <button onClick={() => navigate('/')} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-6">
-          <ArrowLeft size={14} /> Back to tools
-        </button>
-        <ShareButtons path="/privacy" title="Privacy Policy | Lab of PDF" />
-      </div>
-
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Privacy Policy</h1>
-      <p className="text-sm text-gray-400 dark:text-gray-500 mb-8">Last updated: July 2026</p>
-
-      <div className="space-y-6 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-        <section>
-          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">1. Data Processing — Client-Side Features</h2>
-          <p>The following features execute entirely in your browser using JavaScript. When you use these tools, no files, document contents, or metadata are transmitted to any server, API, or third-party service:</p>
-          <ul className="list-disc list-inside mt-1.5 space-y-0.5 text-gray-500 dark:text-gray-400">
-            <li>PDF Merge</li>
-            <li>PDF Split</li>
-            <li>Page Management (delete, rotate, extract)</li>
-            <li>PDF to Image conversion</li>
-            <li>Compress PDF (lossless rebuild)</li>
-            <li>Add Watermark</li>
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">2. Data Processing — Server-Side Features</h2>
-          <p>Some future features may require server-side processing (e.g., PDF to Word / Excel conversion, AI-powered analysis). For those features:</p>
-          <ul className="list-disc list-inside mt-1.5 space-y-0.5 text-gray-500 dark:text-gray-400">
-            <li>Files are uploaded to a temporary, encrypted processing server</li>
-            <li>Files are automatically deleted from the server within 60 minutes of processing completion</li>
-            <li>No file content is permanently stored, logged, or used for model training</li>
-            <li>Server-side features are clearly marked with a badge in the tool interface</li>
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">3. No Cookies or Tracking (GDPR Art. 5, ePrivacy)</h2>
-          <p>We do not use cookies, localStorage, sessionStorage, or any form of persistent identifier for tracking. No analytics, advertising networks, or third-party scripts are loaded. Your visit is anonymous. This complies with the ePrivacy Directive and GDPR Article 5 (minimisation).</p>
-        </section>
-
-        <section>
-          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">3a. Advertising & Third-Party Cookies (Google AdSense)</h2>
-          <p>We may display advertisements via Google AdSense (an advertising service by Google LLC). If and when ads are served:</p>
-          <ul className="list-disc list-inside mt-1.5 space-y-0.5 text-gray-500 dark:text-gray-400">
-            <li>Google and its partners may use cookies and similar technologies to serve personalized ads based on your prior visits to this and other websites</li>
-            <li>The Google AdSense cookie ("_gads") enables interest-based advertising and frequency capping</li>
-            <li>Data collected via these cookies may be transferred to Google LLC in the United States under the EU-US Data Privacy Framework</li>
-            <li>You can opt out of personalized advertising at <a href="https://adssettings.google.com" className="underline" target="_blank" rel="noopener noreferrer">adssettings.google.com</a></li>
-            <li>You can manage cookie preferences via the cookie consent banner displayed on your first visit</li>
-          </ul>
-          <p className="mt-2">We display a cookie consent banner before any ad-related scripts load, in compliance with the ePrivacy Directive (Cookie Law) and GDPR Article 7. Your consent can be withdrawn at any time.</p>
-        </section>
-
-        <section>
-          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">4. Legal Basis for Processing (GDPR Art. 6)</h2>
-          <p>For client-side features: no personal data is processed, so no legal basis is required. For server-side features (if added), the legal basis is your consent (Art. 6(1)(a)), obtained through a clear opt-in dialog before any upload occurs.</p>
-        </section>
-
-        <section>
-          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">5. Data Retention & Deletion (GDPR Art. 17 — Right to Erasure)</h2>
-          <p>Client-side: data exists only in browser memory and is cleared on page refresh or close. Server-side: uploaded files are automatically purged within 60 minutes. You may request immediate deletion by closing the browser tab during processing. No backups, logs, or caches retain your documents.</p>
-        </section>
-
-        <section>
-          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">6. Data Transfers (GDPR Art. 44–49, US Compliance)</h2>
-          <p>Client-side features involve no data transfer. If server-side features are introduced, processing servers are hosted within the United States (for US users) or the European Economic Area (for EU users), and appropriate Standard Contractual Clauses (SCCs) will be in place for any cross-border data flow. This satisfies both GDPR adequacy requirements and US federal standards.</p>
-        </section>
-
-        <section>
-          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">7. US Regulatory Compliance — CCPA, CALOPPA, FTC</h2>
-          <p>Under the California Consumer Privacy Act (CCPA) as amended by CPRA, Lab of PDF does not "sell" or "share" any personal information — we collect none. The California Online Privacy Protection Act (CALOPPA) requires us to disclose how we respond to Do Not Track signals; we honour DNT by default as no tracking infrastructure exists. Under Section 5 of the FTC Act, all processing claims made on this site are truthful and non-misleading, with clear distinctions between client-side and server-side features.</p>
-        </section>
-
-        <section>
-          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">8. Changes to This Policy</h2>
-          <p>Material changes will be announced via a banner on the site. Continued use after changes constitutes acceptance of the updated policy.</p>
-        </section>
-
-        <section>
-          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">9. Contact & Data Controller</h2>
-          <p>For privacy inquiries or data deletion requests, contact the site maintainer via the project repository. The data controller is the site operator; for server-side features a Data Processing Agreement (DPA) is available on request.</p>
-        </section>
+    <div className="legal-page">
+      <span className="legal-kicker">PLAIN-LANGUAGE PRIVACY NOTICE</span>
+      <h1>Privacy Policy</h1>
+      <p className="legal-updated">Last updated: 30 July 2026</p>
+      <div className="legal-highlight"><strong>The short version</strong><p>Your PDF files are processed in browser memory. Lab of PDF does not receive, store, or inspect their contents.</p></div>
+      <div className="legal-content">
+        <section><h2>1. Document processing</h2><p>The following current tools run locally with JavaScript and open-source browser libraries:</p><ul>{tools.map((item) => <li key={item}>{item}</li>)}</ul><p>Selecting a file gives your browser temporary access to it. The file is not automatically uploaded to Lab of PDF. Refreshing or closing the tab clears working data held in memory.</p></section>
+        <section><h2>2. Data the website may receive</h2><p>Like most hosted websites, the hosting and security infrastructure may receive basic request information such as IP address, browser type, requested URL, timestamp, and error or security logs. This information may be processed for delivery, abuse prevention, reliability, and legal compliance. Document contents are not included in ordinary page requests.</p></section>
+        <section><h2>3. Browser storage</h2><p>We use localStorage or sessionStorage for necessary device-local preferences, including your privacy choice. These values do not contain PDF contents, document names, or extracted text.</p></section>
+        <section><h2>4. Analytics and advertising</h2><p>Advertising scripts are currently disabled in this release. Privacy-friendly traffic measurement may record page visits without receiving your PDF contents. If Google AdSense or additional analytics is enabled later, this notice will be updated before activation and optional storage will be controlled through an appropriate consent mechanism where required.</p></section>
+        <section><h2>5. Your choices</h2><p>You can keep optional technologies off, change your privacy choice from the footer, clear this site’s browser storage, or use browser controls to block storage. Necessary storage may be required to remember your preference.</p><button className="legal-choice-button" onClick={() => window.dispatchEvent(new Event('open-privacy-settings'))}>Open privacy choices</button></section>
+        <section><h2>6. Legal rights</h2><p>Depending on where you live, you may have rights to access, correct, delete, restrict, or object to processing of personal information received by the website. Because PDF contents are not received, Lab of PDF cannot retrieve or delete documents that never left your device.</p></section>
+        <section><h2>7. Children</h2><p>The service is a general-purpose document utility and is not directed to children under 13. Do not use it to submit personal information to us about a child.</p></section>
+        <section><h2>8. Contact</h2><p>Questions and privacy requests can be sent to <a href="mailto:labofpdf@gmail.com">labofpdf@gmail.com</a>. The site operator should add its legal name and mailing address here before commercial launch if required by its jurisdiction or advertising partner.</p></section>
       </div>
     </div>
   )

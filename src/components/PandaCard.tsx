@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 
 const BAMBOO_KEY = 'panda-bamboo-count'
 const FEEDER_KEY = 'panda-last-feeder'
@@ -103,7 +103,7 @@ function getDetectedCountry(): { flag: string; name: string } {
         'Indian': ['🌏', 'Indian Ocean'],
         'Pacific': ['🌏', 'Pacific'],
       }
-      if (regionMap[parts[0]]) return regionMap[parts[0]]
+      if (regionMap[parts[0]]) return { flag: regionMap[parts[0]][0], name: regionMap[parts[0]][1] }
     }
   } catch {}
   return { flag: '🇺🇸', name: 'United States' }
@@ -137,12 +137,20 @@ function getLevelInfo(bamboo: number) {
   const API = window.location.hostname === 'localhost' ? '' : 'https://labofpdf.com'
 
 export default function PandaCard() {
+  const sleepAnimationRef = useRef<any>(null)
+  const previewAnimation = import.meta.env.DEV
+    ? new URLSearchParams(window.location.search).get('panda-preview')
+    : null
   const [bamboo, setBamboo] = useState<number | null>(null)
   const info = getLevelInfo(bamboo ?? 0)
   const [visitorCount, setVisitorCount] = useState<number | null>(null)
   const [lastFeeder, setLastFeeder] = useState<{ flag: string; name: string } | null>(getFeeder() || getDetectedCountry())
   const [pendingFeed, setPendingFeed] = useState(false)
-  const [feedDone, setFeedDone] = useState(false)
+  const [hoverAwake, setHoverAwake] = useState(false)
+  const [feedDone, setFeedDone] = useState(() => Boolean(previewAnimation))
+  const sleepCal = { x: -48, y: -45, scale: 88 }
+  const awakeCal = { x: -50, y: -46.5, scale: 79.5 }
+  const thanksCal = { x: -49, y: -45.5, scale: 83 }
 
   useEffect(() => {
     const counted = sessionStorage.getItem('panda-visitor-counted')
@@ -171,9 +179,19 @@ export default function PandaCard() {
   // Check if user came from download page
   useEffect(() => {
     try {
+      if (sessionStorage.getItem('panda-feed-celebrate') === '1') {
+        setFeedDone(true)
+        sessionStorage.removeItem('panda-feed-celebrate')
+        const country = getDetectedCountry()
+        setLastFeeder(country)
+        localStorage.setItem(FEEDER_KEY, JSON.stringify(country))
+        window.setTimeout(() => document.getElementById('panda-habitat')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 180)
+        return
+      }
       if (sessionStorage.getItem('panda-pending-feed') === '1') {
         setPendingFeed(true)
         sessionStorage.removeItem('panda-pending-feed')
+        window.setTimeout(() => document.getElementById('panda-habitat')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 180)
       }
     } catch {}
   }, [])
@@ -188,11 +206,44 @@ export default function PandaCard() {
           const c = document.getElementById('panda-card-lottie-sleep')
           if (!c || destroyed) return
           animSleep = Lottie.default.loadAnimation({ container: c, renderer: 'svg', autoplay: true, loop: true, animationData: data })
+          sleepAnimationRef.current = animSleep
         })
         .catch(() => {})
     })
-    return () => { destroyed = true; if (animSleep) animSleep.destroy() }
+    return () => {
+      destroyed = true
+      if (sleepAnimationRef.current === animSleep) sleepAnimationRef.current = null
+      if (animSleep) animSleep.destroy()
+    }
   }, [])
+
+  useEffect(() => {
+    if (!hoverAwake || feedDone || previewAnimation) return
+    let animation: any
+    let destroyed = false
+    import('lottie-web').then(Lottie => {
+      fetch('/panda-awake.json?v=2')
+        .then(r => r.json())
+        .then(data => {
+          const container = document.getElementById('panda-card-lottie-awake')
+          if (!container || destroyed) return
+          container.innerHTML = ''
+          animation = Lottie.default.loadAnimation({
+            container,
+            renderer: 'svg',
+            autoplay: false,
+            loop: false,
+            animationData: data,
+          })
+          animation.playSegments([0, 40], false)
+        })
+        .catch(() => {})
+    })
+    return () => {
+      destroyed = true
+      if (animation) animation.destroy()
+    }
+  }, [hoverAwake, feedDone, previewAnimation])
 
   // When feedDone becomes true, load and play big panda once, then switch back
   useEffect(() => {
@@ -200,14 +251,19 @@ export default function PandaCard() {
     let destroyed = false
     let playedOnce = false
     import('lottie-web').then(Lottie => {
-      fetch('/panda.json')
+      fetch(previewAnimation ? `/panda-${previewAnimation}.json` : '/panda.json')
         .then(r => r.json())
         .then(data => {
           const c = document.getElementById('panda-card-lottie-big')
           if (!c || destroyed) return
           c.innerHTML = ''
           const a = Lottie.default.loadAnimation({ container: c, renderer: 'svg', autoplay: false, loop: false, animationData: data })
-          a.playSegments([180, data.op - 1], false)
+          if (previewAnimation) {
+            a.loop = true
+            a.play()
+            return
+          }
+          a.playSegments([180, data.op - 1], true)
           a.addEventListener('complete', () => {
             if (!destroyed && !playedOnce) {
               playedOnce = true
@@ -218,7 +274,7 @@ export default function PandaCard() {
         .catch(() => { if (!destroyed) setFeedDone(false) })
     })
     return () => { destroyed = true }
-  }, [feedDone])
+  }, [feedDone, previewAnimation])
 
   const handleFeed = useCallback(() => {
     fetch(API + '/api/bamboo/feed')
@@ -230,24 +286,47 @@ export default function PandaCard() {
     try { localStorage.setItem(FEEDER_KEY, JSON.stringify(country)) } catch {}
     window.dispatchEvent(new Event('feeder-update'))
     setPendingFeed(false)
-    setFeedDone(true)
+    const sleepAnimation = sleepAnimationRef.current
+    if (sleepAnimation) {
+      sleepAnimation.loop = false
+      const finishTransition = () => {
+        sleepAnimation.removeEventListener('complete', finishTransition)
+        setFeedDone(true)
+      }
+      sleepAnimation.addEventListener('complete', finishTransition)
+      sleepAnimation.playSegments([
+        Math.max(0, Math.floor(sleepAnimation.currentFrame)),
+        Math.max(1, Math.floor(sleepAnimation.totalFrames - 1)),
+      ], true)
+    } else {
+      setFeedDone(true)
+    }
   }, [API])
 
   const bambooDigits = (bamboo ?? 0).toLocaleString().split('')
 
   return (
-    <div className="mt-8" style={{ width: '100%', maxWidth: '960px', margin: '24px auto' }}>
-      <div style={{
+    <div id="panda-habitat" className="mt-8 panda-habitat" style={{ width: '100%', maxWidth: '960px', margin: '24px auto' }}>
+      <div className="panda-shell" style={{
         background: 'linear-gradient(180deg, #f8fbf9, #edf4ef)',
         borderRadius: '28px',
         padding: '24px',
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), 0 25px 50px rgba(0,0,0,0.08)',
       }}>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch', flexWrap: 'nowrap' }}>
+        <div className="panda-shell-header">
+          <div>
+            <span>PANDA HABITAT</span>
+            <strong>A small reward for finishing the job</strong>
+          </div>
+          <div className="bamboo-rule">
+            <span className="bamboo-mark" aria-hidden="true"><i /><i /><i /></span>
+            <span>1 completed tool = 1 bamboo</span>
+          </div>
+        </div>
+        <div className="panda-stage">
 
           {/* ─── LEFT ─── */}
-          <div style={{
-            flex: '3 1 0',
+          <div className="panda-story" style={{
             minWidth: 0,
             position: 'relative',
             padding: '20px 24px',
@@ -258,9 +337,11 @@ export default function PandaCard() {
             justifyContent: 'space-between',
           }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ fontSize: '16px', fontWeight: 600 }}>
-                Let's raise the panda together!
+              <div className="panda-story-kicker">COMMUNITY BAMBOO</div>
+              <div style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+                Help Hua Hua grow
               </div>
+              <p className="panda-story-copy">Finish a PDF task, earn a bamboo, and come back to feed the panda.</p>
 
               <div style={{
                 marginTop: '12px',
@@ -269,53 +350,28 @@ export default function PandaCard() {
                 gap: '8px',
               }}>
                 {visitorCount !== null && (
-                  <div style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '13px',
-                    color: '#666',
-                    padding: '6px 12px',
-                    borderRadius: '12px',
-                    background: 'linear-gradient(180deg, #f7f7f7, #f1f1f1)',
-                    width: 'fit-content',
-                  }}>
-                    👋 <span style={{ color: '#2fa36b', fontWeight: 700, fontSize: '18px' }}>{visitorCount.toLocaleString()}</span> visitors
+                  <div className="panda-visitor-pill">
+                    <span className="panda-visitor-dot" aria-hidden="true" />
+                    <span><strong>{visitorCount.toLocaleString()}</strong> visitors joined</span>
                   </div>
                 )}
-                <div style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontSize: '13px',
-                  color: '#666',
-                  padding: '6px 12px',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(180deg, #f7f7f7, #f1f1f1)',
-                  width: 'fit-content',
-                }}>
-                  <span style={{
-                    display: 'flex',
-                    gap: '3px',
-                  }}>
+                <div className="panda-bamboo-counter">
+                  <div className="panda-counter-caption">BAMBOO COLLECTED</div>
+                  <div className="panda-counter-row">
+                    <span className="panda-counter-digits">
                     {bambooDigits.map((d, i) => (
-                      <span key={i} style={{
-                        display: 'inline-block',
-                        padding: '8px 10px',
-                        borderRadius: '12px',
-                        fontSize: '24px',
-                        fontWeight: 'bold',
-                        background: 'linear-gradient(180deg, rgba(200,230,200,0.95), rgba(160,200,160,0.95))',
-                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.08), inset 0 -2px 4px rgba(255,255,255,0.6)',
-                        color: d === ',' ? '#2fa36b' : '#1b5e20',
-                        minWidth: d === ',' ? '12px' : '24px',
-                        textAlign: 'center',
-                      }}>
+                      <span key={i} className={d === ',' ? 'separator' : ''}>
                         {d}
                       </span>
                     ))}
-                  </span>
-                  <span style={{ fontSize: '24px', fontWeight: 'bold' }}>🎋</span>
+                    </span>
+                    <span className="bamboo-tally" aria-label="bamboo">
+                      <i className="bamboo-leaf bamboo-leaf-left" />
+                      <i className="bamboo-node bamboo-node-one" />
+                      <i className="bamboo-node bamboo-node-two" />
+                      <i className="bamboo-leaf bamboo-leaf-right" />
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -325,25 +381,30 @@ export default function PandaCard() {
             </div>
 
             {/* Last feeder — bottom of left column */}
-            <div style={{ marginTop: '24px', fontSize: '13px', color: '#6b7280', minHeight: '20px', whiteSpace: 'nowrap' }}>
+            <div style={{ marginTop: '24px', fontSize: '13px', color: '#6b7280', minHeight: '20px', lineHeight: 1.45 }}>
               🐼 Thanks {lastFeeder?.flag ?? '🇺🇸'} {lastFeeder?.name ?? 'United States'} for feeding the panda 🎋
             </div>
           </div>
 
           {/* ─── CENTER — Panda Lottie + Feed ─── */}
-          <div style={{
-            flex: '2.5 1 0',
+          <div className="panda-hero" style={{
             minWidth: 0,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            marginLeft: '-100px',
             position: 'relative',
-          }}>
+          }}
+            onPointerEnter={() => setHoverAwake(true)}
+            onPointerLeave={() => setHoverAwake(false)}
+          >
+            <div className="panda-hero-title">
+              <span>THE BAMBOO PAVILION</span>
+              <strong>A quiet moment with Hua Hua</strong>
+            </div>
             <div id="panda-card-lottie" style={{
-              width: 'min(390px, 100%)',
-              height: 'min(390px, 36vw)',
-              marginTop: '-80px',
+              width: 'min(280px, 100%)',
+              height: '260px',
+              marginTop: '0',
               position: 'relative',
               display: 'flex',
               alignItems: 'center',
@@ -351,24 +412,35 @@ export default function PandaCard() {
               overflow: 'hidden',
             }}>
               {/* Sleep panda */}
-              <div style={{
+              <div className="panda-animation-layer panda-animation-sleep" style={{
                 position: 'absolute',
-                width: '86%',
-                height: '86%',
-                transform: 'translate(8px, 10px)',
-                opacity: feedDone ? 0 : 1,
+                width: `${sleepCal.scale}%`,
+                height: `${sleepCal.scale}%`,
+                transform: `translate(${sleepCal.x}%, ${sleepCal.y}%)`,
+                opacity: (feedDone || hoverAwake ? 0 : 1),
                 transition: 'opacity 0.4s',
                 pointerEvents: 'none',
               }}>
                 <div id="panda-card-lottie-sleep" style={{ width: '100%', height: '100%' }} />
               </div>
-              {/* Big panda (thanks) */}
-              <div style={{
+              <div className="panda-animation-layer panda-animation-awake" style={{
                 position: 'absolute',
-                width: '90%',
-                height: '90%',
-                transform: 'translate(-2px, 0px)',
-                opacity: feedDone ? 1 : 0,
+                width: `${awakeCal.scale}%`,
+                height: `${awakeCal.scale}%`,
+                transform: `translate(${awakeCal.x}%, ${awakeCal.y}%)`,
+                opacity: (hoverAwake && !feedDone && !previewAnimation ? 1 : 0),
+                transition: 'opacity 0.18s',
+                pointerEvents: 'none',
+              }}>
+                <div id="panda-card-lottie-awake" style={{ width: '100%', height: '100%' }} />
+              </div>
+              {/* Big panda (thanks) */}
+              <div className="panda-animation-layer panda-animation-thanks" style={{
+                position: 'absolute',
+                width: `${thanksCal.scale}%`,
+                height: `${thanksCal.scale}%`,
+                transform: `translate(${thanksCal.x}%, ${thanksCal.y}%)`,
+                opacity: (feedDone ? 1 : 0),
                 transition: 'opacity 0.4s',
                 pointerEvents: 'none',
               }}>
@@ -376,11 +448,11 @@ export default function PandaCard() {
               </div>
             </div>
 
-            {/* Feed button — absolute positioned, doesn't affect layout */}
+            {/* Feed button */}
             {(pendingFeed || feedDone) && (
               <div style={{
                 position: 'absolute',
-                bottom: '-8px',
+                bottom: '14px',
                 left: '50%',
                 transform: 'translateX(-50%)',
                 display: 'flex',
@@ -413,7 +485,7 @@ export default function PandaCard() {
                       animation: feedDone ? 'none' : 'popIn 0.5s ease',
                     }}
                   >
-                    {feedDone ? '🎋 已喂！' : '🎋 喂熊猫 Feed'}
+                    {feedDone ? '🎋 Fed!' : '🎋 Feed the panda'}
                   </button>
                 </div>
 
@@ -458,62 +530,42 @@ export default function PandaCard() {
           </div>
 
           {/* ─── RIGHT ─── */}
-          <div style={{
-            flex: '2 1 0',
+          <div className="panda-progress-card" style={{
             minWidth: 0,
             padding: '20px',
             borderRadius: '22px',
-            background: '#ffffff',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
           }}>
+            <div className="panda-level-overline">HUA HUA'S GROWTH BOOK</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                width: '50px', height: '50px', borderRadius: '50%',
-                background: '#f2f5f3', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', fontSize: '26px',
-              }}>
-                🐼
+              <div className="panda-level-portrait">
+                <img src="/hua-hua-portrait-v1.webp" alt="Hua Hua panda portrait" />
               </div>
-              <div>
-                <div style={{ fontWeight: 600 }}>HUA HUA</div>
-                <div style={{
-                  display: 'inline-block', marginTop: '4px',
-                  background: '#e8f5ec', color: '#2fa36b',
-                  padding: '4px 10px', borderRadius: '12px', fontSize: '12px',
-                }}>
-                  Lv.{info.level}
-                </div>
+              <div className="panda-level-identity">
+                <div>HUA HUA</div>
+                <span>Growing with the community</span>
               </div>
+              <div className="panda-level-seal"><small>LEVEL</small>{info.level}</div>
             </div>
 
-            <div style={{ marginTop: '16px', height: '10px', borderRadius: '10px', background: '#edf1ee', position: 'relative' }}>
-              <div style={{
+            <div className="panda-level-progress">
+              <div className="panda-level-progress-fill" style={{
                 height: '100%', width: `${Math.min(Math.max(info.progress * 100, 0), 100)}%`,
-                borderRadius: '10px',
-                background: 'linear-gradient(90deg, #6bd18c, #2fa36b)',
                 transition: 'width 0.6s ease',
               }} />
             </div>
 
-            <div style={{ marginTop: '10px', color: '#6b7280', fontSize: '13px' }}>
-              <span style={{ color: '#2fa36b', fontWeight: 600 }}>{info.needed.toLocaleString()}</span> 🎋 to next level
+            <div className="panda-level-needed">
+              <span>{info.needed.toLocaleString()}</span> more bamboo to grow
             </div>
 
-            <div style={{ margin: '16px 0', borderTop: '1px dashed #e3e7e5' }} />
+            <div className="panda-level-divider"><span /></div>
 
-            <div style={{
-              display: 'flex', gap: '12px', padding: '14px',
-              borderRadius: '16px',
-              background: 'linear-gradient(180deg, #f7f7f7, #f1f1f1)',
-            }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600 }}>Next Milestone</div>
-                <div style={{ marginTop: '4px', fontSize: '13px', color: '#666' }}>
-                  Level {info.level + 1}
-                </div>
-                <div style={{ marginTop: '8px', fontWeight: 'bold', color: '#2fa36b', fontSize: '18px' }}>
-                  🎋 {info.nextMilestone.toLocaleString()}
-                </div>
+            <div className="panda-milestone">
+              <div className="panda-milestone-bamboo" aria-hidden="true"><i /><i /><i /></div>
+              <div>
+                <span>NEXT MILESTONE</span>
+                <strong>Level {info.level + 1}</strong>
+                <small>{info.nextMilestone.toLocaleString()} bamboo collected</small>
               </div>
             </div>
           </div>
