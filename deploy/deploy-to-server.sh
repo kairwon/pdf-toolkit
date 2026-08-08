@@ -115,13 +115,34 @@ rollback() {
   systemctl reload nginx
 }
 
-if ! curl -kfsS --resolve labofpdf.com:443:127.0.0.1 https://labofpdf.com/guides | grep -q 'Practical PDF Guides'; then
+verify_page() {
+  local url="$1"
+  local expected="$2"
+  local label="$3"
+  local body="/tmp/labofpdf-verify-body"
+  local headers="/tmp/labofpdf-verify-headers"
+
+  local attempt
+  for attempt in $(seq 1 10); do
+    if curl -ksS -D "$headers" --resolve labofpdf.com:443:127.0.0.1 "$url" -o "$body" && grep -q "$expected" "$body"; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  echo "$label verification failed after $attempt attempts; response follows." >&2
+  sed -n '1,20p' "$headers" >&2 || true
+  sed -n '1,30p' "$body" >&2 || true
+  return 1
+}
+
+if ! verify_page https://labofpdf.com/guides 'Practical PDF Guides' 'Guides page'; then
   echo "Online verification failed; restoring the previous release." >&2
   rollback
   exit 1
 fi
 
-if ! curl -kfsS --resolve labofpdf.com:443:127.0.0.1 https://labofpdf.com/guides/compress-pdf-for-university-upload | grep -q 'university submission portal'; then
+if ! verify_page https://labofpdf.com/guides/compress-pdf-for-university-upload 'university submission portal' 'Guide article'; then
   echo "Guide verification failed; restoring the previous release." >&2
   rollback
   exit 1
