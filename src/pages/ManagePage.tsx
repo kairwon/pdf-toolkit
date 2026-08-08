@@ -125,7 +125,7 @@ export default function ManagePage() {
   if (!file) {
     return (
       <ToolPageWrapper>
-        <ToolHeader title="Manage Pages" description="Delete, rotate, and extract PDF pages online free — no upload, no sign-up. Browser-based PDF page manager with visual preview. Unlimited pages, no file size limits. Your files never leave your device." />
+        <ToolHeader title="Manage Pages" description="Delete, rotate, reorder, and extract PDF pages locally with a visual preview. No document upload; practical capacity depends on your device." />
         <FileUpload onFiles={handleFile} multiple={false} />
       </ToolPageWrapper>
     )
@@ -206,7 +206,7 @@ export default function ManagePage() {
       <section className="portal-seo-copy" style={{ marginTop: '24px' }}>
         <span>FREE ONLINE PDF PAGE MANAGER</span>
         <h2>Edit PDF pages online free — delete, rotate, reorder, and extract</h2>
-        <p>Manage PDF pages entirely in your browser: delete unwanted pages, rotate pages, reorder them by dragging, and extract selected pages into a new PDF. No upload required, no limits, no sign-up.</p>
+        <p>Manage PDF pages entirely in your browser: delete unwanted pages, rotate pages, reorder them by dragging, and extract selected pages into a new PDF. No document upload or sign-up.</p>
         <div>
           <article><h3>How to edit PDF pages online for free?</h3><p>Upload your PDF, then use the visual page thumbnails to select, rotate, or reorder pages. Delete unwanted pages and download the edited PDF — all in your browser.</p></article>
           <article><h3>Is this PDF editor safe to use?</h3><p>Yes. Page management runs entirely in your browser. Files are never uploaded. Your documents stay private on your device.</p></article>

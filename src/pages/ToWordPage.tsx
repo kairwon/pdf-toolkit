@@ -17,6 +17,7 @@ export default function ToWordPage() {
   const [processing, setProcessing] = useState(false)
   const [progress, setProgress] = useState('')
   const [status, setStatus] = useState<'classifying' | 'converting' | null>(null)
+  const [ocrLanguage, setOcrLanguage] = useState('eng')
 
   const handleFile = useCallback(async (files: File[]) => {
     const f = files[0]
@@ -46,12 +47,12 @@ export default function ToWordPage() {
         setProgress('Text-based PDF detected — extracting text directly...')
       }
 
-      const blob = await pdfToWord(file, (current, total, statusText) => {
+      const blob = await pdfToWord(file, ocrLanguage, (current, total, statusText) => {
         setProgress(statusText)
       })
 
-      triggerDownloadOverlay('Converted! PDF to Word', () => {
-        downloadBlob(blob, `${file.name.replace(/\.pdf$/i, '')}.doc`)
+      triggerDownloadOverlay('Converted to a real DOCX file', () => {
+        downloadBlob(blob, `${file.name.replace(/\.pdf$/i, '')}.docx`)
       })
     } catch (err) {
       toast.error('Conversion failed')
@@ -66,7 +67,7 @@ export default function ToWordPage() {
   if (!file) {
     return (
       <ToolPageWrapper>
-        <ToolHeader title="PDF to Word" description="Convert PDF to Word document online free with no upload. Browser-based converter with automatic OCR for scanned pages — no limits on pages or file size, no sign-up. Complete privacy — your files never leave your device." />
+        <ToolHeader title="PDF to Word" description="Create a real DOCX file locally with automatic OCR for scanned pages. No document upload; practical capacity depends on your browser and device memory." />
         <FileUpload onFiles={handleFile} multiple={false} />
       </ToolPageWrapper>
     )
@@ -74,7 +75,7 @@ export default function ToWordPage() {
 
   return (
     <ToolPageWrapper>
-      <ToolHeader title="PDF to Word" description="Convert PDF to Word — OCR applied automatically to scanned pages." />
+      <ToolHeader title="PDF to Word" description="Create a real DOCX document — OCR is applied automatically to scanned pages." />
       <div className="p-4 mb-5 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
         <div className="flex items-center gap-3">
           <div className="bg-jade/10 dark:bg-jade-dark/20 rounded-lg p-2 text-jade"><FileText size={16} /></div>
@@ -101,6 +102,19 @@ export default function ToWordPage() {
               For scanned PDFs, each page is rendered as an image then recognized — this may take some time depending on page count.
             </p>
           </div>
+          <label className="text-sm font-medium text-gray-600 dark:text-gray-300 block max-w-sm">OCR language for scanned pages
+            <select value={ocrLanguage} onChange={(event) => setOcrLanguage(event.target.value)} className="mt-1.5 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm">
+              <option value="eng">English</option>
+              <option value="chi_sim">Chinese (Simplified)</option>
+              <option value="chi_tra">Chinese (Traditional)</option>
+              <option value="deu">German</option>
+              <option value="fra">French</option>
+              <option value="spa">Spanish</option>
+              <option value="por">Portuguese</option>
+              <option value="ara">Arabic</option>
+            </select>
+          </label>
+          <p className="text-xs text-gray-400">Text and simple paragraph structure are preserved where possible. Complex tables, columns, equations, and exact typography may still need review.</p>
         </div>
       )}
 
@@ -137,9 +151,9 @@ export default function ToWordPage() {
       <section className="portal-seo-copy" style={{ marginTop: '24px' }}>
         <span>FREE ONLINE PDF TO WORD CONVERTER</span>
         <h2>Convert PDF to Word document with OCR — browser-based converter</h2>
-        <p>Convert PDF to an editable Word document entirely in your browser. Text PDFs are extracted directly; scanned PDFs use OCR (Optical Character Recognition) to recognize text. No file upload, no limits, no sign-up.</p>
+        <p>Convert PDF to a real DOCX document entirely in your browser. Text PDFs are extracted directly; scanned PDFs use your selected OCR language. No document upload or sign-up.</p>
         <div>
-          <article><h3>How to convert PDF to Word for free?</h3><p>Upload your PDF, and the tool automatically detects whether pages contain text or scanned images. Text is extracted directly; scanned pages are processed with OCR. Download the result as a .doc file.</p></article>
+          <article><h3>How to convert PDF to Word for free?</h3><p>Upload your PDF, choose the OCR language for scanned pages, and download the result as a real .docx file. Review complex layouts after conversion.</p></article>
           <article><h3>Does this PDF to Word converter work with scanned documents?</h3><p>Yes. Scanned pages are processed with Tesseract.js OCR running locally in your browser. No server upload is needed.</p></article>
           <article><h3>Is it safe to convert PDF to Word online?</h3><p>Yes. The conversion runs in your browser. PDF contents are never uploaded — they stay private on your device.</p></article>
         </div>

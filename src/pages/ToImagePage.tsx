@@ -81,7 +81,7 @@ export default function ToImagePage() {
   if (!file) {
     return (
       <ToolPageWrapper>
-        <ToolHeader title="PDF to Image" description="Convert PDF pages to PNG or JPEG images online free without uploading — browser-based converter. No page limits, no file size limits, no sign-up. Download individually or as ZIP. Complete privacy — files never leave your device." />
+        <ToolHeader title="PDF to Image" description="Convert PDF pages to PNG or JPEG locally without uploading. Download individually or as ZIP; practical capacity depends on your browser and device memory." />
         <FileUpload onFiles={handleFile} multiple={false} />
       </ToolPageWrapper>
     )
@@ -132,7 +132,7 @@ export default function ToImagePage() {
       <section className="portal-seo-copy" style={{ marginTop: '24px' }}>
         <span>FREE ONLINE PDF TO IMAGE CONVERTER</span>
         <h2>Convert PDF to PNG or JPEG images — browser-based PDF converter</h2>
-        <p>Convert PDF pages to high-quality PNG or JPEG images in your browser. Choose resolution from 1x to 3x, select specific pages, and download individually or as a ZIP file. No upload, no limits.</p>
+        <p>Convert PDF pages to high-quality PNG or JPEG images in your browser. Choose resolution from 1x to 3x, select pages, and download individually or as a ZIP file without uploading the document.</p>
         <div>
           <article><h3>How to convert PDF to image for free?</h3><p>Upload a PDF, choose PNG or JPEG format, select the resolution (1x, 1.5x, 2x, or 3x), pick the pages to convert, and download as individual images or a ZIP archive.</p></article>
           <article><h3>Is PDF to image conversion safe?</h3><p>Yes. Conversion runs entirely in your browser using PDF.js rendering. Your PDF never leaves your device.</p></article>

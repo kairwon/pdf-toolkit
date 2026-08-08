@@ -149,7 +149,7 @@ export default function MergePage() {
 
   return (
     <ToolPageWrapper>
-      <ToolHeader title="Merge PDF" description="Combine multiple PDF files into one document online free — no upload required. Browser-based PDF merger with unlimited pages, no file size limits, no sign-up. 100% private — your files never leave your device." />
+      <ToolHeader title="Merge PDF" description="Combine multiple PDF files locally with no document upload or sign-up. Practical capacity depends on your browser and device memory." />
       {files.length === 0 ? (
         <FileUpload onFiles={addFiles} />
       ) : (

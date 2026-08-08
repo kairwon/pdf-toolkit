@@ -32,8 +32,8 @@ that its commit matches the intended Git release before and after switching
 Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
-The release prepared by this handoff uses the immutable tag
-`production-2026-08-08-seo-deployment-standard`.
+The production release prepared after the core reliability work uses the
+immutable tag `production-2026-08-09-core-pdf-reliability`.
 
 The deployment script uses `/var/www/labofpdf-next` and
 `/var/www/labofpdf-prev` only during its atomic switch. Both are removed after
@@ -54,6 +54,23 @@ locally and on GitHub. Never move or reuse a production tag.
   portal preparation, and page management.
 - Core tools include compress, merge, split, manage pages, PDF to image,
   PDF to Word, watermark removal, and watermarking.
+- Watermark removal now inspects `/Stamp` and `/Watermark` annotations, shows
+  every candidate, recommends only likely watermarks, preserves unselected
+  stamps, reports the actual number removed, and warns when a digital signature
+  may be invalidated. It deliberately does not claim to remove content-stream
+  or scanned-image watermarks.
+- Watermark creation supports text or PNG/JPEG marks, selected page ranges,
+  placement (including tiled marks), angle, opacity, text colour, and text size.
+- Target-size compression now tries progressively stronger modes up to the
+  quality level selected by the user and stops at the first result that meets
+  the target. Lossless preserves searchable text; balanced and maximum modes
+  create image-based copies and the UI says so explicitly.
+- PDF to Word now generates a real `.docx` file and offers multiple OCR
+  languages for scanned pages. Complex tables, columns, equations, and exact
+  typography remain documented limitations.
+- `npm test` covers watermark candidate detection and selective removal with a
+  synthetic PDF fixture. Keep adding representative, non-sensitive fixtures as
+  PDF manipulation behavior expands.
 - Tool icons use task-specific PDF metaphors rather than generic document icons.
 - Browser back actions should use history when available and fall back safely.
 - The PandaCard feature remains in source, but large obsolete

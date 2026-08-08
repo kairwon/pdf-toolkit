@@ -1,4 +1,5 @@
-import { PDFDocument, rgb, StandardFonts, degrees, PDFName, PDFArray, PDFDict, PDFRef } from 'pdf-lib'
+import './promiseTryPolyfill'
+import { PDFDocument, rgb, StandardFonts, degrees, PDFName, PDFArray, PDFDict } from 'pdf-lib'
 import * as pdfjsLib from 'pdfjs-dist'
 
 // Set up the worker
@@ -181,17 +182,14 @@ export async function rotatePages(
 }
 
 /**
- * Compress a PDF — all modes keep text as text (searchable / selectable).
+ * Compress a PDF with an explicit quality trade-off.
  *
  * - "lossless":  copy pages to fresh document, strip unused objects,
  *                save with object-streams.  Best for text-heavy files.
- * - "balanced":  lossless + down-sample large embedded images to 72 DPI.
- * - "aggressive": lossless + down-sample images to 36 DPI.
+ * - "balanced":  render each page to a compressed image copy.
+ * - "aggressive": render a lower-resolution image copy.
  *
- * Balanced / aggressive use pdf-lib's built-in compression flags.
- * pdf-lib itself doesn't re-encode images, so real image compression
- * requires a library like `sharp` (Node.js only).  For the browser,
- * these modes still provide the lossless benefit.
+ * Balanced / aggressive reduce image-heavy scans but remove searchable text.
  */
 export async function compressPdf(
   file: File,
@@ -243,89 +241,211 @@ export async function addWatermark(
     angle?: number
     fontSize?: number
     color?: { r: number; g: number; b: number }
+    position?: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'tile'
+    pageIndices?: number[]
+    image?: { bytes: ArrayBuffer; mimeType: 'image/png' | 'image/jpeg' }
   } = {},
 ): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.load(await file.arrayBuffer())
-  const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica)
+  const helvetica = opts.image ? null : await pdfDoc.embedFont(StandardFonts.Helvetica)
+  const embeddedImage = opts.image
+    ? opts.image.mimeType === 'image/png'
+      ? await pdfDoc.embedPng(opts.image.bytes)
+      : await pdfDoc.embedJpg(opts.image.bytes)
+    : null
 
   const opacity = opts.opacity ?? 0.2
   const angle = opts.angle ?? -45
   const fontSize = opts.fontSize ?? 48
   const color = opts.color ?? { r: 0.5, g: 0.5, b: 0.5 }
+  const position = opts.position ?? 'center'
+  const selectedPages = opts.pageIndices ? new Set(opts.pageIndices) : null
 
   const pages = pdfDoc.getPages()
-  for (const page of pages) {
+  for (const [pageIndex, page] of pages.entries()) {
+    if (selectedPages && !selectedPages.has(pageIndex)) continue
     const { width, height } = page.getSize()
-    page.drawText(text, {
-      x: width / 2 - (text.length * fontSize * 0.3) / 2,
-      y: height / 2 - fontSize / 2,
-      size: fontSize,
-      font: helvetica,
-      color: rgb(color.r, color.g, color.b),
-      opacity,
-      rotate: degrees(angle),
-    })
+    const margin = 28
+    const imageScale = embeddedImage ? Math.min(1, (width * 0.35) / embeddedImage.width, (height * 0.22) / embeddedImage.height) : 1
+    const markWidth = embeddedImage ? embeddedImage.width * imageScale : helvetica!.widthOfTextAtSize(text, fontSize)
+    const markHeight = embeddedImage ? embeddedImage.height * imageScale : fontSize
+    const coordinates = (slot: Exclude<typeof position, 'tile'>) => {
+      if (slot === 'top-left') return { x: margin, y: height - markHeight - margin }
+      if (slot === 'top-right') return { x: width - markWidth - margin, y: height - markHeight - margin }
+      if (slot === 'bottom-left') return { x: margin, y: margin }
+      if (slot === 'bottom-right') return { x: width - markWidth - margin, y: margin }
+      return { x: (width - markWidth) / 2, y: (height - markHeight) / 2 }
+    }
+    const slots = position === 'tile'
+      ? [
+          { x: width * 0.12, y: height * 0.22 },
+          { x: width * 0.52, y: height * 0.22 },
+          { x: width * 0.12, y: height * 0.62 },
+          { x: width * 0.52, y: height * 0.62 },
+        ]
+      : [coordinates(position)]
+
+    for (const { x, y } of slots) {
+      if (embeddedImage) {
+        page.drawImage(embeddedImage, { x, y, width: markWidth, height: markHeight, opacity, rotate: degrees(angle) })
+      } else {
+        page.drawText(text, {
+          x,
+          y,
+          size: fontSize,
+          font: helvetica!,
+          color: rgb(color.r, color.g, color.b),
+          opacity,
+          rotate: degrees(angle),
+        })
+      }
+    }
   }
 
   return pdfDoc.save()
 }
 
-/**
- * Remove watermark annotations from a PDF.
- *
- * Only removes annotation-layer watermarks (Stamp / Watermark subtype).
- * Does NOT modify content-layer watermark content (burned-in text/images),
- * and does NOT cover anything with white rectangles (which would hide
- * legitimate content).
- *
- * Limitations:
- *  - Watermarks baked into the page content stream (e.g. "DRAFT" text
- *    rendered as regular content) cannot be removed without re-rendering
- *    the page, which destroys text selectability.
- *  - Only annotation-type watermarks added as PDF Stamp/Watermark objects
- *    can be removed here.
- */
-export async function removeWatermark(file: File): Promise<Uint8Array> {
-  const buffer = await file.arrayBuffer()
-  const pdfDoc = await PDFDocument.load(buffer)
+export interface WatermarkCandidate {
+  id: string
+  pageIndex: number
+  pageNumber: number
+  annotationIndex: number
+  subtype: 'Stamp' | 'Watermark'
+  label: string
+  recommended: boolean
+}
 
-  const pages = pdfDoc.getPages()
-  for (const page of pages) {
-    // Access the raw page dictionary
-    const pageNode = (page as any).node as { get: (key: PDFName) => any; set: (key: PDFName, ref: any) => void; context: any }
-    const annotsRef = pageNode.get(PDFName.of('Annots'))
-    if (!annotsRef) continue
+export interface WatermarkInspection {
+  pageCount: number
+  candidates: WatermarkCandidate[]
+  hasDigitalSignature: boolean
+}
 
-    const annotsArray = pdfDoc.context.lookup(annotsRef) as PDFArray | null
+export interface RemoveWatermarkResult {
+  bytes: Uint8Array
+  removedCount: number
+  affectedPages: number[]
+}
+
+function pdfNameValue(value: unknown): string {
+  if (!value) return ''
+  const encoded = (value as { encodedName?: string; asString?: () => string }).encodedName
+    ?? (value as { asString?: () => string }).asString?.()
+    ?? String(value)
+  return encoded.replace(/^\//, '')
+}
+
+function pdfTextValue(value: unknown): string {
+  if (!value) return ''
+  try {
+    return ((value as { decodeText?: () => string }).decodeText?.()
+      ?? (value as { asString?: () => string }).asString?.()
+      ?? String(value)).trim()
+  } catch {
+    return ''
+  }
+}
+
+function hasAsciiToken(buffer: ArrayBuffer, token: string): boolean {
+  const bytes = new Uint8Array(buffer)
+  const pattern = new TextEncoder().encode(token)
+  outer: for (let index = 0; index <= bytes.length - pattern.length; index++) {
+    for (let offset = 0; offset < pattern.length; offset++) {
+      if (bytes[index + offset] !== pattern[offset]) continue outer
+    }
+    return true
+  }
+  return false
+}
+
+function annotationLabel(pdfDoc: PDFDocument, annotDict: PDFDict): string {
+  for (const key of ['Contents', 'T', 'NM', 'Name']) {
+    const raw = annotDict.get(PDFName.of(key))
+    const resolved = raw ? pdfDoc.context.lookup(raw) : null
+    const value = key === 'Name' ? pdfNameValue(resolved) : pdfTextValue(resolved)
+    if (value) return value
+  }
+  return ''
+}
+
+function listWatermarkCandidates(pdfDoc: PDFDocument): WatermarkCandidate[] {
+  const candidates: WatermarkCandidate[] = []
+  for (const [pageIndex, page] of pdfDoc.getPages().entries()) {
+    const pageNode = (page as any).node as { get: (key: PDFName) => unknown }
+    const annotsRef = pageNode.get(PDFName.of('Annots')) as any
+    const annotsArray = annotsRef ? pdfDoc.context.lookup(annotsRef) : null
     if (!(annotsArray instanceof PDFArray)) continue
 
-    // Filter out Stamp and Watermark annotations
-    const kept: PDFRef[] = []
-    for (let i = 0; i < annotsArray.size(); i++) {
-      const annotRef = annotsArray.get(i)
-      const annotDict = pdfDoc.context.lookup(annotRef) as PDFDict | null
-      if (!annotDict || !(annotDict instanceof Object)) { kept.push(annotRef as PDFRef); continue }
+    for (let annotationIndex = 0; annotationIndex < annotsArray.size(); annotationIndex++) {
+      const annotObject = annotsArray.get(annotationIndex) as any
+      const annotDict = pdfDoc.context.lookup(annotObject)
+      if (!(annotDict instanceof PDFDict)) continue
+      const subtypeObject = annotDict.get(PDFName.of('Subtype')) as any
+      const subtype = pdfNameValue(subtypeObject ? pdfDoc.context.lookup(subtypeObject) : null)
+      if (subtype !== 'Stamp' && subtype !== 'Watermark') continue
 
-      try {
-        const subtype = annotDict.get(PDFName.of('Subtype'))
-        if (subtype) {
-          const resolved = pdfDoc.context.lookup(subtype) as any
-          const typeName = String(resolved.encodedName ?? resolved)
-          if (typeName === 'Stamp' || typeName === 'Watermark') continue
-        }
-      } catch { /* skip unreadable annotations */ }
-      kept.push(annotRef as PDFRef)
+      const label = annotationLabel(pdfDoc, annotDict)
+      candidates.push({
+        id: `${pageIndex}:${annotationIndex}`,
+        pageIndex,
+        pageNumber: pageIndex + 1,
+        annotationIndex,
+        subtype,
+        label: label || `${subtype} annotation`,
+        recommended: subtype === 'Watermark' || /watermark|draft|confidential|sample|copy|do not/i.test(label),
+      })
     }
+  }
+  return candidates
+}
 
-    // Update the page's annotation list
-    if (kept.length === 0) {
-      pageNode.set(PDFName.of('Annots'), pdfDoc.context.obj([]))
-    } else if (kept.length < annotsArray.size()) {
+/** Inspect removable annotation-layer watermark candidates without changing the PDF. */
+export async function inspectWatermarks(file: File): Promise<WatermarkInspection> {
+  const buffer = await file.arrayBuffer()
+  const pdfDoc = await PDFDocument.load(buffer.slice(0))
+  return {
+    pageCount: pdfDoc.getPageCount(),
+    candidates: listWatermarkCandidates(pdfDoc),
+    hasDigitalSignature: hasAsciiToken(buffer, '/ByteRange'),
+  }
+}
+
+/**
+ * Remove only the annotation candidates explicitly selected by the user.
+ * Content-stream and scanned-image watermarks are intentionally left untouched.
+ */
+export async function removeWatermark(file: File, candidateIds: string[]): Promise<RemoveWatermarkResult> {
+  const pdfDoc = await PDFDocument.load(await file.arrayBuffer())
+  const selected = new Set(candidateIds)
+  let removedCount = 0
+  const affectedPages = new Set<number>()
+
+  for (const [pageIndex, page] of pdfDoc.getPages().entries()) {
+    const pageNode = (page as any).node as { get: (key: PDFName) => unknown; set: (key: PDFName, value: unknown) => void }
+    const annotsRef = pageNode.get(PDFName.of('Annots')) as any
+    const annotsArray = annotsRef ? pdfDoc.context.lookup(annotsRef) : null
+    if (!(annotsArray instanceof PDFArray)) continue
+
+    const kept: any[] = []
+    for (let annotationIndex = 0; annotationIndex < annotsArray.size(); annotationIndex++) {
+      const annotObject = annotsArray.get(annotationIndex) as any
+      if (selected.has(`${pageIndex}:${annotationIndex}`)) {
+        removedCount++
+        affectedPages.add(pageIndex + 1)
+      } else {
+        kept.push(annotObject)
+      }
+    }
+    if (kept.length < annotsArray.size()) {
       pageNode.set(PDFName.of('Annots'), pdfDoc.context.obj(kept))
     }
   }
 
-  return pdfDoc.save()
+  return {
+    bytes: await pdfDoc.save(),
+    removedCount,
+    affectedPages: [...affectedPages],
+  }
 }
 
 export async function deletePages(
@@ -402,11 +522,12 @@ export async function classifyPdf(file: File): Promise<'text' | 'mixed' | 'scann
 }
 
 /**
- * Generate a Word document (HTML-based .docx) from text + optional OCR.
+ * Generate a real Office Open XML Word document from text + optional OCR.
  * Returns a Blob ready for download.
  */
 export async function pdfToWord(
   file: File,
+  language: string = 'eng',
   onProgress?: (page: number, total: number, status: string) => void,
 ): Promise<Blob> {
   const buffer = await file.arrayBuffer()
@@ -427,7 +548,7 @@ export async function pdfToWord(
       // OCR path — create worker once and reuse
       if (!ocrWorker) {
         const { createWorker } = await import('tesseract.js')
-        ocrWorker = await createWorker('eng')
+        ocrWorker = await createWorker(language)
       }
       const dataUrl = await renderPageForOcr(file, i, 2.5)
       const imgBlob = await (await fetch(dataUrl)).blob()
@@ -439,24 +560,22 @@ export async function pdfToWord(
 
   if (ocrWorker) await ocrWorker.terminate()
 
-  // Build a simple Word-compatible HTML document
-  const html = `<!DOCTYPE html>
-<html xmlns:o="urn:schemas-microsoft-com:office:office"
-      xmlns:w="urn:schemas-microsoft-com:office:word"
-      xmlns="http://www.w3.org/TR/REC-html40">
-<head><meta charset="UTF-8"><title>Converted Document</title>
-<style>body{font-family:Calibri,Arial,sans-serif;font-size:12pt;line-height:1.6}p{margin:0 0 8pt 0}</style>
-</head>
-<body>
-${pages.map((text, i) => {
-  const clean = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\n/g, '<br/>')
-  return `<h2>Page ${i + 1}</h2><p>${clean}</p>`
-}).join('\n')}
-</body></html>`
+  return textPagesToWord(pages)
+}
 
-  return new Blob([html], { type: 'application/msword' })
+export async function textPagesToWord(pages: string[]): Promise<Blob> {
+  const { Document, Packer, PageBreak, Paragraph, TextRun } = await import('docx')
+  const children = pages.flatMap((text, pageIndex) => {
+    const paragraphs = text.split(/\n{2,}|\r?\n/).map((line) => line.trim()).filter(Boolean)
+    return [
+      ...(pageIndex > 0 ? [new Paragraph({ children: [new PageBreak()] })] : []),
+      new Paragraph({ children: [new TextRun({ text: `Page ${pageIndex + 1}`, bold: true, size: 28 })], spacing: { after: 180 } }),
+      ...(paragraphs.length > 0 ? paragraphs : ['']).map((line) => new Paragraph({
+        children: [new TextRun({ text: line, size: 24 })],
+        spacing: { after: 120, line: 360 },
+      })),
+    ]
+  })
+  const document = new Document({ sections: [{ properties: {}, children }] })
+  return Packer.toBlob(document)
 }

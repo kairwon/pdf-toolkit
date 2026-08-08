@@ -90,7 +90,7 @@ const howTos: Record<string, object> = {
     step: [
       { '@type': 'HowToStep', position: 1, name: 'Upload PDF', text: 'Upload the PDF you want to convert to Word format.' },
       { '@type': 'HowToStep', position: 2, name: 'Automatic OCR', text: 'Scanned pages are processed with OCR to extract text.' },
-      { '@type': 'HowToStep', position: 3, name: 'Download Word document', text: 'Download the editable .doc file with your converted content.' },
+      { '@type': 'HowToStep', position: 3, name: 'Download Word document', text: 'Download the editable .docx file with your converted content.' },
     ],
   },
   '/to-image': {
@@ -129,7 +129,7 @@ const howTos: Record<string, object> = {
   '/unwatermark': {
     '@context': 'https://schema.org',
     '@type': 'HowTo',
-    name: 'How to Remove Watermark from PDF Online Free',
+    name: 'How to Inspect and Remove Supported PDF Watermark Annotations',
     description: 'Remove annotation-type watermarks from a PDF in your browser.',
     step: [
       { '@type': 'HowToStep', position: 1, name: 'Upload PDF', text: 'Upload the PDF that contains watermark annotations.' },

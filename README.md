@@ -1,6 +1,6 @@
 # Lab of PDF
 
-> Free online PDF tools — merge, split, compress, watermark, and convert PDFs entirely in your browser. No uploads, no sign-up, no limits.
+> Free online PDF tools — merge, split, compress, watermark, and convert PDFs entirely in your browser. No document uploads or sign-up; practical capacity depends on the device and browser.
 
 ## Features
 
@@ -11,7 +11,7 @@
 | **Compress PDF** | Reduce PDF file size losslessly — text stays selectable. |
 | **PDF to Word** | Convert PDF to Word document. OCR applied automatically to scanned pages. |
 | **Add Watermark** | Add a text watermark to every page of your PDF. |
-| **Remove Watermark** | Strip overlay watermarks and cover common watermark regions. |
+| **Remove Watermark Annotations** | Inspect supported Stamp/Watermark annotations and remove only selected candidates. |
 | **Manage Pages** | Delete, rotate, or extract pages from your PDF with a visual preview. |
 | **PDF to Image** | Convert PDF pages to PNG or JPEG images. Download individually or as ZIP. |
 

@@ -113,7 +113,7 @@ export default function SplitPage() {
   if (!file) {
     return (
       <ToolPageWrapper>
-        <ToolHeader title="Split PDF" description="Split PDF or extract specific pages from a PDF file online free — no upload, no sign-up. Browser-based PDF splitter with unlimited pages, no file size limits. Your files stay private — nothing leaves your device." />
+        <ToolHeader title="Split PDF" description="Split a PDF or extract selected pages locally with no document upload or sign-up. Practical capacity depends on your browser and device memory." />
         <FileUpload onFiles={handleFile} multiple={false} />
       </ToolPageWrapper>
     )
@@ -173,12 +173,12 @@ export default function SplitPage() {
       {/* SEO content */}
       <section className="portal-seo-copy" style={{ marginTop: '24px' }}>
         <span>FREE ONLINE PDF SPLITTER</span>
-        <h2>Split PDF files or extract pages — no upload, no limits</h2>
+        <h2>Split PDF files or extract pages without uploading</h2>
         <p>Split a large PDF into separate documents or extract only the pages you need. Choose from extract mode (get selected pages) or split mode (keep selected, remove the rest). Entirely browser-based with no file upload.</p>
         <div>
           <article><h3>How to split a PDF online free?</h3><p>Upload your PDF, select the pages you want to keep or extract, choose Extract or Split mode, and download. Both original and extracted files are created locally.</p></article>
           <article><h3>Is splitting a PDF safe?</h3><p>Yes. The PDF never leaves your browser. All splitting and extraction runs locally with no server upload.</p></article>
-          <article><h3>Can I split a PDF with unlimited pages?</h3><p>Yes. There is no page limit or file size limit. Split any PDF regardless of size, completely free.</p></article>
+          <article><h3>Is there a server file limit?</h3><p>No server upload limit applies because processing stays in the browser. Very large documents may still be limited by available device memory.</p></article>
         </div>
       </section>
     </ToolPageWrapper>

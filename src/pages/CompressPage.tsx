@@ -71,20 +71,35 @@ export default function CompressPage({ forcedGoal }: { forcedGoal?: string } = {
     setProcessing(true)
     try {
       const before = file.size
-      const candidate = await compressPdf(file, level)
-      const result = candidate.byteLength < before
-        ? candidate
-        : new Uint8Array(await file.arrayBuffer())
+      const original = new Uint8Array(await file.arrayBuffer())
+      const targetBytes = targetMb > 0 ? targetMb * 1024 * 1024 : 0
+      const levelsToTry: Level[] = targetBytes > 0
+        ? level === 'lossless'
+          ? ['lossless']
+          : level === 'balanced'
+            ? ['lossless', 'balanced']
+            : ['lossless', 'balanced', 'aggressive']
+        : [level]
+      let result: Uint8Array<ArrayBufferLike> = original
+      let resultLevel: Level | 'original' = 'original'
+      for (const attemptLevel of levelsToTry) {
+        const candidate = await compressPdf(file, attemptLevel)
+        if (candidate.byteLength < result.byteLength) {
+          result = candidate
+          resultLevel = attemptLevel
+        }
+        if (targetBytes > 0 && result.byteLength <= targetBytes) break
+      }
       const blob = new Blob([Uint8Array.from(result).buffer], { type: 'application/pdf' })
       const savedValue = (before - blob.size) / before * 100
       const saved = savedValue.toFixed(1)
-      const targetBytes = targetMb > 0 ? targetMb * 1024 * 1024 : 0
       const meetsTarget = targetBytes > 0 && blob.size <= targetBytes
+      const method = resultLevel === 'original' ? 'original file' : levelInfo[resultLevel].label.toLowerCase()
       const resultMessage = targetBytes > 0
         ? meetsTarget
-          ? `Ready to submit — under ${targetMb}MB`
+          ? `Ready — under ${targetMb}MB using ${method}`
           : savedValue > 0
-            ? `Compressed ${saved}% — still above ${targetMb}MB`
+            ? `Reduced ${saved}% using ${method} — still above ${targetMb}MB`
             : `No smaller copy found — still above ${targetMb}MB`
         : savedValue > 0
           ? `Compressed! Reduced by ${saved}%`
@@ -233,7 +248,7 @@ export default function CompressPage({ forcedGoal }: { forcedGoal?: string } = {
 
   return (
     <ToolPageWrapper>
-      <ToolHeader title={goalConfig.title} description="All modes keep text selectable and searchable. We will check the result against your target." />
+      <ToolHeader title={goalConfig.title} description="Lossless mode preserves searchable text. Balanced and maximum reduction create image-based copies for smaller output. The finished size is checked against your target." />
       <div className="p-4 mb-5 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
         <div>
           <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{file.name}</p>

@@ -16,7 +16,28 @@ export default function WatermarkPage() {
   const [pageCount, setPageCount] = useState(0)
   const [text, setText] = useState('CONFIDENTIAL')
   const [opacity, setOpacity] = useState(20)
+  const [mode, setMode] = useState<'text' | 'image'>('text')
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [position, setPosition] = useState<'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'tile'>('center')
+  const [angle, setAngle] = useState(-35)
+  const [fontSize, setFontSize] = useState(52)
+  const [color, setColor] = useState('#64706a')
+  const [pageRange, setPageRange] = useState('')
   const [processing, setProcessing] = useState(false)
+
+  const selectedPageIndices = () => {
+    if (!pageRange.trim()) return undefined
+    const result = new Set<number>()
+    for (const token of pageRange.split(',')) {
+      const match = token.trim().match(/^(\d+)(?:\s*-\s*(\d+))?$/)
+      if (!match) throw new Error('Invalid page range')
+      const start = Number(match[1])
+      const end = Number(match[2] ?? match[1])
+      if (start < 1 || end < start || end > pageCount) throw new Error('Invalid page range')
+      for (let page = start; page <= end; page++) result.add(page - 1)
+    }
+    return [...result]
+  }
 
   const handleFile = useCallback(async (files: File[]) => {
     const f = files[0]
@@ -29,20 +50,37 @@ export default function WatermarkPage() {
   usePendingFiles(handleFile)
 
   const handleAdd = async () => {
-    if (!file || !text.trim()) return
+    if (!file || (mode === 'text' ? !text.trim() : !imageFile)) return
     setProcessing(true)
     try {
+      const hex = color.replace('#', '')
+      const image = imageFile
+        ? { bytes: await imageFile.arrayBuffer(), mimeType: imageFile.type as 'image/png' | 'image/jpeg' }
+        : undefined
       const result = await addWatermark(file, text.trim(), {
         opacity: opacity / 100,
-        angle: -35,
-        fontSize: 52,
+        angle,
+        fontSize,
+        position,
+        pageIndices: selectedPageIndices(),
+        image,
+        color: {
+          r: parseInt(hex.slice(0, 2), 16) / 255,
+          g: parseInt(hex.slice(2, 4), 16) / 255,
+          b: parseInt(hex.slice(4, 6), 16) / 255,
+        },
       })
       const blob = new Blob([Uint8Array.from(result).buffer], { type: 'application/pdf' })
       triggerDownloadOverlay('Watermark added!', () => {
         downloadBlob(blob, `watermarked-${file.name}`)
       })
-    } catch {
-      toast.error('Failed to add watermark')
+    } catch (error) {
+      const message = error instanceof Error && error.message === 'Invalid page range'
+        ? `Use page numbers between 1 and ${pageCount}, for example 1-3,5`
+        : error instanceof Error && /WinAnsi/.test(error.message)
+          ? 'This font supports Latin text only. Use an image watermark for other writing systems.'
+          : 'Failed to add watermark'
+      toast.error(message)
     } finally {
       setProcessing(false)
     }
@@ -51,7 +89,7 @@ export default function WatermarkPage() {
   if (!file) {
     return (
       <ToolPageWrapper>
-        <ToolHeader title="Add Watermark" description="Add a text watermark to every page of your PDF online free — no upload needed, no sign-up. Browser-based processing with unlimited pages and no file size limits. Your files stay completely private." />
+        <ToolHeader title="Add Watermark" description="Add a configurable text or image watermark to selected PDF pages. Processing stays on this device; practical capacity depends on your browser and memory." />
         <FileUpload onFiles={handleFile} multiple={false} />
       </ToolPageWrapper>
     )
@@ -59,7 +97,7 @@ export default function WatermarkPage() {
 
   return (
     <ToolPageWrapper>
-      <ToolHeader title="Add Watermark" description="Add a text watermark to every PDF page — free online tool." />
+      <ToolHeader title="Add Watermark" description="Choose text or an image, placement, pages, angle, size, and opacity." />
       <div className="p-4 mb-5 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
         <div>
           <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{file.name}</p>
@@ -69,21 +107,45 @@ export default function WatermarkPage() {
       </div>
 
       <div className="p-5 mb-5 space-y-5" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
-        <div>
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300 block mb-1.5">Watermark text</label>
-          <input type="text" value={text} onChange={(e) => setText(e.target.value)}
-            className="w-full max-w-xs px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-jade transition-colors" />
+        <div className="flex gap-2">
+          <button type="button" className={mode === 'text' ? 'btn-primary' : 'btn-ghost'} onClick={() => setMode('text')}>Text watermark</button>
+          <button type="button" className={mode === 'image' ? 'btn-primary' : 'btn-ghost'} onClick={() => setMode('image')}>Image watermark</button>
         </div>
-        <div>
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300 block mb-1.5">Opacity: {opacity}%</label>
-          <input type="range" min={5} max={80} value={opacity} onChange={(e) => setOpacity(Number(e.target.value))}
-            className="w-full max-w-xs accent-jade" />
+        {mode === 'text' ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Watermark text
+              <input type="text" value={text} onChange={(e) => setText(e.target.value)} className="mt-1.5 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-jade" />
+            </label>
+            <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Text color
+              <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="mt-1.5 block w-full h-10 rounded-lg border border-gray-200 dark:border-gray-700 bg-white" />
+            </label>
+          </div>
+        ) : (
+          <label className="text-sm font-medium text-gray-600 dark:text-gray-300 block">PNG or JPEG watermark
+            <input type="file" accept="image/png,image/jpeg" onChange={(event) => setImageFile(event.target.files?.[0] ?? null)} className="mt-1.5 block w-full text-sm text-gray-500 file:mr-3 file:rounded-lg file:border-0 file:bg-jade/10 file:px-3 file:py-2 file:text-jade" />
+            {imageFile && <small className="block mt-1 text-gray-400">Selected: {imageFile.name}</small>}
+          </label>
+        )}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Placement
+            <select value={position} onChange={(event) => setPosition(event.target.value as typeof position)} className="mt-1.5 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm">
+              <option value="center">Center</option><option value="tile">Tiled</option><option value="top-left">Top left</option><option value="top-right">Top right</option><option value="bottom-left">Bottom left</option><option value="bottom-right">Bottom right</option>
+            </select>
+          </label>
+          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Pages <span className="font-normal text-gray-400">(blank = all)</span>
+            <input value={pageRange} onChange={(event) => setPageRange(event.target.value)} placeholder="1-3,5" className="mt-1.5 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm" />
+          </label>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <label className="text-sm text-gray-600 dark:text-gray-300">Opacity: {opacity}%<input type="range" min={5} max={90} value={opacity} onChange={(e) => setOpacity(Number(e.target.value))} className="block w-full mt-2 accent-jade" /></label>
+          <label className="text-sm text-gray-600 dark:text-gray-300">Angle: {angle}°<input type="range" min={-90} max={90} value={angle} onChange={(e) => setAngle(Number(e.target.value))} className="block w-full mt-2 accent-jade" /></label>
+          {mode === 'text' && <label className="text-sm text-gray-600 dark:text-gray-300">Text size: {fontSize}<input type="range" min={16} max={120} value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))} className="block w-full mt-2 accent-jade" /></label>}
         </div>
       </div>
 
       <div className="sticky bottom-4 sticky-bar p-4 flex items-center justify-between">
         <span className="text-sm text-gray-400">{pageCount} pages</span>
-        <button onClick={handleAdd} disabled={processing || !text.trim()} className="btn-primary flex items-center gap-2">
+        <button onClick={handleAdd} disabled={processing || (mode === 'text' ? !text.trim() : !imageFile)} className="btn-primary flex items-center gap-2">
           {processing ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
           {processing ? 'Adding...' : 'Add Watermark & Download'}
         </button>
@@ -94,7 +156,7 @@ export default function WatermarkPage() {
       <section className="portal-seo-copy" style={{ marginTop: '24px' }}>
         <span>FREE ONLINE PDF WATERMARK TOOL</span>
         <h2>Add watermark to PDF online free — private browser-based tool</h2>
-        <p>Add custom text watermarks to your PDF documents entirely in your browser. Choose your text, adjust opacity, and the watermark is applied to every page — no upload, no sign-up.</p>
+        <p>Add custom text or image watermarks to selected PDF pages entirely in your browser. Choose placement, page range, angle, size, color, and opacity before downloading.</p>
         <div>
           <article><h3>How to add watermark to PDF for free?</h3><p>Upload your PDF, type the watermark text (e.g. CONFIDENTIAL, DRAFT), adjust the opacity slider, and download the watermarked PDF. Processing is done locally.</p></article>
           <article><h3>Is it safe to add watermark to PDF online?</h3><p>Yes. Your PDF stays in your browser — it is never uploaded to any server. The watermark is applied locally using pdf-lib.</p></article>
