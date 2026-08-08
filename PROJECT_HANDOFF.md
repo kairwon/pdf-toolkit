@@ -14,17 +14,27 @@ every meaningful implementation or production change.
 
 ## Canonical working copy
 
-The clean release worktree is this repository. Do not deploy from similarly
-named Desktop backup folders without first comparing them with this branch.
+The canonical source is GitHub `main`. In this Codex environment its checked-out
+worktree is `/Users/kai/Documents/Codex/pdf-toolkit-source`, with Git metadata
+stored separately at `/Users/kai/Documents/Codex/pdf-toolkit` because project
+directories cannot contain a writable `.git` directory. Use:
 
-The release prepared on 2026-08-08 is commit `b16aecb`:
+```bash
+git --git-dir=/Users/kai/Documents/Codex/pdf-toolkit \
+  --work-tree=/Users/kai/Documents/Codex/pdf-toolkit-source status
+```
 
-`Optimize SEO, performance, security, and production UI`
+`/Users/kai/Desktop/pdf-toolkit` is an older local copy and is not a deployment
+source. Ignore `/Users/kai/Desktop/pdf-toolkit-bak`; it is only a backup.
 
-At handoff time the commit was built successfully but could not be pushed from
-Codex because that session could not resolve `github.com`. Check `git status`,
-`git log -1`, and `git status -sb` before continuing. If `main` is ahead of
-`origin/main`, push it normally.
+Every production build writes `dist/release.json`. The deployment script checks
+that its commit matches the intended Git release before and after switching
+Nginx to the new static files. Verify the live version at
+`https://labofpdf.com/release.json`.
+
+Before each switch, the script stores the previous static site at
+`/var/backups/labofpdf/before-<commit>.tgz`. This directory is outside Nginx's
+enabled site roots and exists only for rollback; it does not run a second site.
 
 ## Current product state
 
@@ -102,6 +112,7 @@ history rewrite and is not part of ordinary deployment.
 7. Test click-to-upload, real drag-and-drop, processing, download, sharing,
    mobile navigation, and browser Back.
 8. Check cache and security headers without making PDF assets uncacheable.
+9. Confirm `/release.json` reports the expected production commit.
 
 ## Agent working rules
 

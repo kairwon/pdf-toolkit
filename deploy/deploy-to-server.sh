@@ -9,11 +9,18 @@ NGINX_CONF="/etc/nginx/sites-enabled/labofpdf.conf"
 
 cd "$(dirname "$0")/.."
 
+RELEASE_COMMIT="${RELEASE_COMMIT:-$(git rev-parse --short=12 HEAD 2>/dev/null || true)}"
+if [[ -z "$RELEASE_COMMIT" ]]; then
+  echo "Set RELEASE_COMMIT to the Git commit being deployed." >&2
+  exit 1
+fi
+
 echo "Building the production site..."
-npm run build
+RELEASE_COMMIT="$RELEASE_COMMIT" npm run build
 test -f dist/index.html
 test -f dist/guides.html
 test -f dist/guides/compress-pdf-for-university-upload.html
+grep -q "\"commit\": \"$RELEASE_COMMIT\"" dist/release.json
 
 echo "Preparing a temporary release directory..."
 ssh "$SERVER" "set -eu; rm -rf '$NEXT_ROOT'; mkdir -p '$NEXT_ROOT'"
@@ -22,18 +29,24 @@ echo "Uploading the verified build..."
 rsync -az --delete dist/ "$SERVER:$NEXT_ROOT/"
 
 echo "Validating and switching the release..."
-ssh "$SERVER" 'bash -s' <<'REMOTE'
+ssh "$SERVER" 'bash -s' -- "$RELEASE_COMMIT" <<'REMOTE'
 set -Eeuo pipefail
 
+RELEASE_COMMIT="$1"
 APP_ROOT="/var/www/labofpdf"
 NEXT_ROOT="/var/www/labofpdf-next"
 PREV_ROOT="/var/www/labofpdf-prev"
+BACKUP_ROOT="/var/backups/labofpdf"
 NGINX_CONF="/etc/nginx/sites-enabled/labofpdf.conf"
 NGINX_BACKUP="/etc/nginx/labofpdf.conf.pre-deploy"
 
 test -f "$NEXT_ROOT/index.html"
 test -f "$NEXT_ROOT/guides.html"
 test -f "$NEXT_ROOT/guides/compress-pdf-for-university-upload.html"
+grep -q "\"commit\": \"$RELEASE_COMMIT\"" "$NEXT_ROOT/release.json"
+
+mkdir -p "$BACKUP_ROOT"
+tar -C /var/www -czf "$BACKUP_ROOT/before-$RELEASE_COMMIT.tgz" labofpdf
 
 cp -a "$NGINX_CONF" "$NGINX_BACKUP"
 python3 - <<'PY'
@@ -112,10 +125,18 @@ if ! curl -kfsS --resolve labofpdf.com:443:127.0.0.1 https://labofpdf.com/guides
   exit 1
 fi
 
+if ! curl -kfsS --resolve labofpdf.com:443:127.0.0.1 https://labofpdf.com/release.json | grep -q "\"commit\": \"$RELEASE_COMMIT\""; then
+  echo "Release manifest verification failed; restoring the previous release." >&2
+  rollback
+  exit 1
+fi
+
 rm -rf "$PREV_ROOT"
 rm -f "$NGINX_BACKUP"
 echo "Release is live and temporary files have been removed."
+echo "Rollback archive: $BACKUP_ROOT/before-$RELEASE_COMMIT.tgz"
 du -sh "$APP_ROOT"
 REMOTE
 
 echo "Deployment completed successfully."
+echo "Release commit: $RELEASE_COMMIT"

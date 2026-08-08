@@ -79,6 +79,17 @@ most two previous releases.
 See `PROJECT_HANDOFF.md` for the current deployment state and the complete
 cross-agent verification checklist.
 
+### Canonical deployment chain
+
+`GitHub main` → canonical local worktree → `npm ci` → `npm run build` →
+validated `dist/` → atomic upload → Nginx `/var/www/labofpdf`.
+
+Run `deploy/deploy-to-server.sh` only from the canonical worktree. The build
+writes `dist/release.json`, and deployment succeeds only when the online
+manifest reports the same Git commit. The visitor counter remains a separate
+systemd service on port 3001 behind `/api/`; static frontend deployment does not
+replace or restart it.
+
 ## Privacy
 
 All PDF processing runs entirely client-side. No files are uploaded to any server. Server-side features (planned) will be clearly marked.
