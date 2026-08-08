@@ -7,6 +7,7 @@ type SeoEntry = {
   description: string
   name: string
   tool?: boolean
+  article?: boolean
 }
 
 const seo: Record<string, SeoEntry> = {
@@ -119,6 +120,39 @@ const seo: Record<string, SeoEntry> = {
     description: 'Understand the browser-based security model, local file processing, temporary memory and practical limitations of Lab of PDF.',
     name: 'Security',
   },
+  '/guides': {
+    title: 'Practical PDF Guides for Study and Submissions | Lab of PDF',
+    description: 'Practical PDF guides for university upload limits, searchable scanned notes and organized exam revision packs, linked to free private browser tools.',
+    name: 'Practical PDF guides',
+  },
+  '/editorial-policy': {
+    title: 'Editorial Policy: How We Test and Review Content | Lab of PDF',
+    description: 'See how Lab of PDF tests workflows, reviews privacy and product claims, handles sources, labels limitations and corrects practical PDF guidance.',
+    name: 'Editorial policy',
+  },
+  '/about/editorial-team': {
+    title: 'Lab of PDF Authors and Reviewers | Editorial Team',
+    description: 'Learn who writes and reviews Lab of PDF guides, what product and privacy review means, and how to request a content correction.',
+    name: 'Authors and reviewers',
+  },
+  '/guides/compress-pdf-for-university-upload': {
+    title: 'How to Reduce PDF Size for a University Upload Portal',
+    description: 'Reduce a thesis or assignment PDF below an exact university portal limit, preserve readability and verify the final file before submission.',
+    name: 'Reduce PDF size for university upload',
+    article: true,
+  },
+  '/guides/make-scanned-notes-searchable': {
+    title: 'How to Make Scanned PDF Notes Searchable for Revision',
+    description: 'Use OCR to make scanned lecture notes searchable and editable, check recognition errors and create a faster exam revision workflow.',
+    name: 'Make scanned notes searchable',
+    article: true,
+  },
+  '/guides/organize-pdf-study-notes': {
+    title: 'How to Organize PDF Study Notes into a Revision Pack',
+    description: 'Combine, reorder and reduce PDF lecture notes into a clear exam revision pack without losing sources, diagrams or useful page order.',
+    name: 'Organize PDF study notes',
+    article: true,
+  },
   '/pdf-to-excel': { title: 'PDF to Excel — Coming Soon | Lab of PDF', description: 'PDF table extraction to Excel is currently in development.', name: 'PDF to Excel' },
   '/sign-pdf': { title: 'Sign PDF — Coming Soon | Lab of PDF', description: 'Browser-based PDF signing is currently in development.', name: 'Sign PDF' },
   '/unlock-pdf': { title: 'Unlock PDF — Coming Soon | Lab of PDF', description: 'Browser-based PDF password removal is currently in development.', name: 'Unlock PDF' },
@@ -198,6 +232,21 @@ export default function usePageTitle(path: string) {
         browserRequirements: 'JavaScript enabled',
         isAccessibleForFree: true,
         offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      })
+    }
+    if (entry.article) {
+      graph.push({
+        '@type': 'Article',
+        headline: entry.name,
+        url,
+        description: entry.description,
+        datePublished: '2026-08-08',
+        dateModified: '2026-08-08',
+        author: { '@type': 'Organization', name: 'Lab of PDF editorial team', url: `${BASE}/about/editorial-team` },
+        reviewedBy: { '@type': 'Organization', name: 'Lab of PDF product and privacy review', url: `${BASE}/editorial-policy` },
+        publisher: { '@type': 'Organization', name: 'Lab of PDF', url: `${BASE}/`, logo: { '@type': 'ImageObject', url: `${BASE}/logo-google.png` } },
+        image: `${BASE}/og-v3.jpg`,
+        mainEntityOfPage: url,
       })
     }
     if (path !== '/' && !noIndexPaths.has(path)) {

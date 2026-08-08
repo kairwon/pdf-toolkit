@@ -18,6 +18,12 @@ const VisaPrepPage = lazy(() => import('./pages/VisaPrepPage'))
 const PortalReadyPage = lazy(() => import('./pages/PortalReadyPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const AllToolsPage = lazy(() => import('./pages/AllToolsPage'))
+const GuidesPage = lazy(() => import('./pages/GuidesPage'))
+const EditorialPolicyPage = lazy(() => import('./pages/EditorialPolicyPage'))
+const EditorialTeamPage = lazy(() => import('./pages/EditorialTeamPage'))
+const UniversityUploadGuidePage = lazy(() => import('./pages/UniversityUploadGuidePage'))
+const SearchableNotesGuidePage = lazy(() => import('./pages/SearchableNotesGuidePage'))
+const StudyPackGuidePage = lazy(() => import('./pages/StudyPackGuidePage'))
 
 export default function App() {
   const deferred = (page: ReactNode) => (
@@ -31,6 +37,12 @@ export default function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<LandingPage />} />
         <Route path="/tools" element={deferred(<AllToolsPage />)} />
+        <Route path="/guides" element={deferred(<GuidesPage />)} />
+        <Route path="/editorial-policy" element={deferred(<EditorialPolicyPage />)} />
+        <Route path="/about/editorial-team" element={deferred(<EditorialTeamPage />)} />
+        <Route path="/guides/compress-pdf-for-university-upload" element={deferred(<UniversityUploadGuidePage />)} />
+        <Route path="/guides/make-scanned-notes-searchable" element={deferred(<SearchableNotesGuidePage />)} />
+        <Route path="/guides/organize-pdf-study-notes" element={deferred(<StudyPackGuidePage />)} />
         <Route path="/merge" element={deferred(<MergePage />)} />
         <Route path="/split" element={deferred(<SplitPage />)} />
         <Route path="/manage" element={deferred(<ManagePage />)} />

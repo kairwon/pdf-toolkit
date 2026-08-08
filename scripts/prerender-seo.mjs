@@ -23,9 +23,25 @@ const pages = {
   '/privacy': ['Privacy Policy and Local PDF Processing | Lab of PDF', 'Learn how Lab of PDF processes document contents in browser memory, what website requests may contain and how privacy choices work.', 'Privacy policy'],
   '/terms': ['Terms of Service | Lab of PDF', 'Read the terms for using Lab of PDF browser-based document preparation and PDF processing tools.', 'Terms of service'],
   '/security': ['How Local PDF Processing Protects Your Files | Lab of PDF', 'Understand the browser-based security model, local file processing, temporary memory and practical limitations of Lab of PDF.', 'Security'],
+  '/guides': ['Practical PDF Guides for Study and Submissions | Lab of PDF', 'Practical PDF guides for university upload limits, searchable scanned notes and organized exam revision packs, linked to free private browser tools.', 'Practical PDF guides'],
+  '/editorial-policy': ['Editorial Policy: How We Test and Review Content | Lab of PDF', 'See how Lab of PDF tests workflows, reviews privacy and product claims, handles sources, labels limitations and corrects practical PDF guidance.', 'Editorial policy'],
+  '/about/editorial-team': ['Lab of PDF Authors and Reviewers | Editorial Team', 'Learn who writes and reviews Lab of PDF guides, what product and privacy review means, and how to request a content correction.', 'Authors and reviewers'],
+  '/guides/compress-pdf-for-university-upload': ['How to Reduce PDF Size for a University Upload Portal', 'Reduce a thesis or assignment PDF below an exact university portal limit, preserve readability and verify the final file before submission.', 'Reduce PDF size for university upload'],
+  '/guides/make-scanned-notes-searchable': ['How to Make Scanned PDF Notes Searchable for Revision', 'Use OCR to make scanned lecture notes searchable and editable, check recognition errors and create a faster exam revision workflow.', 'Make scanned notes searchable'],
+  '/guides/organize-pdf-study-notes': ['How to Organize PDF Study Notes into a Revision Pack', 'Combine, reorder and reduce PDF lecture notes into a clear exam revision pack without losing sources, diagrams or useful page order.', 'Organize PDF study notes'],
 }
 
 const toolPaths = new Set(Object.keys(pages).filter((path) => !['/tools', '/privacy', '/terms', '/security'].includes(path)))
+for (const path of ['/guides', '/editorial-policy', '/about/editorial-team', '/guides/compress-pdf-for-university-upload', '/guides/make-scanned-notes-searchable', '/guides/organize-pdf-study-notes']) toolPaths.delete(path)
+const articlePaths = new Set(['/guides/compress-pdf-for-university-upload', '/guides/make-scanned-notes-searchable', '/guides/organize-pdf-study-notes'])
+const staticBodies = {
+  '/guides': `<main class="guides-page"><header class="guides-hero"><span>PRACTICAL PDF GUIDES</span><h1>Finish the document task, not just the file conversion</h1><p>Step-by-step guidance for university uploads, scanned study notes and exam revision packs. Every guide connects to a private browser tool.</p></header><section class="guide-grid"><article><h2>Reduce a PDF for a university submission portal</h2><p>Meet an exact MB limit without sacrificing readable text or submitting the wrong file.</p><a href="/guides/compress-pdf-for-university-upload">Read the university upload guide</a></article><article><h2>Make scanned lecture notes searchable</h2><p>Use OCR carefully, verify recognition errors and create notes you can search.</p><a href="/guides/make-scanned-notes-searchable">Read the searchable notes guide</a></article><article><h2>Organize PDF study notes for exams</h2><p>Remove duplicates, arrange topics and create a useful revision pack.</p><a href="/guides/organize-pdf-study-notes">Read the revision pack guide</a></article></section></main>`,
+  '/editorial-policy': `<main class="content-article"><article class="content-body"><h1>How Lab of PDF reviews practical content</h1><p>We define the real document outcome, test the current workflow with non-sensitive samples, verify the result, review privacy claims and state important limits. Official university and government instructions always take priority. Content is written by the Lab of PDF editorial team without invented credentials. Corrections can be sent to labofpdf@gmail.com without attaching confidential documents.</p><h2>Our review sequence</h2><ol><li>Define the user’s real constraint.</li><li>Test the current production workflow.</li><li>Verify size, format, order and readability.</li><li>Review local-processing and privacy claims.</li><li>Document failure cases and changing requirements.</li></ol></article></main>`,
+  '/about/editorial-team': `<main class="content-article"><article class="content-body"><h1>Who writes and reviews Lab of PDF content</h1><p>The Lab of PDF editorial team maintains the product documentation and practical guides. We use a transparent team identity instead of inventing a named expert or unsupported credentials. Product review checks that instructions match the current interface. Privacy review checks local-processing claims against the application architecture.</p><p><a href="/editorial-policy">Read the complete editorial method</a>.</p></article></main>`,
+  '/guides/compress-pdf-for-university-upload': `<main class="content-article"><article class="content-body"><h1>How to reduce a PDF for a university submission portal</h1><p>Start by recording the portal’s exact size limit, accepted format and whether it expects one PDF or several files. Keep the original, remove accidental pages, then begin with balanced compression. Aim slightly below the limit.</p><h2>Verify the downloaded PDF</h2><ul><li>Check its filename and file size.</li><li>Open the downloaded copy.</li><li>Inspect the first, middle and last pages.</li><li>Zoom into tables, equations and signatures.</li><li>Confirm page count, orientation and searchable text.</li></ul><p>If the file is still too large, remove unnecessary pages or improve the source scan instead of repeatedly compressing it. Follow the university’s official requirements as the final authority.</p><p><a href="/compress/exact">Compress a PDF to an exact size</a></p></article></main>`,
+  '/guides/make-scanned-notes-searchable': `<main class="content-article"><article class="content-body"><h1>Make scanned lecture notes searchable for faster revision</h1><p>First try selecting or searching the PDF text. If each page behaves like a photograph, OCR is needed. Rotate pages, remove blanks and test a short sample before processing a large scan.</p><h2>Check OCR before studying from it</h2><p>Compare dense text, headings, tables and formulas with the original. Names, dates, equations and low-contrast words need manual checking. Apply consistent headings, retain original page references and use the searchable copy for navigation—not as a replacement for the source.</p><p><a href="/to-word">Convert scanned PDF notes with OCR</a></p></article></main>`,
+  '/guides/organize-pdf-study-notes': `<main class="content-article"><article class="content-body"><h1>Organize PDF study notes into one useful revision pack</h1><p>Choose a predictable order such as syllabus sequence or exam weighting. Keep full readings in an archive and include only high-value summaries, diagrams, formulas and examples in the master pack.</p><h2>Clean and combine</h2><p>Remove duplicates and blank pages, rotate pages, extract useful sections and preserve source references. Merge one topic at a time, verify each transition and compress only after the order is correct. If the final file is slow to open, create one PDF per major unit.</p><p><a href="/merge">Merge and reorder PDF study notes</a></p></article></main>`,
+}
 const noIndexPages = {
   '/pdf-to-excel': ['PDF to Excel — Coming Soon | Lab of PDF', 'PDF table extraction to Excel is currently in development.', 'PDF to Excel'],
   '/sign-pdf': ['Sign PDF — Coming Soon | Lab of PDF', 'Browser-based PDF signing is currently in development.', 'Sign PDF'],
@@ -61,12 +77,29 @@ function graphFor(path, title, description, name) {
     })
   } else if (path === '/tools') {
     graph.unshift({ '@type': 'CollectionPage', name, url, description })
+  } else if (path === '/guides') {
+    graph.unshift({ '@type': 'CollectionPage', name, url, description, about: 'Practical PDF workflows for study and document submissions' })
+  } else if (articlePaths.has(path)) {
+    graph.unshift({
+      '@type': 'Article',
+      headline: name,
+      url,
+      description,
+      datePublished: '2026-08-08',
+      dateModified: '2026-08-08',
+      author: { '@type': 'Organization', name: 'Lab of PDF editorial team', url: `${BASE}/about/editorial-team` },
+      reviewedBy: { '@type': 'Organization', name: 'Lab of PDF product and privacy review', url: `${BASE}/editorial-policy` },
+      publisher: { '@type': 'Organization', name: 'Lab of PDF', url: `${BASE}/`, logo: { '@type': 'ImageObject', url: `${BASE}/logo-google.png` } },
+      image: `${BASE}/og-v3.jpg`,
+      mainEntityOfPage: url,
+    })
   }
   return { '@context': 'https://schema.org', '@graph': graph }
 }
 
 function renderRoute(source, path, [title, description, name]) {
   const url = `${BASE}${path}`
+  const structuredData = `<script type="application/ld+json">${JSON.stringify(graphFor(path, title, description, name))}</script>`
   let html = source
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(title)}</title>`)
     .replace(/(<link\s+rel=["']canonical["'][^>]*href=["'])[^"']*(["'][^>]*>)/i, `$1${url}$2`)
@@ -76,7 +109,13 @@ function renderRoute(source, path, [title, description, name]) {
   html = html.replace(/(<meta\s+property=["']og:url["'][^>]*content=["'])[^"']*(["'][^>]*>)/i, `$1${url}$2`)
   html = html.replace(/(<meta\s+name=["']twitter:title["'][^>]*content=["'])[^"']*(["'][^>]*>)/i, `$1${escapeHtml(title)}$2`)
   html = html.replace(/(<meta\s+name=["']twitter:description["'][^>]*content=["'])[^"']*(["'][^>]*>)/i, `$1${escapeHtml(description)}$2`)
-  html = html.replace(/<script\s+type=["']application\/ld\+json["']>[\s\S]*?<\/script>/i, `<script type="application/ld+json">${JSON.stringify(graphFor(path, title, description, name))}</script>`)
+  if (/<script\s+type=["']application\/ld\+json["']>[\s\S]*?<\/script>/i.test(html)) {
+    html = html.replace(/<script\s+type=["']application\/ld\+json["']>[\s\S]*?<\/script>/i, structuredData)
+  } else {
+    html = html.replace('</head>', `    ${structuredData}\n  </head>`)
+  }
+  if (articlePaths.has(path)) html = html.replace('property="og:type" content="website"', 'property="og:type" content="article"')
+  if (staticBodies[path]) html = html.replace('<div id="root"></div>', `<div id="root">${staticBodies[path]}</div>`)
   return html
 }
 

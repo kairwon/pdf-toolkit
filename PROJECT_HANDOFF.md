@@ -44,8 +44,12 @@ Codex because that session could not resolve `github.com`. Check `git status`,
 ## SEO and production behavior
 
 - `npm run build` runs TypeScript, Vite, and `scripts/prerender-seo.mjs`.
-- The prerender step currently creates 18 indexable route HTML files, three
+- The prerender step currently creates 24 indexable route HTML files, three
   noindex route files, and a noindex 404 document.
+- Trust and discovery content now includes `/guides`, `/editorial-policy`,
+  `/about/editorial-team`, and three long-tail study/submission guides. The
+  guide HTML includes crawlable fallback copy plus canonical metadata and
+  Article structured data; keep the fallback copy aligned with visible pages.
 - Do not replace the build command with plain `vite build`; that would remove
   route-specific SEO output.
 - `public/sitemap.xml`, `public/robots.txt`, canonical tags, Open Graph data,
@@ -81,7 +85,7 @@ history rewrite and is not part of ordinary deployment.
 ## Verification checklist
 
 1. Run `npm ci` and `npm run build`.
-2. Confirm the build reports 18 indexable routes, 3 noindex routes, and 404.
+2. Confirm the build reports 24 indexable routes, 3 noindex routes, and 404.
 3. Confirm `dist/to-image.html` has its own title, description, and canonical.
 4. Deploy only after the build succeeds.
 5. Run `nginx -t` before any reload when Nginx configuration changed.
@@ -98,4 +102,3 @@ history rewrite and is not part of ordinary deployment.
 - Build and visually verify meaningful UI changes before committing.
 - Update this file when routes, deployment, infrastructure, privacy behavior,
   analytics, advertising, or the canonical working location changes.
-

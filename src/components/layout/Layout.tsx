@@ -27,6 +27,12 @@ export default function Layout() {
     '/privacy': 'Privacy',
     '/terms': 'Terms',
     '/security': 'Security',
+    '/guides': 'Guides',
+    '/editorial-policy': 'Editorial policy',
+    '/about/editorial-team': 'Authors and reviewers',
+    '/guides/compress-pdf-for-university-upload': 'University PDF upload guide',
+    '/guides/make-scanned-notes-searchable': 'Searchable notes guide',
+    '/guides/organize-pdf-study-notes': 'PDF revision pack guide',
   }
   const toolPaths = new Set([
     '/merge', '/split', '/manage', '/edit-pdf', '/to-image', '/compress',
@@ -74,6 +80,9 @@ export default function Layout() {
           </div>
           <nav aria-label="Footer navigation">
             <Link to="/tools">All tools</Link>
+            <Link to="/guides">Guides</Link>
+            <Link to="/editorial-policy">How we review</Link>
+            <Link to="/about/editorial-team">Authors</Link>
             <Link to="/privacy">Privacy</Link>
             <Link to="/terms">Terms</Link>
             <Link to="/security">Security</Link>
