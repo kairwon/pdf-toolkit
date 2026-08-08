@@ -68,6 +68,13 @@ Production should use one fixed Git working directory and one `dist/` directory,
 not a new full release directory on every deploy. Vite empties `dist/` before a
 successful build, so obsolete hashed assets do not accumulate.
 
+The current server is `root@167.99.1.62`, Nginx serves
+`/var/www/labofpdf`, and its site configuration is
+`/etc/nginx/sites-enabled/labofpdf.conf`. Run
+`deploy/deploy-to-server.sh` from a local terminal for the validated atomic
+upload workflow. It removes its temporary and previous release only after
+online verification succeeds.
+
 After a successful static build, `node_modules/` is not required by Nginx and
 may be removed. The next deployment can recreate it with `npm ci`. Never remove
 `dist/`, the active Nginx document root, or the repository before a replacement
