@@ -32,8 +32,8 @@ that its commit matches the intended Git release before and after switching
 Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
-The production release prepared after the core reliability work uses the
-immutable tag `production-2026-08-09-core-pdf-reliability`.
+The current production release uses the immutable tag
+`production-2026-08-09-private-feedback-v2`.
 
 The deployment script uses `/var/www/labofpdf-next` and
 `/var/www/labofpdf-prev` only during its atomic switch. Both are removed after
