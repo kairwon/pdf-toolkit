@@ -81,19 +81,30 @@ cross-agent verification checklist.
 
 ### Canonical deployment chain
 
-`GitHub main` → canonical local worktree → `npm ci` → `npm run build` →
+`GitHub main` → canonical local worktree → lint and tests → `npm run build` →
 validated `dist/` → atomic upload → Nginx `/var/www/labofpdf`.
 
 Run `deploy/deploy-to-server.sh production-YYYY-MM-DD-description` only from
 the canonical worktree after pushing that new immutable tag. The build
 writes `dist/release.json`, and deployment succeeds only when the online
-manifest reports the same Git commit. The visitor counter remains a separate
-systemd service on port 3001 behind `/api/`; static frontend deployment does not
-replace or restart it.
+manifest reports the same Git commit. The deployment also installs the local
+Node API at `/opt/labofpdf-api` and restarts `visitor-counter.service` on port
+3001 behind `/api/`. API state is kept in `/var/lib/labofpdf`, outside the
+static release directories.
 
 ## Privacy
 
-All PDF processing runs entirely client-side. No files are uploaded to any server. Server-side features (planned) will be clearly marked.
+All PDF processing runs entirely client-side. No files are uploaded to the
+server. After a result is downloaded, users can optionally report whether it
+worked. Feedback stores the tool path, outcome, reason, optional short comment,
+and release commit in a server-local SQLite database. It does not store the PDF,
+file name, document content, or IP address.
+
+Administrators can view privacy-safe 30-day aggregates on the server with:
+
+```bash
+sudo -u www-data node /opt/labofpdf-api/feedback-report.mjs
+```
 
 ## License
 

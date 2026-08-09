@@ -71,6 +71,10 @@ locally and on GitHub. Never move or reuse a production tag.
 - `npm test` covers watermark candidate detection and selective removal with a
   synthetic PDF fixture. Keep adding representative, non-sensitive fixtures as
   PDF manipulation behavior expands.
+- The download result dialog asks for optional outcome feedback only after a
+  user downloads a result. It records the tool path, yes/no outcome, reason,
+  optional 300-character comment, and release commit. It never sends the PDF,
+  file name, document content, or IP address.
 - Tool icons use task-specific PDF metaphors rather than generic document icons.
 - Browser back actions should use history when available and fall back safely.
 - The PandaCard feature remains in source, but large obsolete
@@ -113,6 +117,17 @@ online verification succeeds.
 Nginx backups must stay outside `/etc/nginx/sites-enabled`; Nginx loads every
 file in that directory, including files without a `.conf` suffix.
 
+The local API runs as `www-data` through `visitor-counter.service`, listening
+only on `127.0.0.1:3001`. Code is installed at `/opt/labofpdf-api`; counters and
+the feedback SQLite database live at `/var/lib/labofpdf`. Nginx proxies `/api/`.
+The deployment script validates and switches both the static site and API, and
+restores both if online verification fails. To view aggregate feedback without
+printing comments, run:
+
+```bash
+sudo -u www-data node /opt/labofpdf-api/feedback-report.mjs
+```
+
 After a successful static build, `node_modules/` is not required by Nginx and
 may be removed. The next deployment can recreate it with `npm ci`. Never remove
 `dist/`, the active Nginx document root, or the repository before a replacement
@@ -139,6 +154,8 @@ history rewrite and is not part of ordinary deployment.
    mobile navigation, and browser Back.
 8. Check cache and security headers without making PDF assets uncacheable.
 9. Confirm `/release.json` reports the expected production commit.
+10. Confirm `/api/health` reports SQLite feedback storage and perform a dry-run
+    feedback POST without creating a row.
 
 ## Agent working rules
 

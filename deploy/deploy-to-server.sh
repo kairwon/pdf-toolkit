@@ -31,6 +31,8 @@ if [[ "$RELEASE_COMMIT" != "$HEAD_COMMIT" || "$RELEASE_COMMIT" != "$REMOTE_COMMI
 fi
 
 echo "Building the production site..."
+npm run lint
+npm test
 RELEASE_COMMIT="$RELEASE_COMMIT" npm run build
 test -f dist/index.html
 test -f dist/guides.html
@@ -38,10 +40,12 @@ test -f dist/guides/compress-pdf-for-university-upload.html
 grep -q "\"commit\": \"$RELEASE_COMMIT\"" dist/release.json
 
 echo "Preparing a temporary release directory..."
-ssh "$SERVER" "set -eu; rm -rf '$NEXT_ROOT'; mkdir -p '$NEXT_ROOT'"
+ssh "$SERVER" "set -eu; rm -rf '$NEXT_ROOT' /tmp/labofpdf-api-stage; mkdir -p '$NEXT_ROOT' /tmp/labofpdf-api-stage"
 
 echo "Uploading the verified build..."
 rsync -az --delete dist/ "$SERVER:$NEXT_ROOT/"
+rsync -az --delete server/ "$SERVER:/tmp/labofpdf-api-stage/"
+rsync -az deploy/visitor-counter.service "$SERVER:/tmp/visitor-counter.service.next"
 
 echo "Validating and switching the release..."
 ssh "$SERVER" 'bash -s' -- "$RELEASE_COMMIT" <<'REMOTE'
@@ -53,11 +57,77 @@ NEXT_ROOT="/var/www/labofpdf-next"
 PREV_ROOT="/var/www/labofpdf-prev"
 NGINX_CONF="/etc/nginx/sites-enabled/labofpdf.conf"
 NGINX_BACKUP="/etc/nginx/labofpdf.conf.pre-deploy"
+API_ROOT="/opt/labofpdf-api"
+API_PREV="/opt/labofpdf-api-prev"
+API_STAGE="/tmp/labofpdf-api-stage"
+API_UNIT="/etc/systemd/system/visitor-counter.service"
+API_UNIT_BACKUP="/etc/systemd/system/visitor-counter.service.pre-deploy"
+API_DATA="/var/lib/labofpdf"
 
 test -f "$NEXT_ROOT/index.html"
 test -f "$NEXT_ROOT/guides.html"
 test -f "$NEXT_ROOT/guides/compress-pdf-for-university-upload.html"
 grep -q "\"commit\": \"$RELEASE_COMMIT\"" "$NEXT_ROOT/release.json"
+node --check "$API_STAGE/labofpdf-api.mjs"
+node --check "$API_STAGE/feedback-report.mjs"
+
+echo "Installing and validating the local feedback API..."
+mkdir -p "$API_DATA"
+if [[ ! -f "$API_DATA/counters.json" ]]; then
+  VISITORS="$(cat /tmp/visitor_count.txt 2>/dev/null || echo 108)"
+  BAMBOO="$(cat /tmp/bamboo_count.txt 2>/dev/null || echo 300)"
+  [[ "$VISITORS" =~ ^[0-9]+$ ]] || VISITORS=108
+  [[ "$BAMBOO" =~ ^[0-9]+$ ]] || BAMBOO=300
+  printf '{"visitors":%s,"bamboo":%s}\n' "$VISITORS" "$BAMBOO" > "$API_DATA/counters.json"
+fi
+chown -R www-data:www-data "$API_DATA"
+chmod 750 "$API_DATA"
+chmod 640 "$API_DATA/counters.json"
+
+API_HAD_ROOT=0
+rm -rf "$API_PREV"
+if [[ -d "$API_ROOT" ]]; then
+  API_HAD_ROOT=1
+  cp -a "$API_ROOT" "$API_PREV"
+fi
+cp -a "$API_UNIT" "$API_UNIT_BACKUP"
+mkdir -p "$API_ROOT"
+install -m 0644 "$API_STAGE/labofpdf-api.mjs" "$API_ROOT/server.mjs"
+install -m 0644 "$API_STAGE/feedback-report.mjs" "$API_ROOT/feedback-report.mjs"
+install -m 0644 /tmp/visitor-counter.service.next "$API_UNIT"
+chown -R root:root "$API_ROOT"
+
+rollback_api() {
+  cp -a "$API_UNIT_BACKUP" "$API_UNIT"
+  rm -rf "$API_ROOT"
+  if [[ "$API_HAD_ROOT" == 1 && -d "$API_PREV" ]]; then mv "$API_PREV" "$API_ROOT"; fi
+  systemctl daemon-reload
+  systemctl restart visitor-counter.service
+}
+
+systemctl daemon-reload
+systemctl restart visitor-counter.service
+API_READY=0
+for attempt in $(seq 1 10); do
+  if curl -fsS http://127.0.0.1:3001/api/health | grep -q '"ok":true'; then API_READY=1; break; fi
+  sleep 1
+done
+if [[ "$API_READY" != 1 ]]; then
+  journalctl -u visitor-counter.service -n 40 --no-pager >&2 || true
+  rollback_api
+  exit 1
+fi
+
+if ! curl -fsS \
+  -H 'Origin: https://labofpdf.com' \
+  -H 'Content-Type: application/json' \
+  -H 'X-Feedback-Dry-Run: 1' \
+  --data "{\"tool\":\"/deployment-check\",\"outcome\":\"yes\",\"reason\":\"result_worked\",\"releaseCommit\":\"$RELEASE_COMMIT\"}" \
+  http://127.0.0.1:3001/api/feedback | grep -q '"stored":false'; then
+  echo "Feedback API validation failed; restoring the previous API." >&2
+  rollback_api
+  exit 1
+fi
 
 cp -a "$NGINX_CONF" "$NGINX_BACKUP"
 python3 - <<'PY'
@@ -107,6 +177,7 @@ PY
 if ! nginx -t; then
   cp -a "$NGINX_BACKUP" "$NGINX_CONF"
   nginx -t
+  rollback_api
   exit 1
 fi
 
@@ -124,6 +195,7 @@ rollback() {
   cp -a "$NGINX_BACKUP" "$NGINX_CONF"
   nginx -t
   systemctl reload nginx
+  rollback_api
 }
 
 verify_page() {
@@ -165,8 +237,16 @@ if ! curl -kfsS --resolve labofpdf.com:443:127.0.0.1 https://labofpdf.com/releas
   exit 1
 fi
 
+if ! curl -kfsS --resolve labofpdf.com:443:127.0.0.1 https://labofpdf.com/api/health | grep -q '"feedbackStorage":"sqlite"'; then
+  echo "Feedback API proxy verification failed; restoring the previous release." >&2
+  rollback
+  exit 1
+fi
+
 rm -rf "$PREV_ROOT"
+rm -rf "$API_PREV" "$API_STAGE"
 rm -f "$NGINX_BACKUP"
+rm -f "$API_UNIT_BACKUP" /tmp/visitor-counter.service.next
 echo "Release is live and temporary files have been removed."
 du -sh "$APP_ROOT"
 REMOTE
