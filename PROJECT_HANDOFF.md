@@ -60,6 +60,44 @@ locally and on GitHub. Never move or reuse a production tag.
 - Manage Pages applies the visible page order and rotations to full-document,
   extraction, and removal downloads instead of silently exporting the original
   order or orientation.
+- Manage Pages keeps the current layout available after preparing a download,
+  offers a one-click layout reset, and provides accessible move-left/right
+  controls so page reordering does not depend on desktop drag-and-drop.
+- Manage Pages accepts visible-position ranges such as `1-5, 8, 12-14` or
+  `all`, making selection practical for long documents even after reordering.
+- Manage Pages keeps up to 20 layout-history steps for page order and rotation,
+  with Undo/Redo buttons and standard Ctrl/Cmd keyboard shortcuts that do not
+  intercept typing in the page-range field.
+- Manage Pages shows operation-specific progress while opening or generating a
+  PDF, locks layout-changing controls until that operation finishes, and
+  ignores stale file-open results when files are selected in quick succession.
+- Manage Pages can remove selected pages from the working layout without an
+  immediate download, move selected pages as one stable block to a specified
+  position, and quickly select odd, even, or inverse visible-page sets. These
+  edits participate in Undo/Redo, Reset, and the final Save & Download output.
+- Manage Pages keeps page order, rotation, removal, and layout history in one
+  tested reducer. Regression coverage includes compound edit sequences,
+  undoable reset, the 20-step history limit, and redo invalidation after a new
+  edit.
+- Manage Pages models every visible page as an independent instance. Users can
+  duplicate selected pages, insert portrait or landscape A4/Letter blank pages,
+  and restore individual or all removed pages from a thumbnail tray. Duplicate
+  source pages and inserted blanks are preserved in the final PDF output.
+- Manage Pages supports direct page navigation, Home/End/Page Up/Page Down and
+  arrow-key navigation, Shift-click range selection, and replace/add/remove
+  range-selection modes. Selection uses visible positions after reordering.
+- Manage Pages inspects forms, signatures, bookmarks, attachments, and page
+  labels before editing and warns when structural features may not survive a
+  rewrite. Password-protected PDFs are not decrypted: the UI asks users to
+  remove the password locally first because the current PDF editing library
+  cannot safely preserve encrypted documents.
+- Manage Pages reports per-page output progress, allows generation to be
+  cancelled between pages, and includes the applied edits in the download
+  summary. Opening errors distinguish encryption, malformed files, memory
+  pressure, and generic failures.
+- PDF previews reuse one parsed PDF.js document per selected file, and the
+  filmstrip lazily renders nearby visible thumbnails instead of repeatedly
+  reading the same file or leaving long-document thumbnails blank.
 - Watermark removal now inspects `/Stamp` and `/Watermark` annotations, shows
   every candidate, recommends only likely watermarks, preserves unselected
   stamps, reports the actual number removed, and warns when a digital signature

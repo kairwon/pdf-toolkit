@@ -1,11 +1,17 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { degrees, PDFDocument, PDFName, PDFString } from 'pdf-lib'
+
+const { getDocumentMock } = vi.hoisted(() => ({ getDocumentMock: vi.fn() }))
+vi.mock('pdfjs-dist', () => ({
+  GlobalWorkerOptions: { workerSrc: '' },
+  getDocument: getDocumentMock,
+}))
 
 Object.defineProperty(globalThis, 'DOMMatrix', { value: class DOMMatrix {} })
 Object.defineProperty(globalThis, 'ImageData', { value: class ImageData {} })
 Object.defineProperty(globalThis, 'Path2D', { value: class Path2D {} })
 
-const { addWatermark, arrangePdfPages, inspectWatermarks, mergePdfPages, removeWatermark, textPagesToWord } = await import('./pdf')
+const { addWatermark, arrangePdfPages, getPageCount, inspectPdfStructure, inspectWatermarks, mergePdfPages, removeWatermark, textPagesToWord } = await import('./pdf')
 
 async function createAnnotationPdf() {
   const document = await PDFDocument.create()
@@ -58,6 +64,19 @@ describe('watermark annotation inspection', () => {
 })
 
 describe('PDF output formats', () => {
+  it('reuses a parsed preview document for repeated reads of the same file', async () => {
+    const document = await PDFDocument.create()
+    document.addPage([210, 297])
+    document.addPage([210, 297])
+    const file = new File([Uint8Array.from(await document.save()).buffer], 'cached-preview.pdf', { type: 'application/pdf' })
+    const arrayBuffer = vi.spyOn(file, 'arrayBuffer')
+    getDocumentMock.mockReturnValue({ promise: Promise.resolve({ numPages: 2 }) })
+
+    expect(await getPageCount(file)).toBe(2)
+    expect(await getPageCount(file)).toBe(2)
+    expect(arrayBuffer).toHaveBeenCalledTimes(1)
+  })
+
   it('merges pages in the requested cross-file order and applies UI rotations', async () => {
     const firstDocument = await PDFDocument.create()
     firstDocument.addPage([210, 310])
@@ -98,6 +117,39 @@ describe('PDF output formats', () => {
     expect(managed.getTitle()).toBe('Managed document metadata')
   })
 
+  it('duplicates source pages and inserts sized blank pages in a managed PDF', async () => {
+    const document = await PDFDocument.create()
+    document.addPage([310, 410])
+    document.addPage([320, 420])
+    const file = new File([Uint8Array.from(await document.save()).buffer], 'duplicate-and-blank.pdf', { type: 'application/pdf' })
+
+    const result = await arrangePdfPages(file, [
+      { pageIndex: 1 },
+      { pageIndex: 1, rotation: 90 },
+      { blankSize: { width: 595, height: 842 } },
+      { pageIndex: 0 },
+    ])
+    const managed = await PDFDocument.load(result)
+
+    expect(managed.getPages().map((page) => page.getSize().width)).toEqual([320, 320, 595, 310])
+    expect(managed.getPages().map((page) => page.getRotation().angle)).toEqual([0, 90, 0, 0])
+  })
+
+  it('reports managed-page progress and honors cancellation', async () => {
+    const document = await PDFDocument.create()
+    document.addPage([310, 410])
+    document.addPage([320, 420])
+    const file = new File([Uint8Array.from(await document.save()).buffer], 'progress.pdf', { type: 'application/pdf' })
+    const progress: string[] = []
+
+    await arrangePdfPages(file, [{ pageIndex: 0 }, { pageIndex: 1 }], (current, total) => progress.push(`${current}/${total}`))
+    expect(progress).toEqual(['1/2', '2/2'])
+
+    const controller = new AbortController()
+    controller.abort()
+    await expect(arrangePdfPages(file, [{ pageIndex: 0 }], undefined, controller.signal)).rejects.toMatchObject({ name: 'AbortError' })
+  })
+
   it('adds a text watermark only to selected pages', async () => {
     const document = await PDFDocument.create()
     document.addPage([612, 792])
@@ -117,5 +169,24 @@ describe('PDF output formats', () => {
 
     expect(blob.type).toBe('application/vnd.openxmlformats-officedocument.wordprocessingml.document')
     expect([...signature]).toEqual([0x50, 0x4b])
+  })
+})
+
+describe('PDF structure inspection', () => {
+  it('detects forms, bookmarks, attachments, and custom page labels', async () => {
+    const document = await PDFDocument.create()
+    document.addPage([612, 792])
+    document.getForm().createTextField('student.name')
+    document.catalog.set(PDFName.of('Outlines'), document.context.obj({ Type: 'Outlines' }))
+    document.catalog.set(PDFName.of('PageLabels'), document.context.obj({ Nums: [] }))
+    document.catalog.set(PDFName.of('Names'), document.context.obj({ EmbeddedFiles: { Names: [] } }))
+    const file = new File([Uint8Array.from(await document.save()).buffer], 'structured.pdf', { type: 'application/pdf' })
+
+    await expect(inspectPdfStructure(file)).resolves.toMatchObject({
+      hasForm: true,
+      hasBookmarks: true,
+      hasAttachments: true,
+      hasPageLabels: true,
+    })
   })
 })

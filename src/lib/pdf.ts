@@ -8,6 +8,20 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).toString();
 
+const renderedDocumentCache = new WeakMap<File, ReturnType<typeof pdfjsLib.getDocument>['promise']>()
+
+/** Reuse one parsed PDF.js document while the browser still holds its File. */
+function loadRenderedDocument(file: File) {
+  const cached = renderedDocumentCache.get(file)
+  if (cached) return cached
+
+  const loading = file.arrayBuffer()
+    .then((buffer) => pdfjsLib.getDocument({ data: buffer }).promise)
+  renderedDocumentCache.set(file, loading)
+  void loading.catch(() => renderedDocumentCache.delete(file))
+  return loading
+}
+
 export interface PdfPageInfo {
   index: number
   pageNumber: number
@@ -30,8 +44,7 @@ export async function renderPageToCanvas(
   pageNum: number,
   scale: number = 0.3,
 ): Promise<string> {
-  const buffer = await file.arrayBuffer()
-  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise
+  const pdf = await loadRenderedDocument(file)
   const page = await pdf.getPage(pageNum)
   const viewport = page.getViewport({ scale })
 
@@ -45,9 +58,32 @@ export async function renderPageToCanvas(
 }
 
 export async function getPageCount(file: File): Promise<number> {
-  const buffer = await file.arrayBuffer()
-  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise
+  const pdf = await loadRenderedDocument(file)
   return pdf.numPages
+}
+
+export interface PdfStructureInspection {
+  hasForm: boolean
+  hasDigitalSignature: boolean
+  hasBookmarks: boolean
+  hasAttachments: boolean
+  hasPageLabels: boolean
+}
+
+/** Detect document structures that page editing may invalidate or alter. */
+export async function inspectPdfStructure(file: File): Promise<PdfStructureInspection> {
+  const pdfDoc = await PDFDocument.load(await file.arrayBuffer())
+  const catalog = pdfDoc.catalog
+  const form = pdfDoc.getForm()
+  const fields = form.getFields()
+  const names = catalog.lookupMaybe(PDFName.of('Names'), PDFDict)
+  return {
+    hasForm: catalog.has(PDFName.of('AcroForm')) || fields.length > 0,
+    hasDigitalSignature: fields.some((field) => field.constructor.name === 'PDFSignature'),
+    hasBookmarks: catalog.has(PDFName.of('Outlines')),
+    hasAttachments: !!names?.get(PDFName.of('EmbeddedFiles')),
+    hasPageLabels: catalog.has(PDFName.of('PageLabels')),
+  }
 }
 
 export interface SubmissionAnalysis {
@@ -167,34 +203,54 @@ export async function mergePdfPages(
   return mergedPdf.save()
 }
 
-/** Reorder, rotate, or omit pages while retaining the source document catalog. */
+export type ArrangePdfPage =
+  | { pageIndex: number; rotation?: number }
+  | { blankSize: { width: number; height: number }; rotation?: number }
+
+/** Reorder, rotate, duplicate, omit, or insert blank pages while retaining the source catalog. */
 export async function arrangePdfPages(
   file: File,
-  pagePlan: { pageIndex: number; rotation?: number }[],
+  pagePlan: ArrangePdfPage[],
+  onProgress?: (current: number, total: number) => void,
+  signal?: AbortSignal,
 ): Promise<Uint8Array> {
+  if (pagePlan.length === 0) throw new Error('A managed PDF must contain at least one page')
   const pdfDoc = await PDFDocument.load(await file.arrayBuffer())
   const originalPages = pdfDoc.getPages()
-  const usedPages = new Set<number>()
 
   for (const item of pagePlan) {
-    if (!originalPages[item.pageIndex]) throw new Error(`Page index ${item.pageIndex} is out of range`)
-    if (usedPages.has(item.pageIndex)) throw new Error(`Page index ${item.pageIndex} is duplicated`)
-    usedPages.add(item.pageIndex)
+    if ('pageIndex' in item && !originalPages[item.pageIndex]) throw new Error(`Page index ${item.pageIndex} is out of range`)
+    if ('blankSize' in item && (item.blankSize.width <= 0 || item.blankSize.height <= 0)) throw new Error('Blank page dimensions must be positive')
+  }
+
+  const plannedPages: { item: ArrangePdfPage; page: ReturnType<PDFDocument['getPage']> | null }[] = []
+  for (const item of pagePlan) {
+    if (signal?.aborted) throw new DOMException('Operation cancelled', 'AbortError')
+    if ('blankSize' in item) plannedPages.push({ item, page: null })
+    else {
+      const [page] = await pdfDoc.copyPages(pdfDoc, [item.pageIndex])
+      plannedPages.push({ item, page })
+    }
   }
 
   for (let pageIndex = originalPages.length - 1; pageIndex >= 0; pageIndex--) {
     pdfDoc.removePage(pageIndex)
   }
 
-  for (const item of pagePlan) {
-    const page = originalPages[item.pageIndex]
-    const addedRotation = item.rotation ?? 0
+  for (const [outputIndex, planned] of plannedPages.entries()) {
+    if (signal?.aborted) throw new DOMException('Operation cancelled', 'AbortError')
+    const page = 'blankSize' in planned.item
+      ? pdfDoc.addPage([planned.item.blankSize.width, planned.item.blankSize.height])
+      : planned.page!
+    const addedRotation = planned.item.rotation ?? 0
     if (addedRotation !== 0) {
       page.setRotation(degrees((page.getRotation().angle + addedRotation + 360) % 360))
     }
-    pdfDoc.addPage(page)
+    if (!('blankSize' in planned.item)) pdfDoc.addPage(page)
+    onProgress?.(outputIndex + 1, pagePlan.length)
   }
 
+  if (signal?.aborted) throw new DOMException('Operation cancelled', 'AbortError')
   return pdfDoc.save()
 }
 

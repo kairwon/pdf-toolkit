@@ -6,6 +6,7 @@ type OverlayData = {
   title: string
   onDownload: () => void
   tool: string
+  summary?: string[]
 }
 
 const failureReasons: { value: FeedbackReason; label: string }[] = [
@@ -79,6 +80,11 @@ export default function DownloadOverlay() {
           <span className="result-kicker">PROCESSING COMPLETE</span>
           <h2 id="result-title">{data.title}</h2>
           <p>Your original file was not changed. Review the downloaded copy before submitting or sharing it.</p>
+          {data.summary && data.summary.length > 0 && (
+            <ul className="mt-2 list-disc pl-5 text-sm text-gray-500 dark:text-gray-400">
+              {data.summary.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          )}
         </div>
         <button type="button" className="result-download" onClick={download}>
           <Download />
