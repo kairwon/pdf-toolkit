@@ -134,6 +134,39 @@ export async function mergePdfs(
   return mergedPdf.save()
 }
 
+export interface MergePageSource {
+  file: File
+  pageIndex: number
+  rotation?: number
+}
+
+/** Merge individual pages in the exact order and rotation shown in the UI. */
+export async function mergePdfPages(
+  sourcePages: MergePageSource[],
+  onProgress?: (current: number, total: number) => void,
+): Promise<Uint8Array> {
+  const mergedPdf = await PDFDocument.create()
+  const loadedDocuments = new Map<File, PDFDocument>()
+
+  for (const [outputIndex, source] of sourcePages.entries()) {
+    let sourceDocument = loadedDocuments.get(source.file)
+    if (!sourceDocument) {
+      sourceDocument = await PDFDocument.load(await source.file.arrayBuffer())
+      loadedDocuments.set(source.file, sourceDocument)
+    }
+
+    const [page] = await mergedPdf.copyPages(sourceDocument, [source.pageIndex])
+    const addedRotation = source.rotation ?? 0
+    if (addedRotation !== 0) {
+      page.setRotation(degrees((page.getRotation().angle + addedRotation + 360) % 360))
+    }
+    mergedPdf.addPage(page)
+    onProgress?.(outputIndex + 1, sourcePages.length)
+  }
+
+  return mergedPdf.save()
+}
+
 export async function extractPages(
   file: File,
   pageIndices: number[],

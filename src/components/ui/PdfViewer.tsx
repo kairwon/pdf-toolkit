@@ -5,8 +5,17 @@ import { renderPageToCanvas } from '../../lib/pdf'
 export interface PreviewItem {
   id?: string
   index: number
+  controlIndex?: number
   file: File
   label?: string
+}
+
+function controlIndexFor(page: PreviewItem) {
+  return page.controlIndex ?? page.index
+}
+
+function renderKeyFor(page: PreviewItem) {
+  return page.id ?? `${page.file.name}-${page.file.size}-${page.file.lastModified}-${page.index}`
 }
 
 interface PdfViewerProps {
@@ -51,7 +60,7 @@ export default function PdfViewer({
     const load = async (idx: number) => {
       const p = pages[idx]
       if (!p) return
-      const key = `${p.index}-${p.file.name}`
+      const key = renderKeyFor(p)
       if (rendered[key]) return
       try {
         const dataUrl = await renderPageToCanvas(p.file, p.index + 1, 2)
@@ -68,6 +77,10 @@ export default function PdfViewer({
     const el = stripRef.current.children[current] as HTMLElement | undefined
     el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
   }, [current])
+
+  useEffect(() => {
+    setCurrent((value) => Math.min(value, Math.max(pages.length - 1, 0)))
+  }, [pages.length])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -115,18 +128,19 @@ export default function PdfViewer({
     )
   }
 
-  const currentKey = `${pages[current].index}-${pages[current].file.name}`
+  const currentKey = renderKeyFor(pages[current])
   const currentSrc = rendered[currentKey]
-  const currentRot = rotations[pages[current].index] || 0
+  const currentControlIndex = controlIndexFor(pages[current])
+  const currentRot = rotations[currentControlIndex] || 0
 
   return (
     <div className="section-card overflow-hidden">
       {/* Header bar */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-gray-700/30">
         <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-          Page {pages[current].index + 1} of {pages.length}
+          Page {current + 1} of {pages.length}
           {pages[current].label && (
-            <span className="text-gray-300 dark:text-gray-600 ml-2">· {pages[current].label}</span>
+            <span className="text-gray-300 dark:text-gray-600 ml-2">· {pages[current].label} · source page {pages[current].index + 1}</span>
           )}
         </span>
         <div className="flex items-center gap-2">
@@ -151,12 +165,12 @@ export default function PdfViewer({
         )}
 
         <div className="absolute top-2 left-2 z-10 flex gap-1">
-          <button onClick={(e) => { e.stopPropagation(); onRotatePage(pages[current].index, -1) }}
+          <button onClick={(e) => { e.stopPropagation(); onRotatePage(currentControlIndex, -1) }}
             title="Rotate counter-clockwise"
             className="p-1.5 rounded-lg bg-white/80 dark:bg-gray-800/80 text-gray-500 hover:text-jade hover:bg-white shadow-sm border border-gray-200 dark:border-gray-700 transition-all">
             <RotateCw size={20} className="scale-x-[-1]" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); onRotatePage(pages[current].index, 1) }}
+          <button onClick={(e) => { e.stopPropagation(); onRotatePage(currentControlIndex, 1) }}
             title="Rotate clockwise"
             className="p-1.5 rounded-lg bg-white/80 dark:bg-gray-800/80 text-gray-500 hover:text-jade hover:bg-white shadow-sm border border-gray-200 dark:border-gray-700 transition-all">
             <RotateCw size={20} />
@@ -185,9 +199,10 @@ export default function PdfViewer({
         </div>
         <div ref={stripRef} className="flex gap-2 overflow-x-auto px-4 py-2 pb-3 scrollbar-thin" style={{ scrollbarWidth: 'thin' }}>
           {pages.map((p, i) => {
-            const key = `${p.index}-${p.file.name}`
+            const key = renderKeyFor(p)
+            const controlIndex = controlIndexFor(p)
             const isCurrent = i === current
-            const isSelected = selected.has(p.index)
+            const isSelected = selected.has(controlIndex)
             const isDragging = dragFrom === i
             const isOver = dragOver === i
 
@@ -221,8 +236,8 @@ export default function PdfViewer({
                 </div>
 
                 <div className="flex items-center justify-between mt-1 px-0.5">
-                  <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500">{p.index + 1}</span>
-                  <button type="button" aria-label={`${isSelected ? 'Deselect' : 'Select'} page ${p.index + 1}`} onClick={(e) => { e.stopPropagation(); onToggle(p.index) }}
+                  <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500">{i + 1}</span>
+                  <button type="button" aria-label={`${isSelected ? 'Deselect' : 'Select'} page ${i + 1}`} onClick={(e) => { e.stopPropagation(); onToggle(controlIndex) }}
                     className={`w-4 h-4 rounded flex items-center justify-center transition-all cursor-pointer shrink-0 ${
                       isSelected
                         ? 'bg-gradient-to-br from-jade to-jade-light text-white'

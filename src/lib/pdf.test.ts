@@ -5,7 +5,7 @@ Object.defineProperty(globalThis, 'DOMMatrix', { value: class DOMMatrix {} })
 Object.defineProperty(globalThis, 'ImageData', { value: class ImageData {} })
 Object.defineProperty(globalThis, 'Path2D', { value: class Path2D {} })
 
-const { addWatermark, inspectWatermarks, removeWatermark, textPagesToWord } = await import('./pdf')
+const { addWatermark, inspectWatermarks, mergePdfPages, removeWatermark, textPagesToWord } = await import('./pdf')
 
 async function createAnnotationPdf() {
   const document = await PDFDocument.create()
@@ -58,6 +58,26 @@ describe('watermark annotation inspection', () => {
 })
 
 describe('PDF output formats', () => {
+  it('merges pages in the requested cross-file order and applies UI rotations', async () => {
+    const firstDocument = await PDFDocument.create()
+    firstDocument.addPage([210, 310])
+    firstDocument.addPage([220, 320])
+    const secondDocument = await PDFDocument.create()
+    secondDocument.addPage([230, 330])
+    const firstFile = new File([Uint8Array.from(await firstDocument.save()).buffer], 'first.pdf', { type: 'application/pdf' })
+    const secondFile = new File([Uint8Array.from(await secondDocument.save()).buffer], 'second.pdf', { type: 'application/pdf' })
+
+    const result = await mergePdfPages([
+      { file: secondFile, pageIndex: 0, rotation: 90 },
+      { file: firstFile, pageIndex: 1 },
+      { file: firstFile, pageIndex: 0, rotation: 270 },
+    ])
+    const merged = await PDFDocument.load(result)
+
+    expect(merged.getPages().map((page) => page.getSize().width)).toEqual([230, 220, 210])
+    expect(merged.getPages().map((page) => page.getRotation().angle)).toEqual([90, 0, 270])
+  })
+
   it('adds a text watermark only to selected pages', async () => {
     const document = await PDFDocument.create()
     document.addPage([612, 792])

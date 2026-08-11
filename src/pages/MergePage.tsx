@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { FileText, Loader2, Download, X, GripVertical } from 'lucide-react'
 import { toast } from 'sonner'
 import ToolHeader from '../components/ui/ToolHeader'
@@ -7,9 +7,8 @@ import PdfViewer from '../components/ui/PdfViewer'
 import type { PreviewItem } from '../components/ui/PdfViewer'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
-import { getPageCount, mergePdfs } from '../lib/pdf'
-import { PDFDocument } from 'pdf-lib'
-import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
+import { getPageCount, mergePdfPages } from '../lib/pdf'
+import { downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 import usePageTitle from '../hooks/usePageTitle'
 import usePendingFiles from '../hooks/usePendingFiles'
 
@@ -27,33 +26,46 @@ export default function MergePage() {
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [previewItems, setPreviewItems] = useState<PreviewItem[]>([])
   const [rotations, setRotations] = useState<Record<number, number>>({})
+  const nextPageIdentity = useRef(0)
+  const nextFileIdentity = useRef(0)
+
+  const pagesForFiles = useCallback((sourceFiles: PdfFile[]) => {
+    const items: PreviewItem[] = []
+    sourceFiles.forEach((source) => {
+      for (let pageIndex = 0; pageIndex < source.pageCount; pageIndex++) {
+        const controlIndex = nextPageIdentity.current++
+        items.push({
+          id: `${source.id}-page-${pageIndex}`,
+          index: pageIndex,
+          controlIndex,
+          file: source.file,
+          label: source.file.name,
+        })
+      }
+    })
+    return items
+  }, [])
 
   const addFiles = useCallback(async (newFiles: File[]) => {
     const loaded: PdfFile[] = await Promise.all(
       newFiles.map(async (file, fi) => {
         const total = await getPageCount(file)
-        return { id: `file-${Date.now()}-${fi}`, file, pageCount: total }
+        return { id: `file-${nextFileIdentity.current++}-${fi}`, file, pageCount: total }
       }),
     )
     setFiles((prev) => [...prev, ...loaded])
-    const items: PreviewItem[] = []
-    loaded.forEach((f) => {
-      for (let i = 0; i < f.pageCount; i++) items.push({ index: i, file: f.file, label: f.file.name })
-    })
+    const items = pagesForFiles(loaded)
     setPreviewItems((prev) => [...prev, ...items])
-    setSelected((prev) => new Set([...prev, ...items.map((p) => p.index)]))
-  }, [])
+    setSelected((prev) => new Set([...prev, ...items.map((page) => page.controlIndex!)]))
+  }, [pagesForFiles])
   usePendingFiles(addFiles)
 
   const rebuildPreview = useCallback((updatedFiles: PdfFile[]) => {
-    const items: PreviewItem[] = []
-    updatedFiles.forEach((f) => {
-      for (let i = 0; i < f.pageCount; i++) items.push({ index: i, file: f.file, label: f.file.name })
-    })
+    const items = pagesForFiles(updatedFiles)
     setPreviewItems(items)
-    setSelected(new Set(items.map((p) => p.index)))
+    setSelected(new Set(items.map((page) => page.controlIndex!)))
     setRotations({})
-  }, [])
+  }, [pagesForFiles])
 
   const removeFile = useCallback((id: string) => {
     const updated = files.filter((f) => f.id !== id)
@@ -62,14 +74,12 @@ export default function MergePage() {
   }, [files, rebuildPreview])
 
   const moveFile = useCallback((dragI: number, dropI: number) => {
-    setFiles((prev) => {
-      const next = [...prev]
-      const [moved] = next.splice(dragI, 1)
-      next.splice(dropI, 0, moved)
-      rebuildPreview(next)
-      return next
-    })
-  }, [rebuildPreview])
+    const next = [...files]
+    const [moved] = next.splice(dragI, 1)
+    next.splice(dropI, 0, moved)
+    setFiles(next)
+    rebuildPreview(next)
+  }, [files, rebuildPreview])
 
   const togglePage = useCallback((pageIndex: number) => {
     setSelected((prev) => {
@@ -91,51 +101,18 @@ export default function MergePage() {
     selected.forEach((idx) => rotatePage(idx, direction))
   }
 
-  const handleExtractSelected = async () => {
-    if (selected.size === 0) return
-    setProcessing(true)
-    try {
-      const byFile: Record<string, { file: File; indices: number[] }> = {}
-      let flat = 0
-      for (const f of files) {
-        for (let i = 0; i < f.pageCount; i++) {
-          if (selected.has(flat)) {
-            (byFile[f.id] ??= { file: f.file, indices: [] }).indices.push(i)
-          }
-          flat++
-        }
-      }
-      const blobs: { blob: Blob; name: string }[] = []
-      for (const { file: f, indices: idxs } of Object.values(byFile)) {
-        const doc = await PDFDocument.load(await f.arrayBuffer())
-        const newDoc = await PDFDocument.create()
-        const pages = await newDoc.copyPages(doc, idxs)
-        pages.forEach((p) => newDoc.addPage(p))
-        blobs.push({ blob: new Blob([Uint8Array.from(await newDoc.save()).buffer], { type: 'application/pdf' }), name: `extracted-${f.name}` })
-      }
-      triggerDownloadOverlay('Pages extracted!', () => {
-        blobs.forEach(({ blob, name }) => downloadBlob(blob, name))
-      })
-    } catch {
-      toast.error('Failed to extract pages')
-    } finally {
-      setProcessing(false)
-    }
-  }
-
   const handleMerge = async () => {
     if (selected.size === 0) { toast.error('Select at least one page'); return }
     setProcessing(true)
     try {
-      const finalSource = files.map((f) => ({ file: f.file, pageIndices: [] as number[] }))
-      let flatIdx = 0
-      for (let fi = 0; fi < files.length; fi++) {
-        for (let pi = 0; pi < files[fi].pageCount; pi++) {
-          if (selected.has(flatIdx)) finalSource[fi].pageIndices.push(pi)
-          flatIdx++
-        }
-      }
-      const result = await mergePdfs(finalSource.filter((s) => s.pageIndices.length > 0))
+      const finalPages = previewItems
+        .filter((page) => selected.has(page.controlIndex!))
+        .map((page) => ({
+          file: page.file,
+          pageIndex: page.index,
+          rotation: rotations[page.controlIndex!] || 0,
+        }))
+      const result = await mergePdfPages(finalPages)
       const blob = new Blob([Uint8Array.from(result).buffer], { type: 'application/pdf' })
       triggerDownloadOverlay('PDF merged!', () => {
         downloadBlob(blob, `merged-${Date.now()}.pdf`)
@@ -183,7 +160,7 @@ export default function MergePage() {
               pages={previewItems}
               selected={selected}
               onToggle={togglePage}
-              onSelectAll={() => setSelected(new Set(previewItems.map((p) => p.index)))}
+              onSelectAll={() => setSelected(new Set(previewItems.map((page) => page.controlIndex!)))}
               onDeselectAll={() => setSelected(new Set())}
               rotations={rotations}
               onRotatePage={rotatePage}
@@ -219,11 +196,11 @@ export default function MergePage() {
       <section className="portal-seo-copy" style={{ marginTop: '24px' }}>
         <span>FREE ONLINE PDF MERGER</span>
         <h2>Merge PDF files without uploading — private browser-based tool</h2>
-        <p>Merge PDF files in any order directly in your browser. Preview thumbnails, select individual pages, and create one combined document — no server upload required. Your documents stay on your device 100% privately.</p>
+        <p>Merge PDF files in any order directly in your browser. Preview, select, rotate, and rearrange individual pages; the downloaded PDF follows the order shown on screen. No server upload is required.</p>
         <div>
           <article><h3>How to merge PDF files online?</h3><p>Drag and drop your PDF files, reorder them by dragging, select the pages you want to include, and click Merge & Download. The process runs entirely in your browser.</p></article>
           <article><h3>Is it safe to merge PDF files online?</h3><p>Yes. Merging happens locally in your browser memory. Files are never uploaded to Lab of PDF servers. Your documents remain private.</p></article>
-          <article><h3>Can I merge PDF files for free without limits?</h3><p>Yes. There is no limit on file size, number of pages, or number of files you can merge. The tool is completely free with no sign-up required.</p></article>
+          <article><h3>Is there a server upload limit?</h3><p>No server upload limit applies because the PDFs remain in your browser. Very large files or many high-resolution pages can still exceed the available memory on your device.</p></article>
         </div>
       </section>
     </ToolPageWrapper>
