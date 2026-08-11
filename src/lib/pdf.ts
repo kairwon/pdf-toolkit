@@ -167,6 +167,37 @@ export async function mergePdfPages(
   return mergedPdf.save()
 }
 
+/** Reorder, rotate, or omit pages while retaining the source document catalog. */
+export async function arrangePdfPages(
+  file: File,
+  pagePlan: { pageIndex: number; rotation?: number }[],
+): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.load(await file.arrayBuffer())
+  const originalPages = pdfDoc.getPages()
+  const usedPages = new Set<number>()
+
+  for (const item of pagePlan) {
+    if (!originalPages[item.pageIndex]) throw new Error(`Page index ${item.pageIndex} is out of range`)
+    if (usedPages.has(item.pageIndex)) throw new Error(`Page index ${item.pageIndex} is duplicated`)
+    usedPages.add(item.pageIndex)
+  }
+
+  for (let pageIndex = originalPages.length - 1; pageIndex >= 0; pageIndex--) {
+    pdfDoc.removePage(pageIndex)
+  }
+
+  for (const item of pagePlan) {
+    const page = originalPages[item.pageIndex]
+    const addedRotation = item.rotation ?? 0
+    if (addedRotation !== 0) {
+      page.setRotation(degrees((page.getRotation().angle + addedRotation + 360) % 360))
+    }
+    pdfDoc.addPage(page)
+  }
+
+  return pdfDoc.save()
+}
+
 export async function extractPages(
   file: File,
   pageIndices: number[],

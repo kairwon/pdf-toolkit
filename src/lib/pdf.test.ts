@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { PDFDocument, PDFName, PDFString } from 'pdf-lib'
+import { degrees, PDFDocument, PDFName, PDFString } from 'pdf-lib'
 
 Object.defineProperty(globalThis, 'DOMMatrix', { value: class DOMMatrix {} })
 Object.defineProperty(globalThis, 'ImageData', { value: class ImageData {} })
 Object.defineProperty(globalThis, 'Path2D', { value: class Path2D {} })
 
-const { addWatermark, inspectWatermarks, mergePdfPages, removeWatermark, textPagesToWord } = await import('./pdf')
+const { addWatermark, arrangePdfPages, inspectWatermarks, mergePdfPages, removeWatermark, textPagesToWord } = await import('./pdf')
 
 async function createAnnotationPdf() {
   const document = await PDFDocument.create()
@@ -76,6 +76,26 @@ describe('PDF output formats', () => {
 
     expect(merged.getPages().map((page) => page.getSize().width)).toEqual([230, 220, 210])
     expect(merged.getPages().map((page) => page.getRotation().angle)).toEqual([90, 0, 270])
+  })
+
+  it('builds a managed-page selection in visible order and preserves existing rotation', async () => {
+    const document = await PDFDocument.create()
+    document.setTitle('Managed document metadata')
+    document.addPage([310, 410])
+    document.addPage([320, 420])
+    const thirdPage = document.addPage([330, 430])
+    thirdPage.setRotation(degrees(90))
+    const file = new File([Uint8Array.from(await document.save()).buffer], 'managed.pdf', { type: 'application/pdf' })
+
+    const result = await arrangePdfPages(file, [
+      { pageIndex: 2, rotation: 90 },
+      { pageIndex: 0, rotation: 270 },
+    ])
+    const managed = await PDFDocument.load(result)
+
+    expect(managed.getPages().map((page) => page.getSize().width)).toEqual([330, 310])
+    expect(managed.getPages().map((page) => page.getRotation().angle)).toEqual([180, 270])
+    expect(managed.getTitle()).toBe('Managed document metadata')
   })
 
   it('adds a text watermark only to selected pages', async () => {

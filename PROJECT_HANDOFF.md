@@ -33,7 +33,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The current production release uses the immutable tag
-`production-2026-08-11-merge-page-order`.
+`production-2026-08-11-manage-page-order`.
 
 The deployment script uses `/var/www/labofpdf-next` and
 `/var/www/labofpdf-prev` only during its atomic switch. Both are removed after
@@ -57,6 +57,9 @@ locally and on GitHub. Never move or reuse a production tag.
 - Merge PDF uses a stable identity for every page across files. Selection,
   thumbnail reordering, and preview rotation are applied to the downloaded PDF
   in exactly the order shown in the interface.
+- Manage Pages applies the visible page order and rotations to full-document,
+  extraction, and removal downloads instead of silently exporting the original
+  order or orientation.
 - Watermark removal now inspects `/Stamp` and `/Watermark` annotations, shows
   every candidate, recommends only likely watermarks, preserves unselected
   stamps, reports the actual number removed, and warns when a digital signature

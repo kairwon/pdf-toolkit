@@ -7,8 +7,7 @@ import PdfViewer from '../components/ui/PdfViewer'
 import type { PreviewItem } from '../components/ui/PdfViewer'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
-import { renderPageToCanvas, deletePages, extractPages, getPageCount } from '../lib/pdf'
-import { PDFDocument, degrees } from 'pdf-lib'
+import { arrangePdfPages, getPageCount } from '../lib/pdf'
 import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 import usePageTitle from '../hooks/usePageTitle'
 import usePendingFiles from '../hooks/usePendingFiles'
@@ -65,8 +64,9 @@ export default function ManagePage() {
     if (!file || selected.size === 0) return
     setProcessing(true)
     try {
-      const indices = [...selected].sort((a, b) => a - b)
-      const result = await extractPages(file, indices)
+      const result = await arrangePdfPages(file, previewItems
+        .filter((page) => selected.has(page.index))
+        .map((page) => ({ pageIndex: page.index, rotation: rotations[page.index] || 0 })))
       const blob = new Blob([Uint8Array.from(result).buffer], { type: 'application/pdf' })
       triggerDownloadOverlay('Pages extracted!', () => {
         downloadBlob(blob, `extracted-${file.name}`)
@@ -86,8 +86,9 @@ export default function ManagePage() {
     }
     setProcessing(true)
     try {
-      const indices = [...selected].sort((a, b) => a - b)
-      const result = await deletePages(file, indices)
+      const result = await arrangePdfPages(file, previewItems
+        .filter((page) => !selected.has(page.index))
+        .map((page) => ({ pageIndex: page.index, rotation: rotations[page.index] || 0 })))
       const blob = new Blob([Uint8Array.from(result).buffer], { type: 'application/pdf' })
       triggerDownloadOverlay('Pages removed!', () => {
         downloadBlob(blob, `edited-${file.name}`)
@@ -99,28 +100,28 @@ export default function ManagePage() {
     }
   }
 
-  const handleApplyRotation = async () => {
+  const handleSaveChanges = async () => {
     if (!file) return
     setProcessing(true)
     try {
-      const pdfDoc = await PDFDocument.load(await file.arrayBuffer())
-      Object.entries(rotations).filter(([, v]) => v !== 0).forEach(([idx, angle]) => {
-        pdfDoc.getPage(Number(idx)).setRotation(degrees(angle))
-      })
-      const result = await pdfDoc.save()
+      const result = await arrangePdfPages(file, previewItems.map((page) => ({
+        pageIndex: page.index,
+        rotation: rotations[page.index] || 0,
+      })))
       const blob = new Blob([Uint8Array.from(result).buffer], { type: 'application/pdf' })
-      triggerDownloadOverlay('Rotation saved!', () => {
-        downloadBlob(blob, `rotated-${file.name}`)
+      triggerDownloadOverlay('Page order and rotations saved!', () => {
+        downloadBlob(blob, `edited-${file.name}`)
       })
       setFile(null); setPreviewItems([]); setSelected(new Set())
     } catch {
-      toast.error('Failed to rotate pages')
+      toast.error('Failed to save page changes')
     } finally {
       setProcessing(false)
     }
   }
 
   const rotatedByUser = Object.entries(rotations).filter(([, a]) => a !== 0).length
+  const reorderedByUser = previewItems.some((page, position) => page.index !== position)
 
   if (!file) {
     return (
@@ -168,6 +169,7 @@ export default function ManagePage() {
           {rotatedByUser > 0 && (
             <span className="text-xs text-amber-600 whitespace-nowrap">{rotatedByUser} page(s) rotated</span>
           )}
+          {reorderedByUser && <span className="text-xs text-amber-600 whitespace-nowrap">Page order changed</span>}
         </div>
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
           <div className="flex items-center gap-1.5 mr-2">
@@ -188,15 +190,15 @@ export default function ManagePage() {
             disabled={selected.size === 0 || processing}
             className="btn-secondary"
           >
-            Remove selected
+            Remove &amp; Download
           </button>
-          {rotatedByUser > 0 && (
+          {(rotatedByUser > 0 || reorderedByUser) && (
             <button
-              onClick={handleApplyRotation}
+              onClick={handleSaveChanges}
               disabled={processing}
               className="btn-primary flex items-center gap-2"
             >
-              {processing ? <Loader2 size={15} className="animate-spin" /> : <span>Save rotated PDF</span>}
+              {processing ? <Loader2 size={15} className="animate-spin" /> : <span>Save all changes</span>}
             </button>
           )}
         </div>
