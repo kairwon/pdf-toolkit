@@ -33,7 +33,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The production release represented by this handoff uses the immutable tag
-`production-2026-08-13-search-growth`. Verify its exact commit in the live
+`production-2026-08-13-functional-tools`. Verify its exact commit in the live
 `release.json` manifest and in GitHub before every subsequent deployment.
 
 The deployment script uses `/var/www/labofpdf-next` and
@@ -96,6 +96,15 @@ locally and on GitHub. Never move or reuse a production tag.
   cancelled between pages, and includes the applied edits in the download
   summary. Opening errors distinguish encryption, malformed files, memory
   pressure, and generic failures.
+- Split PDF preserves the visible thumbnail order and applied rotations in both
+  extracted and split outputs. It also supports visible-position ranges,
+  odd/even/inverse selection, per-page progress, and cancellation.
+- PDF to Images emits real PNG bytes when PNG is selected, exposes JPEG quality,
+  supports ranges and odd/even/inverse selection, and processes long documents
+  sequentially with progress and cancellation.
+- Images to PDF is a first-class local tool at `/images-to-pdf`. It accepts
+  JPEG, PNG, and WebP images, supports ordering, rotation, A4/Letter/image-sized
+  pages, orientation and margins, and provides progress and cancellation.
 - PDF previews reuse one parsed PDF.js document per selected file, and the
   filmstrip lazily renders nearby visible thumbnails instead of repeatedly
   reading the same file or leaving long-document thumbnails blank.
@@ -111,8 +120,9 @@ locally and on GitHub. Never move or reuse a production tag.
   the target. Lossless preserves searchable text; balanced and maximum modes
   create image-based copies and the UI says so explicitly.
 - PDF to Word now generates a real `.docx` file and offers multiple OCR
-  languages for scanned pages. Complex tables, columns, equations, and exact
-  typography remain documented limitations.
+  languages for scanned pages. Long OCR conversions can be cancelled, report
+  the current page, and always terminate the OCR worker. Complex tables,
+  columns, equations, and exact typography remain documented limitations.
 - `npm test` covers watermark candidate detection and selective removal with a
   synthetic PDF fixture. Keep adding representative, non-sensitive fixtures as
   PDF manipulation behavior expands.
@@ -129,7 +139,7 @@ locally and on GitHub. Never move or reuse a production tag.
 ## SEO and production behavior
 
 - `npm run build` runs TypeScript, Vite, and `scripts/prerender-seo.mjs`.
-- The prerender step currently creates 26 indexable route HTML files, three
+- The prerender step currently creates 27 indexable route HTML files, three
   noindex route files, and a noindex 404 document.
 - Trust and discovery content now includes `/guides`, `/editorial-policy`,
   `/about/editorial-team`, and five long-tail study/submission/compression guides. The
@@ -210,8 +220,9 @@ history rewrite and is not part of ordinary deployment.
 ## Verification checklist
 
 1. Run `npm ci` and `npm run build`.
-2. Confirm the build reports 26 indexable routes, 3 noindex routes, and 404.
-3. Confirm `dist/to-image.html` has its own title, description, and canonical.
+2. Confirm the build reports 27 indexable routes, 3 noindex routes, and 404.
+3. Confirm `dist/to-image.html` and `dist/images-to-pdf.html` have their own
+   titles, descriptions, and canonicals.
 4. Deploy only after the build succeeds.
 5. Run `nginx -t` before any reload when Nginx configuration changed.
 6. Check `/`, `/to-image`, one featured workflow, privacy, and an unknown URL.

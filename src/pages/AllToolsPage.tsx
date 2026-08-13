@@ -26,7 +26,7 @@ const groups = [
       { title: 'Thesis PDF check', note: 'Check submission readiness and common issues.', path: '/thesis-pdf-check', icon: GraduationCap },
       { title: 'Visa application prep', note: 'Prepare documents for a visa upload workflow.', path: '/visa-prep', icon: BriefcaseBusiness },
       { title: 'Portal-ready PDF', note: 'Make a PDF easier to upload to online portals.', path: '/portal-ready-pdf', icon: FileCheck2 },
-      { title: 'Visa photo PDF', note: 'Build a clean PDF from application photos.', path: '/compress/visa', icon: Images },
+      { title: 'Images to PDF', note: 'Build a clean PDF from application photos or scans.', path: '/images-to-pdf', icon: Images },
     ],
   },
   {
@@ -46,6 +46,7 @@ const groups = [
       { title: 'Compress to exact size', note: 'Aim for a specific portal limit.', path: '/compress/exact', icon: FileOutput },
       { title: 'PDF to Word', note: 'Turn a PDF into an editable document.', path: '/to-word', icon: FileText },
       { title: 'PDF to images', note: 'Export PDF pages as image files.', path: '/to-image', icon: FileImage },
+      { title: 'Images to PDF', note: 'Combine photos and scans into an ordered PDF.', path: '/images-to-pdf', icon: Images },
     ],
   },
   {

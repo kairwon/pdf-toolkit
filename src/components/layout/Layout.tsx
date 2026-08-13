@@ -15,6 +15,7 @@ export default function Layout() {
     '/manage': 'Manage PDF pages',
     '/edit-pdf': 'Manage PDF pages',
     '/to-image': 'PDF to images',
+    '/images-to-pdf': 'Images to PDF',
     '/compress': 'Compress PDF',
     '/compress/visa': 'Visa PDF compressor',
     '/compress/exact': 'Compress to exact size',
@@ -38,7 +39,7 @@ export default function Layout() {
     '/guides/pdf-submission-checklist': 'PDF submission checklist',
   }
   const toolPaths = new Set([
-    '/merge', '/split', '/manage', '/to-image', '/compress',
+    '/merge', '/split', '/manage', '/to-image', '/images-to-pdf', '/compress',
     '/compress/visa', '/compress/exact', '/thesis-pdf-check', '/watermark',
     '/unwatermark', '/to-word', '/visa-prep', '/portal-ready-pdf',
   ])

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { Loader2, Download, FileText, FileImage } from 'lucide-react'
 import { toast } from 'sonner'
 import ToolHeader from '../components/ui/ToolHeader'
@@ -18,6 +18,7 @@ export default function ToWordPage() {
   const [progress, setProgress] = useState('')
   const [status, setStatus] = useState<'classifying' | 'converting' | null>(null)
   const [ocrLanguage, setOcrLanguage] = useState('eng')
+  const operationAbort = useRef<AbortController | null>(null)
 
   const handleFile = useCallback(async (files: File[]) => {
     const f = files[0]
@@ -34,9 +35,11 @@ export default function ToWordPage() {
     setProcessing(true)
     setStatus('classifying')
     setProgress('Analyzing PDF type...')
+    const controller = new AbortController()
+    operationAbort.current = controller
 
     try {
-      const pdfType = await classifyPdf(file)
+      const pdfType = await classifyPdf(file, controller.signal)
       setStatus('converting')
 
       if (pdfType === 'scanned') {
@@ -49,18 +52,19 @@ export default function ToWordPage() {
 
       const blob = await pdfToWord(file, ocrLanguage, (current, total, statusText) => {
         setProgress(statusText)
-      })
+      }, controller.signal)
 
       triggerDownloadOverlay('Converted to a real DOCX file', () => {
         downloadBlob(blob, `${file.name.replace(/\.pdf$/i, '')}.docx`)
       })
     } catch (err) {
-      toast.error('Conversion failed')
-      console.error(err)
+      if (err instanceof DOMException && err.name === 'AbortError') toast.success('Conversion cancelled')
+      else toast.error('Conversion failed')
     } finally {
       setProcessing(false)
       setStatus(null)
       setProgress('')
+      operationAbort.current = null
     }
   }
 
@@ -145,7 +149,7 @@ export default function ToWordPage() {
           {processing ? 'Converting...' : 'Convert to Word'}
         </button>
       </div>
-      {processing && <ProcessingOverlay message={progress || 'Processing...'} />}
+      {processing && <ProcessingOverlay message={progress || 'Processing...'} onCancel={() => operationAbort.current?.abort()} />}
 
       {/* SEO content */}
       <section className="portal-seo-copy" style={{ marginTop: '24px' }}>

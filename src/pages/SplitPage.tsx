@@ -1,13 +1,15 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { Loader2, Download, Split } from 'lucide-react'
 import { toast } from 'sonner'
 import ToolHeader from '../components/ui/ToolHeader'
 import FileUpload from '../components/ui/FileUpload'
 import PdfViewer from '../components/ui/PdfViewer'
 import type { PreviewItem } from '../components/ui/PdfViewer'
+import PageSelectionControls from '../components/ui/PageSelectionControls'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
-import { renderPageToCanvas, extractPages, splitPdf, getPageCount } from '../lib/pdf'
+import { arrangePdfPages, getPageCount } from '../lib/pdf'
+import { buildVisiblePagePlan } from '../lib/pageExportPlan'
 import { downloadBlob, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
 import usePageTitle from '../hooks/usePageTitle'
 import usePendingFiles from '../hooks/usePendingFiles'
@@ -22,6 +24,8 @@ export default function SplitPage() {
   const [rotations, setRotations] = useState<Record<number, number>>({})
   const [mode, setMode] = useState<SplitMode>('extract')
   const [processing, setProcessing] = useState(false)
+  const [progress, setProgress] = useState('')
+  const operationAbort = useRef<AbortController | null>(null)
 
   const handleFile = useCallback(async (files: File[]) => {
     const f = files[0]
@@ -63,38 +67,32 @@ export default function SplitPage() {
     selected.forEach((idx) => rotatePage(idx, direction))
   }
 
-  const handleExtractSelected = async () => {
-    if (!file || selected.size === 0) return
-    setProcessing(true)
-    try {
-      const indices = [...selected].sort((a, b) => a - b)
-      const result = await extractPages(file, indices)
-      const blob = new Blob([Uint8Array.from(result).buffer], { type: 'application/pdf' })
-      triggerDownloadOverlay('Pages extracted!', () => {
-        downloadBlob(blob, `extracted-${file.name}`)
-      })
-    } catch {
-      toast.error('Failed to extract pages')
-    } finally {
-      setProcessing(false)
-    }
-  }
-
   const handleSplit = async () => {
     if (!file) return
     if (selected.size === 0) { toast.error('Select at least one page'); return }
     if (selected.size === previewItems.length && mode === 'split') { toast.error('Keep at least one page unselected to split into two files'); return }
     setProcessing(true)
+    const controller = new AbortController()
+    operationAbort.current = controller
     try {
-      const indices = [...selected].sort((a, b) => a - b)
+      const visiblePages = previewItems.map((page) => ({ index: page.index, rotation: rotations[page.index] || 0 }))
+      const selectedPlan = buildVisiblePagePlan(visiblePages, selected, true)
       if (mode === 'extract') {
-        const result = await extractPages(file, indices)
+        const result = await arrangePdfPages(file, selectedPlan, (current, total) => {
+          setProgress(`Preparing selected page ${current} of ${total}…`)
+        }, controller.signal)
         const blob = new Blob([Uint8Array.from(result).buffer], { type: 'application/pdf' })
         triggerDownloadOverlay('Pages extracted!', () => {
           downloadBlob(blob, `extracted-${file.name}`)
         })
       } else {
-        const { kept, removed } = await splitPdf(file, indices)
+        const unselectedPlan = buildVisiblePagePlan(visiblePages, selected, false)
+        const kept = await arrangePdfPages(file, selectedPlan, (current, total) => {
+          setProgress(`Preparing selected page ${current} of ${total}…`)
+        }, controller.signal)
+        const removed = await arrangePdfPages(file, unselectedPlan, (current, total) => {
+          setProgress(`Preparing remaining page ${current} of ${total}…`)
+        }, controller.signal)
         const outputs = [
           { data: kept, name: `selected-${file.name}` },
           { data: removed, name: `removed-${file.name}` },
@@ -103,10 +101,13 @@ export default function SplitPage() {
           downloadBlob(new Blob([Uint8Array.from(data).buffer], { type: 'application/pdf' }), name)
         }))
       }
-    } catch {
-      toast.error('Operation failed')
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') toast.success('Operation cancelled')
+      else toast.error('Operation failed')
     } finally {
       setProcessing(false)
+      setProgress('')
+      operationAbort.current = null
     }
   }
 
@@ -152,6 +153,13 @@ export default function SplitPage() {
         }}
       />
 
+      <PageSelectionControls
+        pageIds={previewItems.map((page) => page.index)}
+        selected={selected}
+        onChange={setSelected}
+        disabled={processing}
+      />
+
       <div className="mt-4 sticky-bar p-4 flex items-center justify-between gap-3 flex-wrap">
         <span className="text-sm text-gray-400">
           {mode === 'extract' ? `Extract ${selected.size} page${selected.size !== 1 ? 's' : ''}` : `${selected.size} kept, ${previewItems.length - selected.size} removed`}
@@ -168,7 +176,7 @@ export default function SplitPage() {
           </button>
         </div>
       </div>
-      {processing && <ProcessingOverlay message={mode === 'extract' ? 'Extracting pages...' : 'Splitting PDF...'} />}
+      {processing && <ProcessingOverlay message={progress || (mode === 'extract' ? 'Extracting pages...' : 'Splitting PDF...')} onCancel={() => operationAbort.current?.abort()} />}
 
       {/* SEO content */}
       <section className="portal-seo-copy" style={{ marginTop: '24px' }}>

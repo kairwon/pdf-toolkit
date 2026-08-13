@@ -43,6 +43,8 @@ export async function renderPageToCanvas(
   file: File,
   pageNum: number,
   scale: number = 0.3,
+  format: 'jpeg' | 'png' = 'jpeg',
+  quality: number = 0.85,
 ): Promise<string> {
   const pdf = await loadRenderedDocument(file)
   const page = await pdf.getPage(pageNum)
@@ -54,7 +56,75 @@ export async function renderPageToCanvas(
   const ctx = canvas.getContext('2d')!
   await page.render({ canvas, canvasContext: ctx, viewport }).promise
 
-  return canvas.toDataURL('image/jpeg', 0.85)
+  return canvas.toDataURL(format === 'png' ? 'image/png' : 'image/jpeg', quality)
+}
+
+export interface ImagePdfSource {
+  file: File
+  rotation?: 0 | 90 | 180 | 270
+}
+
+export interface ImagesToPdfOptions {
+  pageSize: 'a4' | 'letter' | 'image'
+  orientation: 'auto' | 'portrait' | 'landscape'
+  margin: number
+}
+
+async function imageFileToPng(file: File, rotation: number): Promise<{ bytes: ArrayBuffer; width: number; height: number }> {
+  const bitmap = await createImageBitmap(file)
+  const quarterTurn = rotation === 90 || rotation === 270
+  const canvas = document.createElement('canvas')
+  canvas.width = quarterTurn ? bitmap.height : bitmap.width
+  canvas.height = quarterTurn ? bitmap.width : bitmap.height
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('This browser could not prepare the image')
+  context.translate(canvas.width / 2, canvas.height / 2)
+  context.rotate(rotation * Math.PI / 180)
+  context.drawImage(bitmap, -bitmap.width / 2, -bitmap.height / 2)
+  bitmap.close()
+  const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error('Image conversion failed')), 'image/png'))
+  return { bytes: await blob.arrayBuffer(), width: canvas.width, height: canvas.height }
+}
+
+/** Create a PDF from browser-decodable images without uploading them. */
+export async function imagesToPdf(
+  sources: ImagePdfSource[],
+  options: ImagesToPdfOptions,
+  onProgress?: (current: number, total: number) => void,
+  signal?: AbortSignal,
+): Promise<Uint8Array> {
+  if (sources.length === 0) throw new Error('Add at least one image')
+  const document = await PDFDocument.create()
+  const fixed = options.pageSize === 'a4' ? [595.28, 841.89] : [612, 792]
+
+  for (const [index, source] of sources.entries()) {
+    if (signal?.aborted) throw new DOMException('Operation cancelled', 'AbortError')
+    const prepared = await imageFileToPng(source.file, source.rotation ?? 0)
+    const image = await document.embedPng(prepared.bytes)
+    let pageWidth: number
+    let pageHeight: number
+    if (options.pageSize === 'image') {
+      const scale = Math.min(1, 1440 / Math.max(prepared.width, prepared.height))
+      pageWidth = prepared.width * scale
+      pageHeight = prepared.height * scale
+    } else {
+      ;[pageWidth, pageHeight] = fixed
+      const shouldLandscape = options.orientation === 'landscape' || (options.orientation === 'auto' && prepared.width > prepared.height)
+      if (shouldLandscape) [pageWidth, pageHeight] = [pageHeight, pageWidth]
+    }
+    const margin = options.pageSize === 'image' ? 0 : Math.max(0, options.margin)
+    const availableWidth = Math.max(1, pageWidth - margin * 2)
+    const availableHeight = Math.max(1, pageHeight - margin * 2)
+    const scale = Math.min(availableWidth / prepared.width, availableHeight / prepared.height)
+    const width = prepared.width * scale
+    const height = prepared.height * scale
+    const page = document.addPage([pageWidth, pageHeight])
+    page.drawImage(image, { x: (pageWidth - width) / 2, y: (pageHeight - height) / 2, width, height })
+    onProgress?.(index + 1, sources.length)
+  }
+
+  if (signal?.aborted) throw new DOMException('Operation cancelled', 'AbortError')
+  return document.save()
 }
 
 export async function getPageCount(file: File): Promise<number> {
@@ -625,13 +695,14 @@ async function renderPageForOcr(
  * Classify a PDF: returns 'text' if all pages have text, 'mixed' if some,
  * and 'scanned' if none have meaningful text.
  */
-export async function classifyPdf(file: File): Promise<'text' | 'mixed' | 'scanned'> {
+export async function classifyPdf(file: File, signal?: AbortSignal): Promise<'text' | 'mixed' | 'scanned'> {
   const buffer = await file.arrayBuffer()
   const pdf = await pdfjsLib.getDocument({ data: buffer }).promise
   let textPages = 0
   const total = pdf.numPages
 
   for (let i = 1; i <= total; i++) {
+    if (signal?.aborted) throw new DOMException('Operation cancelled', 'AbortError')
     const isText = await pageIsText(pdf, i)
     if (isText) textPages++
   }
@@ -649,6 +720,7 @@ export async function pdfToWord(
   file: File,
   language: string = 'eng',
   onProgress?: (page: number, total: number, status: string) => void,
+  signal?: AbortSignal,
 ): Promise<Blob> {
   const buffer = await file.arrayBuffer()
   const pdf = await pdfjsLib.getDocument({ data: buffer }).promise
@@ -656,30 +728,35 @@ export async function pdfToWord(
   const pages: string[] = []
   let ocrWorker: any = null
 
-  for (let i = 1; i <= total; i++) {
-    const isText = await pageIsText(pdf, i)
-    onProgress?.(i, total, isText ? `Extracting page ${i}...` : `Running OCR on page ${i}...`)
+  try {
+    for (let i = 1; i <= total; i++) {
+      if (signal?.aborted) throw new DOMException('Operation cancelled', 'AbortError')
+      const isText = await pageIsText(pdf, i)
+      onProgress?.(i, total, isText ? `Extracting page ${i} of ${total}...` : `Running OCR on page ${i} of ${total}...`)
 
-    if (isText) {
-      const page = await pdf.getPage(i)
-      const tc = await page.getTextContent()
-      pages.push(tc.items.map((item: any) => item.str).join(' '))
-    } else {
-      // OCR path — create worker once and reuse
-      if (!ocrWorker) {
-        const { createWorker } = await import('tesseract.js')
-        ocrWorker = await createWorker(language)
+      if (isText) {
+        const page = await pdf.getPage(i)
+        const tc = await page.getTextContent()
+        pages.push(tc.items.map((item: any) => item.str).join(' '))
+      } else {
+        // OCR path — create one worker and always terminate it in finally.
+        if (!ocrWorker) {
+          const { createWorker } = await import('tesseract.js')
+          ocrWorker = await createWorker(language)
+        }
+        const dataUrl = await renderPageForOcr(file, i, 2.5)
+        if (signal?.aborted) throw new DOMException('Operation cancelled', 'AbortError')
+        const imgBlob = await (await fetch(dataUrl)).blob()
+        const { data } = await ocrWorker.recognize(imgBlob)
+        pages.push(data.text)
       }
-      const dataUrl = await renderPageForOcr(file, i, 2.5)
-      const imgBlob = await (await fetch(dataUrl)).blob()
-      const { data } = await ocrWorker.recognize(imgBlob)
-      pages.push(data.text)
+      onProgress?.(i, total, `Page ${i} of ${total} done`)
     }
-    onProgress?.(i, total, `Page ${i} done`)
+  } finally {
+    if (ocrWorker) await ocrWorker.terminate()
   }
 
-  if (ocrWorker) await ocrWorker.terminate()
-
+  if (signal?.aborted) throw new DOMException('Operation cancelled', 'AbortError')
   return textPagesToWord(pages)
 }
 

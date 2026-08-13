@@ -7,9 +7,11 @@ interface FileUploadProps {
   onFiles: (files: File[]) => void
   multiple?: boolean
   accept?: Record<string, string[]>
+  title?: string
+  note?: string
 }
 
-export default function FileUpload({ onFiles, multiple = true, accept }: FileUploadProps) {
+export default function FileUpload({ onFiles, multiple = true, accept, title = 'PDF files', note = 'PDF files · processed on this device · no account required' }: FileUploadProps) {
   const onDrop = useCallback(
     (accepted: File[]) => {
       if (accepted.length > 0) onFiles(accepted)
@@ -49,10 +51,10 @@ export default function FileUpload({ onFiles, multiple = true, accept }: FileUpl
 
         <div>
           <p className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-            {isDragActive ? 'Drop your files here' : 'Drag & drop PDF files here'}
+            {isDragActive ? 'Drop your files here' : `Drag & drop ${title} here`}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">or click anywhere in this area to browse</p>
-          <p className="tool-upload-note">PDF files · processed on this device · no account required</p>
+          <p className="tool-upload-note">{note}</p>
         </div>
 
         {!multiple && (

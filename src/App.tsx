@@ -7,6 +7,7 @@ const MergePage = lazy(() => import('./pages/MergePage'))
 const SplitPage = lazy(() => import('./pages/SplitPage'))
 const ManagePage = lazy(() => import('./pages/ManagePage'))
 const ToImagePage = lazy(() => import('./pages/ToImagePage'))
+const ImagesToPdfPage = lazy(() => import('./pages/ImagesToPdfPage'))
 const CompressPage = lazy(() => import('./pages/CompressPage'))
 const WatermarkPage = lazy(() => import('./pages/WatermarkPage'))
 const UnwatermarkPage = lazy(() => import('./pages/UnwatermarkPage'))
@@ -53,6 +54,7 @@ export default function App() {
         <Route path="/split" element={deferred(<SplitPage />)} />
         <Route path="/manage" element={deferred(<ManagePage />)} />
         <Route path="/to-image" element={deferred(<ToImagePage />)} />
+        <Route path="/images-to-pdf" element={deferred(<ImagesToPdfPage />)} />
         <Route path="/compress" element={deferred(<CompressPage />)} />
         <Route path="/compress/visa" element={deferred(<CompressPage forcedGoal="visa" />)} />
         <Route path="/compress/exact" element={deferred(<CompressPage forcedGoal="exact" />)} />

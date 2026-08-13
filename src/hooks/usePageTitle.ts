@@ -51,6 +51,12 @@ const seo: Record<string, SeoEntry> = {
     name: 'PDF to images',
     tool: true,
   },
+  '/images-to-pdf': {
+    title: 'Convert Images to One PDF Without Uploading | Lab of PDF',
+    description: 'Combine JPEG, PNG, or WebP images into an ordered A4, Letter, or image-sized PDF. Rotate photos and create the file privately in your browser.',
+    name: 'Images to PDF',
+    tool: true,
+  },
   '/compress': {
     title: 'Compress PDF Without Uploading the File | Lab of PDF',
     description: 'Reduce PDF file size locally with lossless, balanced or maximum-reduction modes. Compare the result and keep the original document unchanged.',

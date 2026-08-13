@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { Loader2, Download, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import ToolHeader from '../components/ui/ToolHeader'
 import FileUpload from '../components/ui/FileUpload'
 import PdfViewer from '../components/ui/PdfViewer'
 import type { PreviewItem } from '../components/ui/PdfViewer'
+import PageSelectionControls from '../components/ui/PageSelectionControls'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import { renderPageToCanvas, getPageCount } from '../lib/pdf'
@@ -17,16 +18,17 @@ export default function ToImagePage() {
   const [file, setFile] = useState<File | null>(null)
   const [previewItems, setPreviewItems] = useState<PreviewItem[]>([])
   const [selected, setSelected] = useState<Set<number>>(new Set())
-  const [loading, setLoading] = useState(false)
   const [converting, setConverting] = useState(false)
   const [format, setFormat] = useState<'png' | 'jpg'>('png')
   const [scale, setScale] = useState(2)
+  const [quality, setQuality] = useState(85)
+  const [progress, setProgress] = useState('')
+  const operationAbort = useRef<AbortController | null>(null)
 
   const handleFile = useCallback(async (files: File[]) => {
     const f = files[0]
     if (!f) return
     setFile(f)
-    setLoading(true)
     try {
       const total = await getPageCount(f)
       const items = Array.from({ length: total }, (_, i) => ({
@@ -40,8 +42,6 @@ export default function ToImagePage() {
       toast.success(`Loaded ${total} pages`)
     } catch {
       toast.error('Failed to load PDF')
-    } finally {
-      setLoading(false)
     }
   }, [])
   usePendingFiles(handleFile)
@@ -58,23 +58,29 @@ export default function ToImagePage() {
   const handleConvert = async () => {
     if (!file || selected.size === 0) return
     setConverting(true)
+    const controller = new AbortController()
+    operationAbort.current = controller
     try {
       const indices = [...selected].sort((a, b) => a - b)
-      const blobs = await Promise.all(
-        indices.map(async (idx) => {
-          const dataUrl = await renderPageToCanvas(file, idx + 1, scale)
-          const blob = await fetch(dataUrl).then((r) => r.blob())
-          return { blob, name: `page-${idx + 1}.${format}` }
-        }),
-      )
+      const blobs: { blob: Blob; name: string }[] = []
+      for (const [position, idx] of indices.entries()) {
+        if (controller.signal.aborted) throw new DOMException('Operation cancelled', 'AbortError')
+        setProgress(`Converting page ${position + 1} of ${indices.length}`)
+        const dataUrl = await renderPageToCanvas(file, idx + 1, scale, format === 'png' ? 'png' : 'jpeg', quality / 100)
+        const blob = await fetch(dataUrl).then((response) => response.blob())
+        blobs.push({ blob, name: `page-${idx + 1}.${format}` })
+      }
       triggerDownloadOverlay(`Converted! ${blobs.length} page${blobs.length !== 1 ? 's' : ''}`, () => {
         if (blobs.length === 1) downloadBlob(blobs[0].blob, blobs[0].name)
         else downloadZip(blobs, `${file.name.replace('.pdf', '')}-images.zip`)
       })
-    } catch {
-      toast.error('Conversion failed')
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') toast.success('Conversion cancelled')
+      else toast.error('Conversion failed')
     } finally {
       setConverting(false)
+      setProgress('')
+      operationAbort.current = null
     }
   }
 
@@ -107,7 +113,8 @@ export default function ToImagePage() {
               <button key={s} onClick={() => setScale(s)} className={`pill text-xs ${scale === s ? 'pill-active' : 'pill-inactive'}`}>{s}×</button>
             ))}
           </div>
-          <button onClick={() => { setFile(null); setPreviewItems([]) }} className="btn-ghost text-xs">Change file</button>
+          {format === 'jpg' && <label className="text-xs text-gray-500">Quality {quality}% <input aria-label="JPEG quality" type="range" min="40" max="100" value={quality} onChange={(event) => setQuality(Number(event.target.value))} /></label>}
+          <button onClick={() => { setFile(null); setPreviewItems([]); setSelected(new Set()) }} className="btn-ghost text-xs">Change file</button>
         </div>
       </div>
 
@@ -119,6 +126,13 @@ export default function ToImagePage() {
         onDeselectAll={() => setSelected(new Set())}
       />
 
+      <PageSelectionControls
+        pageIds={previewItems.map((page) => page.index)}
+        selected={selected}
+        onChange={setSelected}
+        disabled={converting}
+      />
+
       <div className="mt-5 sticky-bar p-4 flex items-center justify-between">
         <span className="text-sm text-gray-400">{selected.size} page{selected.size !== 1 ? 's' : ''} · {format.toUpperCase()} · {scale}×</span>
         <button onClick={handleConvert} disabled={converting || selected.size === 0} className="btn-primary flex items-center gap-2">
@@ -126,7 +140,7 @@ export default function ToImagePage() {
           {converting ? 'Converting...' : selected.size === 1 ? 'Download Image' : 'Download ZIP'}
         </button>
       </div>
-      {converting && <ProcessingOverlay message="Converting pages to images..." />}
+      {converting && <ProcessingOverlay message={progress || 'Converting pages to images...'} onCancel={() => operationAbort.current?.abort()} />}
 
       {/* SEO content */}
       <section className="portal-seo-copy" style={{ marginTop: '24px' }}>
