@@ -161,6 +161,22 @@ if 'error_page 404 /404.html;' not in text:
         1,
     )
 
+edit_redirect = '    location = /edit-pdf { return 301 https://labofpdf.com/manage; }'
+if edit_redirect not in text:
+    text = text.replace(
+        '    error_page 404 /404.html;',
+        f'{edit_redirect}\n\n    error_page 404 /404.html;',
+        1,
+    )
+
+old_asset_cache = '''            expires 1h;
+            add_header Cache-Control public;'''
+new_asset_cache = '''            expires 1y;
+            add_header Cache-Control "public, max-age=31536000, immutable" always;'''
+text = text.replace(old_asset_cache, new_asset_cache)
+if 'expires 1h;' in text:
+    raise SystemExit('A short JavaScript or CSS cache rule remains in the Lab of PDF Nginx configuration')
+
 security_anchor = '    add_header Referrer-Policy strict-origin-when-cross-origin always;'
 security_headers = '''    add_header Referrer-Policy strict-origin-when-cross-origin always;
     add_header Strict-Transport-Security "max-age=31536000" always;

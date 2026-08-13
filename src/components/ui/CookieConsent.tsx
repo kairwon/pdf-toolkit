@@ -46,7 +46,7 @@ export default function CookieConsent() {
           Necessary browser storage remembers this choice and essential site preferences. Advertising and analytics scripts are currently disabled.
           If they are introduced, optional technologies will remain off unless you allow them.{' '}
           <a href="/privacy" className="underline text-jade hover:text-jade-dark" target="_blank" rel="noopener noreferrer">
-            Learn more
+            Read the privacy policy
           </a>
         </div>
         <div className="flex items-center gap-3 flex-wrap">

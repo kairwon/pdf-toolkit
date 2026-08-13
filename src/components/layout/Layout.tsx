@@ -35,9 +35,10 @@ export default function Layout() {
     '/guides/organize-pdf-study-notes': 'PDF revision pack guide',
     '/guides/compress-pdf-without-losing-quality': 'Readable PDF compression guide',
     '/guides/reduce-scanned-pdf-file-size': 'Scanned PDF size guide',
+    '/guides/pdf-submission-checklist': 'PDF submission checklist',
   }
   const toolPaths = new Set([
-    '/merge', '/split', '/manage', '/edit-pdf', '/to-image', '/compress',
+    '/merge', '/split', '/manage', '/to-image', '/compress',
     '/compress/visa', '/compress/exact', '/thesis-pdf-check', '/watermark',
     '/unwatermark', '/to-word', '/visa-prep', '/portal-ready-pdf',
   ])
@@ -83,6 +84,7 @@ export default function Layout() {
           <nav aria-label="Footer navigation">
             <Link to="/tools">All tools</Link>
             <Link to="/guides">Guides</Link>
+            <Link to="/guides/pdf-submission-checklist">Submission checklist</Link>
             <Link to="/editorial-policy">How we review</Link>
             <Link to="/about/editorial-team">Authors</Link>
             <Link to="/privacy">Privacy</Link>

@@ -32,8 +32,9 @@ that its commit matches the intended Git release before and after switching
 Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
-The current production release uses the immutable tag
-`production-2026-08-11-manage-page-order`.
+The production release represented by this handoff uses the immutable tag
+`production-2026-08-13-search-growth`. Verify its exact commit in the live
+`release.json` manifest and in GitHub before every subsequent deployment.
 
 The deployment script uses `/var/www/labofpdf-next` and
 `/var/www/labofpdf-prev` only during its atomic switch. Both are removed after
@@ -134,6 +135,26 @@ locally and on GitHub. Never move or reuse a production tag.
   `/about/editorial-team`, and five long-tail study/submission/compression guides. The
   guide HTML includes crawlable fallback copy plus canonical metadata and
   Article structured data; keep the fallback copy aligned with visible pages.
+- The search-growth release adds `/guides/pdf-submission-checklist`, a
+  printable and downloadable ten-step resource designed for legitimate links
+  from university, application-support, library, privacy, and documentation
+  pages. Every guide page now exposes sharing controls, and the repository
+  includes `marketing/BACKLINK_OUTREACH.md` with quality-first directory and
+  editorial outreach copy.
+- Crawl improvements replace homepage task/tool buttons
+  with real links, give prerendered tool routes crawlable fallback copy and
+  internal links, redirect the duplicate `/edit-pdf` alias to `/manage`, and
+  refresh sitemap last-modified dates. Do not re-add `/edit-pdf` to the sitemap.
+- A 2026-08-13 Search Console review reported 5 indexed pages, 21 excluded
+  pages (including 16 discovered but not indexed), 18 clicks, 43 impressions,
+  41.9% CTR, average position 3.7, and one recognized external link from
+  `uicomet.com`. The sitemap was last read on 2026-07-28 and recognized 21 URLs;
+  resubmit it after this SEO release is deployed.
+- The same review found no manual action or security issue. PageSpeed mobile
+  scored 89 performance, 96 accessibility, 96 best practices, and 92 SEO. The
+  release fixes remove the broken Umami request and render-blocking Google font,
+  improve small-label contrast and privacy-link wording, remove a mobile
+  overflow, and update deployment to cache hashed JS/CSS for one year.
 - Do not replace the build command with plain `vite build`; that would remove
   route-specific SEO output.
 - `public/sitemap.xml`, `public/robots.txt`, canonical tags, Open Graph data,

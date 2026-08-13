@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { ArrowRight, CalendarDays, CheckCircle2, Clock3, ShieldCheck, UserRoundCheck } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import ShareButtons from '../ui/ShareButtons'
 
 type ArticleShellProps = {
   kicker: string
@@ -14,6 +15,7 @@ type ArticleShellProps = {
 }
 
 export default function ArticleShell({ kicker, title, summary, updated, readingTime, reviewed = true, children, tool }: ArticleShellProps) {
+  const { pathname } = useLocation()
   return (
     <article className="content-article">
       <header className="content-hero">
@@ -24,6 +26,9 @@ export default function ArticleShell({ kicker, title, summary, updated, readingT
           <span><UserRoundCheck /> Lab of PDF editorial team</span>
           <span><CalendarDays /> Updated {updated}</span>
           {readingTime && <span><Clock3 /> {readingTime}</span>}
+        </div>
+        <div className="content-share">
+          <ShareButtons path={pathname} title={title} />
         </div>
         {reviewed && (
           <div className="content-review-note">
@@ -55,4 +60,3 @@ export default function ArticleShell({ kicker, title, summary, updated, readingT
     </article>
   )
 }
-

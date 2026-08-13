@@ -165,6 +165,12 @@ const seo: Record<string, SeoEntry> = {
     name: 'Reduce a scanned PDF file size',
     article: true,
   },
+  '/guides/pdf-submission-checklist': {
+    title: 'PDF Submission Checklist: 10 Checks Before Upload | Lab of PDF',
+    description: 'Print or download a 10-step PDF submission checklist for file size, page order, readability, signatures, filenames and upload confirmation.',
+    name: 'PDF submission checklist',
+    article: true,
+  },
   '/pdf-to-excel': { title: 'PDF to Excel — Coming Soon | Lab of PDF', description: 'PDF table extraction to Excel is currently in development.', name: 'PDF to Excel' },
   '/sign-pdf': { title: 'Sign PDF — Coming Soon | Lab of PDF', description: 'Browser-based PDF signing is currently in development.', name: 'Sign PDF' },
   '/unlock-pdf': { title: 'Unlock PDF — Coming Soon | Lab of PDF', description: 'Browser-based PDF password removal is currently in development.', name: 'Unlock PDF' },
@@ -247,13 +253,14 @@ export default function usePageTitle(path: string) {
       })
     }
     if (entry.article) {
+      const articleDate = path === '/guides/pdf-submission-checklist' ? '2026-08-13' : '2026-08-08'
       graph.push({
         '@type': 'Article',
         headline: entry.name,
         url,
         description: entry.description,
-        datePublished: '2026-08-08',
-        dateModified: '2026-08-08',
+        datePublished: articleDate,
+        dateModified: articleDate,
         author: { '@type': 'Organization', name: 'Lab of PDF editorial team', url: `${BASE}/about/editorial-team` },
         reviewedBy: { '@type': 'Organization', name: 'Lab of PDF product and privacy review', url: `${BASE}/editorial-policy` },
         publisher: { '@type': 'Organization', name: 'Lab of PDF', url: `${BASE}/`, logo: { '@type': 'ImageObject', url: `${BASE}/logo-google.png` } },

@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpenCheck, FileDown, Files, ScanText } from 'lucide-react'
+import { ArrowRight, BookOpenCheck, ClipboardCheck, FileDown, Files, ScanText } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import usePageTitle from '../hooks/usePageTitle'
 
@@ -8,6 +8,7 @@ const guides = [
   { icon: Files, href: '/guides/organize-pdf-study-notes', label: 'EXAM REVISION', title: 'Organize PDF study notes into one useful revision pack', text: 'Remove duplicate pages, arrange topics, add a predictable order, and create a smaller master PDF.' },
   { icon: FileDown, href: '/guides/compress-pdf-without-losing-quality', label: 'READABLE COMPRESSION', title: 'Compress a PDF without making it unreadable', text: 'Find what makes the document large, reduce it deliberately, and inspect the downloaded copy before sending or submitting it.' },
   { icon: ScanText, href: '/guides/reduce-scanned-pdf-file-size', label: 'LARGE SCANS', title: 'Reduce a scanned PDF file size', text: 'Clean the scan, choose reduction based on its content, and protect small print, handwriting, stamps and signatures.' },
+  { icon: ClipboardCheck, href: '/guides/pdf-submission-checklist', label: 'BEFORE YOU UPLOAD', title: 'PDF submission checklist: 10 checks before upload', text: 'Print or download a neutral checklist for file size, page order, readability, signatures, filenames, and portal confirmation.' },
 ]
 
 export default function GuidesPage() {

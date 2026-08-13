@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Navigate, Routes, Route } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import LandingPage from './pages/LandingPage'
 
@@ -26,6 +26,7 @@ const SearchableNotesGuidePage = lazy(() => import('./pages/SearchableNotesGuide
 const StudyPackGuidePage = lazy(() => import('./pages/StudyPackGuidePage'))
 const CompressWithoutQualityGuidePage = lazy(() => import('./pages/CompressWithoutQualityGuidePage'))
 const ReduceScannedPdfGuidePage = lazy(() => import('./pages/ReduceScannedPdfGuidePage'))
+const PdfSubmissionChecklistPage = lazy(() => import('./pages/PdfSubmissionChecklistPage'))
 
 export default function App() {
   const deferred = (page: ReactNode) => (
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="/guides/organize-pdf-study-notes" element={deferred(<StudyPackGuidePage />)} />
         <Route path="/guides/compress-pdf-without-losing-quality" element={deferred(<CompressWithoutQualityGuidePage />)} />
         <Route path="/guides/reduce-scanned-pdf-file-size" element={deferred(<ReduceScannedPdfGuidePage />)} />
+        <Route path="/guides/pdf-submission-checklist" element={deferred(<PdfSubmissionChecklistPage />)} />
         <Route path="/merge" element={deferred(<MergePage />)} />
         <Route path="/split" element={deferred(<SplitPage />)} />
         <Route path="/manage" element={deferred(<ManagePage />)} />
@@ -63,7 +65,7 @@ export default function App() {
         <Route path="/security" element={deferred(<SecurityPage />)} />
         <Route path="/visa-prep" element={deferred(<VisaPrepPage />)} />
         <Route path="/portal-ready-pdf" element={deferred(<PortalReadyPage />)} />
-        <Route path="/edit-pdf" element={deferred(<ManagePage />)} />
+        <Route path="/edit-pdf" element={<Navigate to="/manage" replace />} />
         <Route path="/pdf-to-excel" element={deferred(<NotFoundPage />)} />
         <Route path="/sign-pdf" element={deferred(<NotFoundPage />)} />
         <Route path="/unlock-pdf" element={deferred(<NotFoundPage />)} />

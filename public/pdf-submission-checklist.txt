@@ -1,0 +1,16 @@
+PDF SUBMISSION CHECKLIST — LAB OF PDF
+https://labofpdf.com/guides/pdf-submission-checklist
+
+[ ] Confirm the official file type, size, page, naming, and deadline rules.
+[ ] Keep an untouched original PDF.
+[ ] Open the exact final downloaded file in a separate PDF reader.
+[ ] Check the first, middle, and last pages for order, rotation, and omissions.
+[ ] Inspect small text, equations, tables, diagrams, stamps, signatures, and QR codes.
+[ ] Test searchable text when the recipient requires it.
+[ ] Measure the final file and aim slightly below the upload limit.
+[ ] Apply the recipient's required filename.
+[ ] Recheck digital signatures, forms, and interactive features after editing.
+[ ] Upload early enough to confirm the portal accepted the correct file.
+
+The receiving organization's current instructions always take priority.
+This checklist is a general verification aid and does not certify acceptance.

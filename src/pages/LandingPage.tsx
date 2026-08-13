@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
 import {
   ArrowRight, BadgeCheck, BookOpenCheck, BriefcaseBusiness, Combine, FileDown,
@@ -313,11 +313,11 @@ export default function LandingPage() {
         </div>
         <div className="lop-outcome-grid">
           {outcomes.map(({ title, description, path, icon: Icon, tone }) => (
-            <button key={title} className="lop-outcome-card" onClick={() => navigate(path)}>
+            <Link key={title} className="lop-outcome-card" to={path}>
               <PdfToolIcon icon={Icon} label={title} tone={tone} kind={pdfIconKindForPath(path)} />
               <span><strong>{title}</strong><small>{description}</small></span>
               <ArrowRight size={15} />
-            </button>
+            </Link>
           ))}
         </div>
 
@@ -388,17 +388,17 @@ export default function LandingPage() {
         </div>
         <div className="lop-tools-grid">
           {popularTools.map(({ title, description, path, icon: Icon, tone }) => (
-            <button key={title} onClick={() => navigate(path)}>
+            <Link key={title} to={path}>
               <PdfToolIcon icon={Icon} label={title} tone={tone} kind={pdfIconKindForPath(path)} />
               <strong>{title}</strong>
               <small>{description}</small>
               <i><ArrowRight size={14} /></i>
-            </button>
+            </Link>
           ))}
         </div>
-        <button className="lop-all-tools" onClick={() => navigate('/tools')}>
+        <Link className="lop-all-tools" to="/tools">
           View all PDF tools <ArrowRight size={16} />
-        </button>
+        </Link>
       </section>
 
       <section className="lop-faq" aria-labelledby="faq-title">
