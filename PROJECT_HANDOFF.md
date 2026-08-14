@@ -33,7 +33,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The production release represented by this handoff uses the immutable tag
-`production-2026-08-13-functional-tools`. Verify its exact commit in the live
+`production-2026-08-14-scanned-pdf-growth`. Verify its exact commit in the live
 `release.json` manifest and in GitHub before every subsequent deployment.
 
 The deployment script uses `/var/www/labofpdf-next` and
@@ -119,6 +119,11 @@ locally and on GitHub. Never move or reuse a production tag.
   quality level selected by the user and stops at the first result that meets
   the target. Lossless preserves searchable text; balanced and maximum modes
   create image-based copies and the UI says so explicitly.
+- `/compress/scanned` is a dedicated scanned-document workflow informed by
+  Search Console query demand. It samples the PDF locally, defaults scanned or
+  mixed documents to balanced scan compression, defaults searchable documents
+  to lossless mode, offers common MB targets, and explains when selectable text
+  may be lost.
 - PDF to Word now generates a real `.docx` file and offers multiple OCR
   languages for scanned pages. Long OCR conversions can be cancelled, report
   the current page, and always terminate the OCR worker. Complex tables,
@@ -139,7 +144,7 @@ locally and on GitHub. Never move or reuse a production tag.
 ## SEO and production behavior
 
 - `npm run build` runs TypeScript, Vite, and `scripts/prerender-seo.mjs`.
-- The prerender step currently creates 27 indexable route HTML files, three
+- The prerender step currently creates 28 indexable route HTML files, three
   noindex route files, and a noindex 404 document.
 - Trust and discovery content now includes `/guides`, `/editorial-policy`,
   `/about/editorial-team`, and five long-tail study/submission/compression guides. The
@@ -160,6 +165,15 @@ locally and on GitHub. Never move or reuse a production tag.
   41.9% CTR, average position 3.7, and one recognized external link from
   `uicomet.com`. The sitemap was last read on 2026-07-28 and recognized 21 URLs;
   resubmit it after this SEO release is deployed.
+- A 2026-08-14 Search Console review reported 19 clicks, 57 impressions, 33.3%
+  CTR and average position 19.4. The homepage received 18 clicks; the scanned
+  PDF guide received 10 impressions and no clicks. Visible queries included
+  “make scanned pdf smaller”, “how to resize a scanned document”, and “how to
+  reduce mb size of scanned pdf”. The sitemap was successfully read on
+  2026-08-13 with 27 discovered URLs, while the links report still showed one
+  external link from `uicomet.com`. The scanned workflow, guide metadata,
+  internal links, GitHub README deep link, and outreach copy were updated from
+  these signals.
 - The same review found no manual action or security issue. PageSpeed mobile
   scored 89 performance, 96 accessibility, 96 best practices, and 92 SEO. The
   release fixes remove the broken Umami request and render-blocking Google font,
@@ -220,7 +234,7 @@ history rewrite and is not part of ordinary deployment.
 ## Verification checklist
 
 1. Run `npm ci` and `npm run build`.
-2. Confirm the build reports 27 indexable routes, 3 noindex routes, and 404.
+2. Confirm the build reports 28 indexable routes, 3 noindex routes, and 404.
 3. Confirm `dist/to-image.html` and `dist/images-to-pdf.html` have their own
    titles, descriptions, and canonicals.
 4. Deploy only after the build succeeds.

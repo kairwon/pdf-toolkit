@@ -6,6 +6,7 @@ import {
   FileCheck2,
   FileImage,
   FileOutput,
+  FileSearch,
   Files,
   FileText,
   GraduationCap,
@@ -43,6 +44,7 @@ const groups = [
     description: 'Meet size limits and move content into useful formats.',
     tools: [
       { title: 'Compress PDF', note: 'Reduce file size for email or upload.', path: '/compress', icon: FileArchive },
+      { title: 'Compress scanned PDF', note: 'Detect image-based scans and reduce their MB size.', path: '/compress/scanned', icon: FileSearch },
       { title: 'Compress to exact size', note: 'Aim for a specific portal limit.', path: '/compress/exact', icon: FileOutput },
       { title: 'PDF to Word', note: 'Turn a PDF into an editable document.', path: '/to-word', icon: FileText },
       { title: 'PDF to images', note: 'Export PDF pages as image files.', path: '/to-image', icon: FileImage },
@@ -60,6 +62,7 @@ const groups = [
 ]
 
 const commonRequirements = [
+  { title: 'Make a scanned PDF smaller', text: 'Detect image-based pages, choose a suitable reduction mode, and verify handwriting and signatures.', path: '/compress/scanned' },
   { title: 'Compress a PDF for a 5 MB upload limit', text: 'Enter the exact maximum shown by the portal and verify the finished file size.', path: '/compress/exact' },
   { title: 'Check whether a thesis PDF has searchable text', text: 'Review text detection, page size, orientation and file size before university submission.', path: '/thesis-pdf-check' },
   { title: 'Combine passport and supporting document PDFs', text: 'Organize sensitive visa files into one ordered PDF or a clearly named ZIP package.', path: '/visa-prep' },

@@ -19,6 +19,7 @@ export default function Layout() {
     '/compress': 'Compress PDF',
     '/compress/visa': 'Visa PDF compressor',
     '/compress/exact': 'Compress to exact size',
+    '/compress/scanned': 'Compress scanned PDF',
     '/thesis-pdf-check': 'Thesis PDF check',
     '/watermark': 'Add watermark',
     '/unwatermark': 'Remove watermark',
@@ -40,7 +41,7 @@ export default function Layout() {
   }
   const toolPaths = new Set([
     '/merge', '/split', '/manage', '/to-image', '/images-to-pdf', '/compress',
-    '/compress/visa', '/compress/exact', '/thesis-pdf-check', '/watermark',
+    '/compress/visa', '/compress/exact', '/compress/scanned', '/thesis-pdf-check', '/watermark',
     '/unwatermark', '/to-word', '/visa-prep', '/portal-ready-pdf',
   ])
   const goBack = () => {

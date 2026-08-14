@@ -58,6 +58,7 @@ export default function App() {
         <Route path="/compress" element={deferred(<CompressPage />)} />
         <Route path="/compress/visa" element={deferred(<CompressPage forcedGoal="visa" />)} />
         <Route path="/compress/exact" element={deferred(<CompressPage forcedGoal="exact" />)} />
+        <Route path="/compress/scanned" element={deferred(<CompressPage forcedGoal="scan" />)} />
         <Route path="/thesis-pdf-check" element={deferred(<CompressPage forcedGoal="thesis" />)} />
         <Route path="/watermark" element={deferred(<WatermarkPage />)} />
         <Route path="/unwatermark" element={deferred(<UnwatermarkPage />)} />

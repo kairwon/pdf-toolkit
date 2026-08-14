@@ -468,6 +468,14 @@ html {
 .target-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
 .target-presets button { padding: 6px; border: 1px solid #e1e8e3; border-radius: 8px; color: #77847d; background: #f9fbfa; font-size: 9px; font-weight: 700; }
 .target-presets button.active { color: #087f5b; border-color: rgba(8,127,91,.3); background: #ecfdf5; }
+.scan-compression-profile { display: flex; gap: 12px; align-items: flex-start; padding: 14px; margin-bottom: 12px; border: 1px solid rgba(8,127,91,.18); border-radius: 12px; background: rgba(236,253,245,.72); color: #087f5b; }
+.scan-compression-profile svg { flex: 0 0 auto; margin-top: 2px; }
+.scan-compression-profile strong { display: block; color: #315247; font-size: 13px; }
+.scan-compression-profile p { margin-top: 3px; color: #718078; font-size: 11px; line-height: 1.55; }
+.scan-target-presets { margin: -2px 0 12px; max-width: 360px; }
+.dark .scan-compression-profile { background: rgba(8,127,91,.1); border-color: rgba(88,196,155,.2); }
+.dark .scan-compression-profile strong { color: #d7e9e1; }
+.dark .scan-compression-profile p { color: #9aaea5; }
 .limit-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin: 10px 0 15px; }
 .limit-choice button { padding: 8px 7px; border: 1px solid #e1e8e3; border-radius: 9px; color: #74827a; background: #f9fbfa; font-size: 9px; font-weight: 750; }
 .limit-choice button.active { color: #087f5b; border-color: rgba(8,127,91,.3); background: #ecfdf5; box-shadow: inset 0 0 0 1px rgba(8,127,91,.06); }

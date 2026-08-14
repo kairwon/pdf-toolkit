@@ -75,6 +75,12 @@ const seo: Record<string, SeoEntry> = {
     name: 'Target-size PDF compressor',
     tool: true,
   },
+  '/compress/scanned': {
+    title: 'Make a Scanned PDF Smaller — Reduce MB Size | Lab of PDF',
+    description: 'Compress a scanned PDF to a smaller MB size. Detect image-based pages, choose a safe reduction level and process the document locally without uploading.',
+    name: 'Scanned PDF compressor',
+    tool: true,
+  },
   '/thesis-pdf-check': {
     title: 'Check a Thesis PDF Before University Submission | Lab of PDF',
     description: 'Check thesis PDF size, page count, searchable text, page format and orientation before submitting it to a university portal.',
@@ -166,9 +172,9 @@ const seo: Record<string, SeoEntry> = {
     article: true,
   },
   '/guides/reduce-scanned-pdf-file-size': {
-    title: 'How to Reduce a Scanned PDF File Size',
-    description: 'Reduce a large scanned PDF by cleaning pages, choosing suitable image compression and checking small print, handwriting and signatures.',
-    name: 'Reduce a scanned PDF file size',
+    title: 'Make a Scanned PDF Smaller: Reduce MB File Size',
+    description: 'Learn how to reduce the MB size of a scanned PDF, protect handwriting and signatures, and compress the file locally without uploading it.',
+    name: 'Make a scanned PDF smaller',
     article: true,
   },
   '/guides/pdf-submission-checklist': {

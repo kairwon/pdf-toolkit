@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
 import {
   ArrowRight, BadgeCheck, BookOpenCheck, BriefcaseBusiness, Combine, FileDown,
-  FileType, Gift, Image, Layers, LockKeyhole, Mail, ScanLine, Stamp,
+  FileType, Gift, Image, Layers, LockKeyhole, ScanLine, Stamp,
   ShieldCheck, Split, Target, Upload, WifiOff, Eraser,
   type LucideIcon,
 } from 'lucide-react'
@@ -44,10 +44,10 @@ const outcomes: Card[] = [
     tone: 'green',
   },
   {
-    title: 'Email a PDF that is too large',
-    description: 'Set a practical attachment target without guessing between compression levels.',
-    path: '/compress/exact',
-    icon: Mail,
+    title: 'Make a scanned PDF smaller',
+    description: 'Detect image-based scans and reduce their MB size while protecting readable details.',
+    path: '/compress/scanned',
+    icon: ScanLine,
     tone: 'orange',
   },
   {
@@ -87,6 +87,7 @@ const featuredMultiWorkflows = [
 
 const singleFileShortcuts = [
   { label: 'Compress', path: '/compress', icon: FileDown },
+  { label: 'Compress scans', path: '/compress/scanned', icon: ScanLine },
   { label: 'Exact size', path: '/compress/exact', icon: Target },
   { label: 'Split / extract', path: '/split', icon: Split },
   { label: 'Manage pages', path: '/manage', icon: Layers },

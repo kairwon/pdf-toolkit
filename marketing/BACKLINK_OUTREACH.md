@@ -9,8 +9,16 @@ This file is a manual, quality-first promotion checklist. Do not automate submis
 3. University upload guide: https://labofpdf.com/guides/compress-pdf-for-university-upload
 4. Privacy and local-processing model: https://labofpdf.com/security
 5. Open-source repository: https://github.com/kairwon/pdf-toolkit
+6. Scanned PDF guide: https://labofpdf.com/guides/reduce-scanned-pdf-file-size
 
 Use the most relevant deep link. Do not point every mention at the homepage.
+
+Search Console on 2026-08-14 showed early impressions for queries such as
+“make scanned pdf smaller”, “how to resize a scanned document”, and “how to
+reduce mb size of scanned pdf”. For scanner-help, records-management, student
+support, or upload-limit resource pages, promote the scanned PDF guide rather
+than the homepage. The guide explains the quality trade-off and links to a
+dedicated local scanned-PDF preset.
 
 ## Priority channel queue
 
@@ -68,6 +76,27 @@ I noticed that your page helps people prepare documents for [specific portal or 
 https://labofpdf.com/guides/pdf-submission-checklist
 
 It is printable, has a plain-text download, does not require an account, and clearly says that the receiving organization's instructions take priority. If it would genuinely help your readers, you are welcome to reference it. No reciprocal link is requested.
+
+Thank you,
+Lab of PDF editorial team
+
+## Scanned-document resource draft
+
+Subject: Optional guide for reducing large scanned PDFs
+
+Hello,
+
+Your page helps readers scan or submit documents, so this may be a useful
+optional reference. We maintain a practical guide to reducing scanned PDF file
+size while checking handwriting, signatures, stamps, and small print:
+
+https://labofpdf.com/guides/reduce-scanned-pdf-file-size
+
+The related compressor detects whether a document is scanned, mixed, or
+searchable and processes supported PDFs locally in the browser. The guide is
+free, requires no account, and clearly explains when image-based compression
+can remove selectable text. If it genuinely complements your page, you are
+welcome to reference it; no reciprocal link is requested.
 
 Thank you,
 Lab of PDF editorial team

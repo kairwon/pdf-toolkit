@@ -2,7 +2,7 @@
 
 > Free online PDF tools — merge, split, compress, watermark, and convert PDFs entirely in your browser. No document uploads or sign-up; practical capacity depends on the device and browser.
 
-Use the production tools at **[labofpdf.com](https://labofpdf.com/)** or start with the **[printable PDF submission checklist](https://labofpdf.com/guides/pdf-submission-checklist)** before uploading a document to a university, visa, government, job, grant, or client portal.
+Use the production tools at **[labofpdf.com](https://labofpdf.com/)**, make a large scan smaller with the **[private scanned PDF compressor](https://labofpdf.com/compress/scanned)**, or start with the **[printable PDF submission checklist](https://labofpdf.com/guides/pdf-submission-checklist)** before uploading a document to a university, visa, government, job, grant, or client portal.
 
 ## Features
 
@@ -11,6 +11,7 @@ Use the production tools at **[labofpdf.com](https://labofpdf.com/)** or start w
 | **Merge PDF** | Combine multiple PDFs into one. Preview pages and pick exactly which ones to include. |
 | **Split PDF** | Extract specific pages from a PDF or split it into two separate files. |
 | **Compress PDF** | Reduce PDF file size losslessly — text stays selectable. |
+| **Compress Scanned PDF** | Detect image-based scans, choose a size target, and make the document smaller locally. |
 | **PDF to Word** | Convert PDF to Word document. OCR applied automatically to scanned pages. |
 | **Add Watermark** | Add a text watermark to every page of your PDF. |
 | **Remove Watermark Annotations** | Inspect supported Stamp/Watermark annotations and remove only selected candidates. |

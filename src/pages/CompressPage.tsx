@@ -22,8 +22,8 @@ const levelInfo: Record<Level, { label: string; desc: string }> = {
   aggressive: { label: 'Maximum reduction', desc: 'Lower-resolution image copy for strict limits; inspect small text carefully' },
 }
 
-export default function CompressPage({ forcedGoal }: { forcedGoal?: string } = {}) {
-  usePageTitle(forcedGoal === 'thesis' ? '/thesis-pdf-check' : forcedGoal === 'visa' ? '/compress/visa' : forcedGoal === 'exact' ? '/compress/exact' : '/compress')
+export default function CompressPage({ forcedGoal }: { forcedGoal?: 'thesis' | 'visa' | 'exact' | 'scan' } = {}) {
+  usePageTitle(forcedGoal === 'thesis' ? '/thesis-pdf-check' : forcedGoal === 'visa' ? '/compress/visa' : forcedGoal === 'exact' ? '/compress/exact' : forcedGoal === 'scan' ? '/compress/scanned' : '/compress')
   const [searchParams] = useSearchParams()
   const goal = forcedGoal ?? searchParams.get('goal')
   const goalConfig = goal === 'thesis'
@@ -32,6 +32,8 @@ export default function CompressPage({ forcedGoal }: { forcedGoal?: string } = {
       ? { title: 'Visa Document Compressor', description: 'Prepare a smaller application PDF for strict embassy upload portals.', target: 2, level: 'aggressive' as Level, label: 'Visa preset' }
       : goal === 'exact'
         ? { title: 'Target Size Compressor', description: 'Set your maximum file size and receive a clear result check after compression.', target: 5, level: 'balanced' as Level, label: 'Custom target' }
+        : goal === 'scan'
+          ? { title: 'Compress Scanned PDF', description: 'Make a large scanned document smaller while checking whether its pages are image-based.', target: 5, level: 'balanced' as Level, label: 'Scanned PDF preset' }
         : { title: 'Compress PDF', description: 'Reduce PDF size privately in your browser while keeping text searchable.', target: 0, level: 'lossless' as Level, label: 'Standard compression' }
   const [file, setFile] = useState<File | null>(null)
   const [pageCount, setPageCount] = useState(0)
@@ -47,11 +49,21 @@ export default function CompressPage({ forcedGoal }: { forcedGoal?: string } = {
     setFile(f)
     setAnalyzing(true)
     try {
-      if (goal === 'thesis') {
+      if (goal === 'thesis' || goal === 'scan') {
         const result = await analyzePdfForSubmission(f)
         setAnalysis(result)
         setPageCount(result.pageCount)
-        toast.success(`Analysis complete — ${result.pageCount} pages`)
+        if (goal === 'scan') {
+          if (result.textStatus === 'searchable') {
+            setLevel('lossless')
+            toast.success('Searchable text detected — starting with lossless compression')
+          } else {
+            setLevel('balanced')
+            toast.success(`${result.textStatus === 'scanned' ? 'Scanned' : 'Mixed'} PDF detected — balanced scan mode selected`)
+          }
+        } else {
+          toast.success(`Analysis complete — ${result.pageCount} pages`)
+        }
       } else {
         const total = await getPageCount(f)
         setPageCount(total)
@@ -120,7 +132,7 @@ export default function CompressPage({ forcedGoal }: { forcedGoal?: string } = {
         <ToolHeader title={goalConfig.title} description={`${goalConfig.description} Your file never leaves this device.`} />
         {goal && (
           <div className="goal-summary">
-            <div><Target size={17} /><span><strong>{goalConfig.label}</strong><small>{goal === 'thesis' ? 'Technical PDF review · optional size limit' : `Target: ${targetMb}MB or less`}</small></span></div>
+            <div><Target size={17} /><span><strong>{goalConfig.label}</strong><small>{goal === 'thesis' ? 'Technical PDF review · optional size limit' : goal === 'scan' ? 'Detect scan type · target 5MB or less' : `Target: ${targetMb}MB or less`}</small></span></div>
             <BadgeCheck size={18} />
           </div>
         )}
@@ -258,10 +270,26 @@ export default function CompressPage({ forcedGoal }: { forcedGoal?: string } = {
       </div>
 
       <div className="p-5 mb-5 space-y-2.5" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
+        {goal === 'scan' && analysis && (
+          <div className="scan-compression-profile" role="status">
+            <FileSearch size={18} />
+            <div>
+              <strong>{analysis.textStatus === 'scanned' ? 'Image-based scan detected' : analysis.textStatus === 'mixed' ? 'Mixed scanned and searchable pages' : 'Searchable text detected'}</strong>
+              <p>{analysis.textStatus === 'searchable'
+                ? 'Lossless mode is selected first so text stays selectable. Choose an image-based mode only if a smaller result is essential.'
+                : `Balanced scan mode is selected. We sampled ${analysis.sampledPages} page${analysis.sampledPages === 1 ? '' : 's'} locally.`}</p>
+            </div>
+          </div>
+        )}
         {goal && (
           <div className="target-control">
             <label htmlFor="target-size">Maximum file size</label>
             <div><input id="target-size" type="number" min="0.1" step="0.1" value={targetMb} onChange={(event) => setTargetMb(Math.max(0.1, Number(event.target.value)))} /><span>MB</span></div>
+          </div>
+        )}
+        {goal === 'scan' && (
+          <div className="target-presets scan-target-presets" aria-label="Common scanned PDF size targets">
+            {[2, 5, 10].map((size) => <button type="button" className={targetMb === size ? 'active' : ''} onClick={() => setTargetMb(size)} key={size}>{size} MB</button>)}
           </div>
         )}
         <label className="text-sm font-medium text-gray-600 dark:text-gray-300 block mb-1">Compression level</label>
@@ -286,6 +314,18 @@ export default function CompressPage({ forcedGoal }: { forcedGoal?: string } = {
         </button>
       </div>
       {processing && <ProcessingOverlay message="Compressing PDF..." />}
+
+      {goal === 'scan' && (
+        <section className="portal-seo-copy" style={{ marginTop: 24 }}>
+          <span>MAKE A SCANNED PDF SMALLER</span>
+          <h2>Reduce the MB size of a scanned document without uploading it</h2>
+          <p>Lab of PDF checks whether the document is image-based, mixed, or searchable, then starts with the safest suitable compression mode. Always inspect handwriting, signatures, stamps, and small print in the downloaded copy.</p>
+          <div>
+            <article><h3>Why is my scanned PDF so large?</h3><p>Every scan page is usually stored as an image. Colour, high resolution, blank margins, and photographic backgrounds can quickly increase file size.</p></article>
+            <article><h3>Will scanned PDF compression remove searchable text?</h3><p>Lossless mode preserves text. Balanced and maximum modes create image-based copies, so use them only when the smaller file is worth that trade-off.</p></article>
+          </div>
+        </section>
+      )}
     </ToolPageWrapper>
   )
 }
