@@ -1,0 +1,23 @@
+import { useCallback, useRef, useState } from 'react'
+import { Crop, Download, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import CropCanvas, { type CropBox } from '../components/ui/CropCanvas'
+import FileUpload from '../components/ui/FileUpload'
+import ProcessingOverlay from '../components/ui/ProcessingOverlay'
+import ToolHeader from '../components/ui/ToolHeader'
+import ToolPageWrapper from '../components/ui/ToolPageWrapper'
+import usePageTitle from '../hooks/usePageTitle'
+import usePendingFiles from '../hooks/usePendingFiles'
+import { cropPdfPages, getPageCount } from '../lib/pdf'
+import { downloadBlob, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
+
+export default function CropPdfPage() {
+  usePageTitle('/crop-pdf')
+  const [file,setFile]=useState<File|null>(null); const [pageCount,setPageCount]=useState(0); const [pageNumber,setPageNumber]=useState(1)
+  const [box,setBox]=useState<CropBox>({x:.05,y:.05,width:.9,height:.9}); const [applyTo,setApplyTo]=useState<'all'|'current'>('all')
+  const [outputSize,setOutputSize]=useState<'cropped'|'a4'|'letter'>('cropped'); const [margin,setMargin]=useState(24); const [processing,setProcessing]=useState(false); const [progress,setProgress]=useState(''); const abortRef=useRef<AbortController|null>(null)
+  const handleFile=useCallback(async(files:File[])=>{const next=files[0];if(!next)return;try{setFile(next);setPageCount(await getPageCount(next));setPageNumber(1)}catch{toast.error('This PDF could not be opened')}},[]); usePendingFiles(handleFile)
+  const run=async()=>{if(!file)return;const controller=new AbortController();abortRef.current=controller;setProcessing(true);try{const bytes=await cropPdfPages(file,{box,pageIndices:applyTo==='current'?[pageNumber-1]:undefined,outputSize,margin},(current,total)=>setProgress(`Cropping page ${current} of ${total}…`),controller.signal);const blob=new Blob([Uint8Array.from(bytes).buffer],{type:'application/pdf'});triggerDownloadOverlay('Cropped PDF ready!',()=>downloadBlob(blob,`cropped-${file.name}`))}catch(error){toast.error(error instanceof DOMException&&error.name==='AbortError'?'Cropping cancelled':'Could not crop this PDF')}finally{setProcessing(false);setProgress('');abortRef.current=null}}
+  if(!file)return <ToolPageWrapper><ToolHeader title="Crop and Resize PDF Pages" description="Drag a crop frame on the real page, remove unwanted borders, and optionally fit the result to A4 or Letter without uploading."/><FileUpload onFiles={handleFile} multiple={false}/></ToolPageWrapper>
+  return <ToolPageWrapper><ToolHeader title="Crop and Resize PDF Pages" description="Keep exactly the visible area inside the frame, then choose cropped, A4 or Letter output."/><div className="editor-file-bar"><div><strong>{file.name}</strong><span>{formatFileSize(file.size)} · {pageCount} pages</span></div><button className="btn-ghost" onClick={()=>setFile(null)}>Change file</button></div><div className="crop-workspace"><CropCanvas file={file} pageCount={pageCount} pageNumber={pageNumber} box={box} disabled={processing} onPageChange={setPageNumber} onChange={setBox}/><aside className="scan-controls"><section><h3><Crop size={16}/>Crop scope</h3><label>Apply crop to<select value={applyTo} onChange={event=>setApplyTo(event.target.value as 'all'|'current')}><option value="all">All pages</option><option value="current">Current preview page only</option></select></label><button className="btn-ghost" onClick={()=>setBox({x:.05,y:.05,width:.9,height:.9})}>Reset frame</button></section><section><h3>Output sheet</h3><select value={outputSize} onChange={event=>setOutputSize(event.target.value as 'cropped'|'a4'|'letter')}><option value="cropped">Use cropped dimensions</option><option value="a4">Fit on A4</option><option value="letter">Fit on Letter</option></select>{outputSize!=='cropped'&&<label>White margin: {margin} pt<input type="range" min={0} max={72} value={margin} onChange={event=>setMargin(Number(event.target.value))}/></label>}<p>Fitting preserves aspect ratio and centers the cropped content on a white sheet.</p></section></aside></div><div className="sticky bottom-4 sticky-bar p-4 flex items-center justify-between"><span className="text-sm text-gray-400">{applyTo==='all'?'All pages':`Page ${pageNumber}`} · local processing</span><button className="btn-primary flex items-center gap-2" disabled={processing} onClick={()=>void run()}>{processing?<Loader2 size={15} className="animate-spin"/>:<Download size={15}/>}Crop & download</button></div>{processing&&<ProcessingOverlay message={progress} onCancel={()=>abortRef.current?.abort()}/>}</ToolPageWrapper>
+}

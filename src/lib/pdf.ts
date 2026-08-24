@@ -141,6 +141,77 @@ export interface PdfStructureInspection {
   hasPageLabels: boolean
 }
 
+export interface PdfFormFieldInfo {
+  name: string
+  type: 'text' | 'checkbox' | 'radio' | 'dropdown' | 'option-list' | 'signature' | 'unknown'
+  value: string | boolean
+  options: string[]
+}
+
+export interface NewPdfFormField {
+  name: string
+  type: 'text' | 'checkbox'
+  pageIndex: number
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export async function inspectPdfForm(file: File): Promise<PdfFormFieldInfo[]> {
+  const document = await PDFDocument.load(await file.arrayBuffer())
+  return document.getForm().getFields().map((field) => {
+    const kind = field.constructor.name
+    const anyField = field as any
+    if (kind === 'PDFTextField') return { name: field.getName(), type: 'text', value: anyField.getText?.() ?? '', options: [] }
+    if (kind === 'PDFCheckBox') return { name: field.getName(), type: 'checkbox', value: anyField.isChecked?.() ?? false, options: [] }
+    if (kind === 'PDFRadioGroup') return { name: field.getName(), type: 'radio', value: anyField.getSelected?.() ?? '', options: anyField.getOptions?.() ?? [] }
+    if (kind === 'PDFDropdown') return { name: field.getName(), type: 'dropdown', value: anyField.getSelected?.()?.[0] ?? '', options: anyField.getOptions?.() ?? [] }
+    if (kind === 'PDFOptionList') return { name: field.getName(), type: 'option-list', value: anyField.getSelected?.()?.join(', ') ?? '', options: anyField.getOptions?.() ?? [] }
+    if (kind === 'PDFSignature') return { name: field.getName(), type: 'signature', value: '', options: [] }
+    return { name: field.getName(), type: 'unknown', value: '', options: [] }
+  })
+}
+
+/** Fill supported existing fields and optionally add new visible AcroForm fields. */
+export async function updatePdfForm(
+  file: File,
+  values: Record<string, string | boolean>,
+  newFields: NewPdfFormField[],
+  flatten: boolean,
+): Promise<Uint8Array> {
+  const document = await PDFDocument.load(await file.arrayBuffer())
+  const form = document.getForm()
+  for (const field of form.getFields()) {
+    const value = values[field.getName()]
+    if (value === undefined) continue
+    const anyField = field as any
+    const kind = field.constructor.name
+    if (kind === 'PDFTextField') anyField.setText(String(value))
+    else if (kind === 'PDFCheckBox') {
+      if (value) anyField.check()
+      else anyField.uncheck()
+    }
+    else if (kind === 'PDFRadioGroup') anyField.select(String(value))
+    else if (kind === 'PDFDropdown') anyField.select(String(value))
+    else if (kind === 'PDFOptionList') anyField.select(String(value).split(',').map((item) => item.trim()).filter(Boolean))
+  }
+  for (const field of newFields) {
+    const page = document.getPage(field.pageIndex)
+    if (!page) continue
+    const { width, height } = page.getSize()
+    const x = field.x * width
+    const y = height - (field.y + field.height) * height
+    if (field.type === 'checkbox') {
+      form.createCheckBox(field.name).addToPage(page, { x, y, width: field.width * width, height: field.height * height, borderWidth: 1, borderColor: rgb(.3, .55, .45) })
+    } else {
+      form.createTextField(field.name).addToPage(page, { x, y, width: field.width * width, height: field.height * height, borderWidth: 1, borderColor: rgb(.3, .55, .45), backgroundColor: rgb(.97, 1, .98) })
+    }
+  }
+  if (flatten) form.flatten()
+  return document.save()
+}
+
 /** Detect document structures that page editing may invalidate or alter. */
 export async function inspectPdfStructure(file: File): Promise<PdfStructureInspection> {
   const pdfDoc = await PDFDocument.load(await file.arrayBuffer())
@@ -155,6 +226,53 @@ export async function inspectPdfStructure(file: File): Promise<PdfStructureInspe
     hasAttachments: !!names?.get(PDFName.of('EmbeddedFiles')),
     hasPageLabels: catalog.has(PDFName.of('PageLabels')),
   }
+}
+
+export interface PdfDocumentInfo {
+  title: string
+  author: string
+  subject: string
+  keywords: string
+  creator: string
+  producer: string
+  language: string
+  creationDate: string
+  modificationDate: string
+  structure: PdfStructureInspection
+}
+
+export interface PdfStructureCleanup {
+  removeBookmarks: boolean
+  removeAttachments: boolean
+  removePageLabels: boolean
+}
+
+export async function readPdfDocumentInfo(file: File): Promise<PdfDocumentInfo> {
+  const document = await PDFDocument.load(await file.arrayBuffer(), { updateMetadata: false })
+  const structure = await inspectPdfStructure(file)
+  const languageObject = document.catalog.get(PDFName.of('Lang')) as any
+  const language = languageObject ? pdfTextValue(document.context.lookup(languageObject)) : ''
+  return {
+    title: document.getTitle() ?? '', author: document.getAuthor() ?? '', subject: document.getSubject() ?? '',
+    keywords: document.getKeywords() ?? '', creator: document.getCreator() ?? '', producer: document.getProducer() ?? '',
+    language, creationDate: document.getCreationDate()?.toISOString() ?? '', modificationDate: document.getModificationDate()?.toISOString() ?? '', structure,
+  }
+}
+
+/** Update document properties and optionally remove selected catalog structures. */
+export async function updatePdfDocumentInfo(file: File, info: Omit<PdfDocumentInfo, 'structure' | 'creationDate' | 'modificationDate'>, cleanup: PdfStructureCleanup) {
+  const document = await PDFDocument.load(await file.arrayBuffer(), { updateMetadata: false })
+  document.setTitle(info.title); document.setAuthor(info.author); document.setSubject(info.subject)
+  document.setKeywords(info.keywords.split(/[,;]+/).map((item) => item.trim()).filter(Boolean))
+  document.setCreator(info.creator); document.setProducer(info.producer); document.setLanguage(info.language)
+  if (cleanup.removeBookmarks) document.catalog.delete(PDFName.of('Outlines'))
+  if (cleanup.removePageLabels) document.catalog.delete(PDFName.of('PageLabels'))
+  if (cleanup.removeAttachments) {
+    const names = document.catalog.lookupMaybe(PDFName.of('Names'), PDFDict)
+    names?.delete(PDFName.of('EmbeddedFiles'))
+  }
+  document.setModificationDate(new Date())
+  return document.save()
 }
 
 export interface SubmissionAnalysis {
@@ -370,6 +488,66 @@ export async function rotatePages(
     page.setRotation(degrees((current + rotation) % 360))
   })
   return pdfDoc.save()
+}
+
+export interface CropPdfOptions {
+  box: { x: number; y: number; width: number; height: number }
+  pageIndices?: number[]
+  outputSize: 'cropped' | 'a4' | 'letter'
+  margin: number
+}
+
+/** Crop visible page content and optionally place it on standardized sheets. */
+export async function cropPdfPages(
+  file: File,
+  options: CropPdfOptions,
+  onProgress?: (current: number, total: number) => void,
+  signal?: AbortSignal,
+): Promise<Uint8Array> {
+  const source = await PDFDocument.load(await file.arrayBuffer())
+  const output = await PDFDocument.create()
+  const selected = options.pageIndices ? new Set(options.pageIndices) : null
+  const box = {
+    x: Math.min(0.975, Math.max(0, options.box.x)),
+    y: Math.min(0.975, Math.max(0, options.box.y)),
+    width: Math.min(1, Math.max(0.025, options.box.width)),
+    height: Math.min(1, Math.max(0.025, options.box.height)),
+  }
+
+  for (let pageIndex = 0; pageIndex < source.getPageCount(); pageIndex++) {
+    if (signal?.aborted) throw new DOMException('Operation cancelled', 'AbortError')
+    if (selected && !selected.has(pageIndex)) {
+      const [copied] = await output.copyPages(source, [pageIndex])
+      output.addPage(copied)
+      onProgress?.(pageIndex + 1, source.getPageCount())
+      continue
+    }
+    const sourcePage = source.getPage(pageIndex)
+    const { width, height } = sourcePage.getSize()
+    const cropWidth = Math.min(width - box.x * width, box.width * width)
+    const cropHeight = Math.min(height - box.y * height, box.height * height)
+    const left = box.x * width
+    const bottom = height - (box.y * height + cropHeight)
+    const hasPageContent = !!sourcePage.node.get(PDFName.of('Contents'))
+    const embedded = hasPageContent
+      ? await output.embedPage(sourcePage, { left, bottom, right: left + cropWidth, top: bottom + cropHeight })
+      : null
+    const fixed = options.outputSize === 'a4' ? [595.28, 841.89] : [612, 792]
+    let pageWidth = cropWidth
+    let pageHeight = cropHeight
+    if (options.outputSize !== 'cropped') {
+      ;[pageWidth, pageHeight] = fixed
+      if (cropWidth > cropHeight) [pageWidth, pageHeight] = [pageHeight, pageWidth]
+    }
+    const margin = options.outputSize === 'cropped' ? 0 : Math.min(Math.max(0, options.margin), Math.min(pageWidth, pageHeight) / 3)
+    const scale = Math.min((pageWidth - margin * 2) / cropWidth, (pageHeight - margin * 2) / cropHeight)
+    const drawWidth = cropWidth * scale
+    const drawHeight = cropHeight * scale
+    const page = output.addPage([pageWidth, pageHeight])
+    if (embedded) page.drawPage(embedded, { x: (pageWidth - drawWidth) / 2, y: (pageHeight - drawHeight) / 2, width: drawWidth, height: drawHeight })
+    onProgress?.(pageIndex + 1, source.getPageCount())
+  }
+  return output.save()
 }
 
 /**
@@ -719,6 +897,137 @@ export async function classifyPdf(file: File, signal?: AbortSignal): Promise<'te
   if (textPages === total) return 'text'
   if (textPages === 0) return 'scanned'
   return 'mixed'
+}
+
+export interface ScanCleanupOptions {
+  grayscale: boolean
+  contrast: number
+  removeBackground: number
+  renderScale: number
+  jpegQuality: number
+  deskewDegrees: number
+}
+
+export const DEFAULT_SCAN_CLEANUP: ScanCleanupOptions = {
+  grayscale: true,
+  contrast: 18,
+  removeBackground: 8,
+  renderScale: 1.8,
+  jpegQuality: 0.82,
+  deskewDegrees: 0,
+}
+
+async function prepareScanPage(file: File, pageNumber: number, options: ScanCleanupOptions): Promise<Blob> {
+  const dataUrl = await renderPageToCanvas(file, pageNumber, options.renderScale, 'png')
+  const source = await createImageBitmap(await (await fetch(dataUrl)).blob())
+  const canvas = document.createElement('canvas')
+  canvas.width = source.width
+  canvas.height = source.height
+  const context = canvas.getContext('2d', { willReadFrequently: true })!
+  context.fillStyle = '#fff'
+  context.fillRect(0, 0, canvas.width, canvas.height)
+  context.translate(canvas.width / 2, canvas.height / 2)
+  context.rotate(options.deskewDegrees * Math.PI / 180)
+  context.drawImage(source, -source.width / 2, -source.height / 2)
+  context.setTransform(1, 0, 0, 1, 0, 0)
+  source.close()
+
+  const pixels = context.getImageData(0, 0, canvas.width, canvas.height)
+  const contrastFactor = (259 * (options.contrast + 255)) / (255 * (259 - options.contrast))
+  const backgroundCutoff = 255 - Math.max(0, options.removeBackground) * 2.4
+  for (let offset = 0; offset < pixels.data.length; offset += 4) {
+    let r = pixels.data[offset]
+    let g = pixels.data[offset + 1]
+    let b = pixels.data[offset + 2]
+    if (options.grayscale) {
+      const luminance = 0.299 * r + 0.587 * g + 0.114 * b
+      r = luminance; g = luminance; b = luminance
+    }
+    r = Math.min(255, Math.max(0, contrastFactor * (r - 128) + 128))
+    g = Math.min(255, Math.max(0, contrastFactor * (g - 128) + 128))
+    b = Math.min(255, Math.max(0, contrastFactor * (b - 128) + 128))
+    if ((r + g + b) / 3 >= backgroundCutoff) r = g = b = 255
+    pixels.data[offset] = r
+    pixels.data[offset + 1] = g
+    pixels.data[offset + 2] = b
+  }
+  context.putImageData(pixels, 0, 0)
+  const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error('Scan cleanup failed')), 'image/jpeg', options.jpegQuality))
+  canvas.width = 1
+  canvas.height = 1
+  return blob
+}
+
+/** Rebuild scanned pages with locally applied background, contrast and grayscale cleanup. */
+export async function cleanScannedPdf(
+  file: File,
+  options: ScanCleanupOptions,
+  onProgress?: (current: number, total: number, message: string) => void,
+  signal?: AbortSignal,
+): Promise<Uint8Array> {
+  const source = await PDFDocument.load(await file.arrayBuffer())
+  const output = await PDFDocument.create()
+  for (let pageIndex = 0; pageIndex < source.getPageCount(); pageIndex++) {
+    if (signal?.aborted) throw new DOMException('Operation cancelled', 'AbortError')
+    onProgress?.(pageIndex + 1, source.getPageCount(), `Cleaning scan page ${pageIndex + 1}…`)
+    const { width, height } = source.getPage(pageIndex).getSize()
+    const image = await output.embedJpg(await prepareScanPage(file, pageIndex + 1, options).then((blob) => blob.arrayBuffer()))
+    const page = output.addPage([width, height])
+    page.drawImage(image, { x: 0, y: 0, width, height })
+  }
+  return output.save({ useObjectStreams: true })
+}
+
+/**
+ * Preserve existing text pages and convert scanned pages into searchable PDF
+ * pages with Tesseract's invisible OCR text layer. Everything runs locally.
+ */
+export async function makePdfSearchable(
+  file: File,
+  language: string,
+  cleanup: ScanCleanupOptions = DEFAULT_SCAN_CLEANUP,
+  onProgress?: (current: number, total: number, message: string) => void,
+  signal?: AbortSignal,
+): Promise<Uint8Array> {
+  const sourceBytes = await file.arrayBuffer()
+  const source = await PDFDocument.load(sourceBytes.slice(0))
+  const rendered = await pdfjsLib.getDocument({ data: sourceBytes.slice(0) }).promise
+  const output = await PDFDocument.create()
+  let worker: Awaited<ReturnType<typeof import('tesseract.js')['createWorker']>> | null = null
+
+  try {
+    for (let pageIndex = 0; pageIndex < source.getPageCount(); pageIndex++) {
+      if (signal?.aborted) throw new DOMException('Operation cancelled', 'AbortError')
+      const renderedPage = await rendered.getPage(pageIndex + 1)
+      const text = (await renderedPage.getTextContent()).items.map((item: any) => item.str).join('').trim()
+      if (text.length > 20) {
+        const [copied] = await output.copyPages(source, [pageIndex])
+        output.addPage(copied)
+        onProgress?.(pageIndex + 1, source.getPageCount(), `Kept existing text on page ${pageIndex + 1}`)
+        continue
+      }
+
+      if (!worker) {
+        onProgress?.(pageIndex + 1, source.getPageCount(), `Loading ${language} OCR locally…`)
+        const { createWorker } = await import('tesseract.js')
+        worker = await createWorker(language)
+      }
+      const prepared = await prepareScanPage(file, pageIndex + 1, { ...cleanup, renderScale: Math.max(2.1, cleanup.renderScale) })
+      onProgress?.(pageIndex + 1, source.getPageCount(), `Recognizing page ${pageIndex + 1} of ${source.getPageCount()}…`)
+      const result = await worker.recognize(prepared, { pdfTitle: file.name, pdfTextOnly: false }, { text: true, pdf: true })
+      if (!result.data.pdf) throw new Error(`OCR did not produce a searchable page ${pageIndex + 1}`)
+      const recognized = await PDFDocument.load(Uint8Array.from(result.data.pdf))
+      const embedded = await output.embedPage(recognized.getPage(0))
+      const { width, height } = source.getPage(pageIndex).getSize()
+      const page = output.addPage([width, height])
+      page.drawPage(embedded, { x: 0, y: 0, width, height })
+      onProgress?.(pageIndex + 1, source.getPageCount(), `Added searchable text to page ${pageIndex + 1}`)
+    }
+  } finally {
+    if (worker) await worker.terminate()
+  }
+  if (signal?.aborted) throw new DOMException('Operation cancelled', 'AbortError')
+  return output.save({ useObjectStreams: true })
 }
 
 /**

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import {
   ArrowRight,
   BriefcaseBusiness,
+  Crop,
   FileArchive,
   FileCheck2,
   FileImage,
@@ -9,12 +10,19 @@ import {
   FileSearch,
   Files,
   FileText,
+  FormInput,
   GraduationCap,
+  Highlighter,
   Images,
   Layers3,
   LockKeyhole,
   Scissors,
+  ScanText,
+  ShieldX,
+  Signature,
   Stamp,
+  Tags,
+  Workflow,
 } from 'lucide-react'
 import usePageTitle from '../hooks/usePageTitle'
 import PdfToolIcon, { pdfIconKindForPath } from '../components/ui/PdfToolIcon'
@@ -28,6 +36,7 @@ const groups = [
       { title: 'Visa application prep', note: 'Prepare documents for a visa upload workflow.', path: '/visa-prep', icon: BriefcaseBusiness },
       { title: 'Portal-ready PDF', note: 'Make a PDF easier to upload to online portals.', path: '/portal-ready-pdf', icon: FileCheck2 },
       { title: 'Images to PDF', note: 'Build a clean PDF from application photos or scans.', path: '/images-to-pdf', icon: Images },
+      { title: 'Reusable workflows', note: 'Process multiple PDFs with one saved local sequence.', path: '/workflows', icon: Workflow },
     ],
   },
   {
@@ -49,6 +58,21 @@ const groups = [
       { title: 'PDF to Word', note: 'Turn a PDF into an editable document.', path: '/to-word', icon: FileText },
       { title: 'PDF to images', note: 'Export PDF pages as image files.', path: '/to-image', icon: FileImage },
       { title: 'Images to PDF', note: 'Combine photos and scans into an ordered PDF.', path: '/images-to-pdf', icon: Images },
+      { title: 'OCR searchable PDF', note: 'Add searchable text to scanned PDF pages locally.', path: '/ocr-pdf', icon: ScanText },
+      { title: 'Clean scanned PDF', note: 'Improve contrast and remove light scan backgrounds.', path: '/scan-cleanup', icon: FileSearch },
+    ],
+  },
+  {
+    title: 'Edit, fill and protect',
+    description: 'Work directly on the page with visual, draggable objects.',
+    tools: [
+      { title: 'Visual PDF editor', note: 'Add text, images, shapes, highlights and drawings.', path: '/edit', icon: Highlighter },
+      { title: 'Fill & sign PDF', note: 'Draw or type a signature and place it directly.', path: '/sign-pdf', icon: Signature },
+      { title: 'Securely redact PDF', note: 'Permanently flatten covered content on selected pages.', path: '/redact-pdf', icon: ShieldX },
+      { title: 'Crop and resize PDF', note: 'Drag a crop frame and fit pages to A4 or Letter.', path: '/crop-pdf', icon: Crop },
+      { title: 'Compare PDF versions', note: 'Review two files side by side and highlight differences.', path: '/compare-pdf', icon: Files },
+      { title: 'PDF forms', note: 'Fill existing fields or place new fields visually.', path: '/pdf-forms', icon: FormInput },
+      { title: 'Document information', note: 'Edit metadata and inspect bookmarks or attachments.', path: '/document-info', icon: Tags },
     ],
   },
   {

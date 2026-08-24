@@ -13,7 +13,17 @@ export default function Layout() {
     '/merge': 'Merge PDF',
     '/split': 'Split PDF',
     '/manage': 'Manage PDF pages',
-    '/edit-pdf': 'Manage PDF pages',
+    '/edit': 'Visual PDF editor',
+    '/edit-pdf': 'Visual PDF editor',
+    '/sign-pdf': 'Fill and sign PDF',
+    '/redact-pdf': 'Securely redact PDF',
+    '/crop-pdf': 'Crop and resize PDF',
+    '/ocr-pdf': 'Make PDF searchable',
+    '/scan-cleanup': 'Clean scanned PDF',
+    '/workflows': 'Reusable PDF workflows',
+    '/compare-pdf': 'Compare PDFs',
+    '/pdf-forms': 'Fill and create PDF forms',
+    '/document-info': 'PDF document information',
     '/to-image': 'PDF to images',
     '/images-to-pdf': 'Images to PDF',
     '/compress': 'Compress PDF',
@@ -42,7 +52,9 @@ export default function Layout() {
   const toolPaths = new Set([
     '/merge', '/split', '/manage', '/to-image', '/images-to-pdf', '/compress',
     '/compress/visa', '/compress/exact', '/compress/scanned', '/thesis-pdf-check', '/watermark',
-    '/unwatermark', '/to-word', '/visa-prep', '/portal-ready-pdf',
+    '/unwatermark', '/to-word', '/visa-prep', '/portal-ready-pdf', '/edit', '/sign-pdf',
+    '/redact-pdf', '/crop-pdf', '/ocr-pdf', '/scan-cleanup', '/workflows', '/compare-pdf',
+    '/pdf-forms', '/document-info',
   ])
   const goBack = () => {
     if (window.history.length > 1) navigate(-1)

@@ -40,9 +40,69 @@ const seo: Record<string, SeoEntry> = {
     tool: true,
   },
   '/edit-pdf': {
-    title: 'Edit PDF Pages Without Uploading | Lab of PDF',
-    description: 'Edit PDF pages locally in your browser: reorder, rotate, remove and extract pages while keeping the original file untouched.',
-    name: 'Edit PDF pages',
+    title: 'Edit PDF Visually Without Uploading | Lab of PDF',
+    description: 'Add text, images, drawings, highlights, signatures and redactions directly on PDF pages in your browser.',
+    name: 'Visual PDF editor',
+    tool: true,
+  },
+  '/edit': {
+    title: 'Visual PDF Editor: Add Text, Images & Drawings | Lab of PDF',
+    description: 'Edit PDF pages visually with draggable text, images, shapes, highlights, drawings, signatures and page numbers. Processing stays in your browser.',
+    name: 'Visual PDF editor',
+    tool: true,
+  },
+  '/sign-pdf': {
+    title: 'Fill and Sign PDF Visually Without Uploading | Lab of PDF',
+    description: 'Draw, type, place and resize signatures directly on PDF pages. Add text and page details locally in your browser.',
+    name: 'Fill and sign PDF',
+    tool: true,
+  },
+  '/redact-pdf': {
+    title: 'Securely Redact PDF in Your Browser | Lab of PDF',
+    description: 'Draw redaction areas on a real PDF preview and permanently flatten affected pages so covered content cannot be recovered.',
+    name: 'Redact PDF',
+    tool: true,
+  },
+  '/ocr-pdf': {
+    title: 'Make Scanned PDF Searchable with Private OCR | Lab of PDF',
+    description: 'Add a searchable text layer to scanned PDF pages with browser-based OCR while preserving pages that already contain selectable text.',
+    name: 'OCR searchable PDF',
+    tool: true,
+  },
+  '/scan-cleanup': {
+    title: 'Clean Scanned PDF Background and Improve Text | Lab of PDF',
+    description: 'Preview and improve scan contrast, remove light backgrounds and create a clearer PDF locally without uploading the document.',
+    name: 'Clean scanned PDF',
+    tool: true,
+  },
+  '/crop-pdf': {
+    title: 'Visually Crop and Resize PDF Pages | Lab of PDF',
+    description: 'Drag a crop frame over a real PDF page, remove unwanted borders and fit the result to cropped, A4 or Letter pages locally.',
+    name: 'Crop and resize PDF',
+    tool: true,
+  },
+  '/workflows': {
+    title: 'Reusable Private PDF Workflows | Lab of PDF',
+    description: 'Process multiple PDFs through reusable local sequences for rotation, page numbers, watermarking and compression without uploading files.',
+    name: 'PDF workflows',
+    tool: true,
+  },
+  '/compare-pdf': {
+    title: 'Compare Two PDF Versions Visually | Lab of PDF',
+    description: 'Compare PDF pages side by side and highlight changed pixels locally in your browser without uploading either document.',
+    name: 'Compare PDF versions',
+    tool: true,
+  },
+  '/pdf-forms': {
+    title: 'Fill or Create PDF Forms Visually | Lab of PDF',
+    description: 'Fill existing PDF form fields or place new text and checkbox fields directly on a page preview without uploading the document.',
+    name: 'PDF forms',
+    tool: true,
+  },
+  '/document-info': {
+    title: 'Edit PDF Metadata and Document Structure | Lab of PDF',
+    description: 'Inspect and edit PDF title, author and keywords, then remove bookmarks, attachments or page labels locally in your browser.',
+    name: 'PDF document information',
     tool: true,
   },
   '/to-image': {
@@ -184,12 +244,11 @@ const seo: Record<string, SeoEntry> = {
     article: true,
   },
   '/pdf-to-excel': { title: 'PDF to Excel — Coming Soon | Lab of PDF', description: 'PDF table extraction to Excel is currently in development.', name: 'PDF to Excel' },
-  '/sign-pdf': { title: 'Sign PDF — Coming Soon | Lab of PDF', description: 'Browser-based PDF signing is currently in development.', name: 'Sign PDF' },
   '/unlock-pdf': { title: 'Unlock PDF — Coming Soon | Lab of PDF', description: 'Browser-based PDF password removal is currently in development.', name: 'Unlock PDF' },
   '/404': { title: 'Page Not Found | Lab of PDF', description: 'The requested Lab of PDF page could not be found.', name: 'Page not found' },
 }
 
-const noIndexPaths = new Set(['/404', '/pdf-to-excel', '/sign-pdf', '/unlock-pdf'])
+const noIndexPaths = new Set(['/404', '/pdf-to-excel', '/unlock-pdf'])
 
 function setMeta(selector: string, attribute: string, value: string) {
   document.querySelector(selector)?.setAttribute(attribute, value)

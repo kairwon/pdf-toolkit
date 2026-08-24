@@ -11,7 +11,7 @@ Object.defineProperty(globalThis, 'DOMMatrix', { value: class DOMMatrix {} })
 Object.defineProperty(globalThis, 'ImageData', { value: class ImageData {} })
 Object.defineProperty(globalThis, 'Path2D', { value: class Path2D {} })
 
-const { addWatermark, arrangePdfPages, getPageCount, inspectPdfStructure, inspectWatermarks, mergePdfPages, removeWatermark, textPagesToWord } = await import('./pdf')
+const { addWatermark, arrangePdfPages, cropPdfPages, getPageCount, inspectPdfForm, inspectPdfStructure, inspectWatermarks, mergePdfPages, readPdfDocumentInfo, removeWatermark, textPagesToWord, updatePdfDocumentInfo, updatePdfForm } = await import('./pdf')
 
 async function createAnnotationPdf() {
   const document = await PDFDocument.create()
@@ -188,5 +188,45 @@ describe('PDF structure inspection', () => {
       hasAttachments: true,
       hasPageLabels: true,
     })
+  })
+
+  it('creates, fills, and flattens visible form fields', async () => {
+    const document = await PDFDocument.create()
+    document.addPage([600, 800])
+    const file = new File([Uint8Array.from(await document.save()).buffer], 'form.pdf', { type: 'application/pdf' })
+    const created = await updatePdfForm(file, {}, [
+      { name: 'student.name', type: 'text', pageIndex: 0, x: .1, y: .1, width: .5, height: .08 },
+      { name: 'accepted', type: 'checkbox', pageIndex: 0, x: .1, y: .25, width: .06, height: .06 },
+    ], false)
+    const createdFile = new File([Uint8Array.from(created).buffer], 'created-form.pdf', { type: 'application/pdf' })
+    expect((await inspectPdfForm(createdFile)).map((field) => field.type)).toEqual(['text', 'checkbox'])
+
+    const filled = await updatePdfForm(createdFile, { 'student.name': 'Kai', accepted: true }, [], true)
+    const flattened = await PDFDocument.load(filled)
+    expect(flattened.getForm().getFields()).toHaveLength(0)
+  })
+
+  it('crops a page using normalized geometry and fits it to A4', async () => {
+    const document = await PDFDocument.create()
+    document.addPage([600, 800])
+    const file = new File([Uint8Array.from(await document.save()).buffer], 'crop.pdf', { type: 'application/pdf' })
+    const cropped = await PDFDocument.load(await cropPdfPages(file, { box: { x: .1, y: .1, width: .5, height: .5 }, outputSize: 'cropped', margin: 0 }))
+    expect(cropped.getPage(0).getSize()).toEqual({ width: 300, height: 400 })
+    const a4 = await PDFDocument.load(await cropPdfPages(file, { box: { x: 0, y: 0, width: 1, height: 1 }, outputSize: 'a4', margin: 24 }))
+    expect(a4.getPage(0).getSize().width).toBeCloseTo(595.28)
+  })
+
+  it('edits metadata and removes selected document structures', async () => {
+    const document = await PDFDocument.create()
+    document.setTitle('Old title')
+    document.addPage([600, 800])
+    document.catalog.set(PDFName.of('Outlines'), document.context.obj({ Type: 'Outlines' }))
+    const file = new File([Uint8Array.from(await document.save()).buffer], 'metadata.pdf', { type: 'application/pdf' })
+    const before = await readPdfDocumentInfo(file)
+    const updated = await updatePdfDocumentInfo(file, { title: 'New title', author: '', subject: '', keywords: 'private, local', creator: '', producer: '', language: 'en' }, { removeBookmarks: true, removeAttachments: false, removePageLabels: false })
+    const result = await PDFDocument.load(updated)
+    expect(before.structure.hasBookmarks).toBe(true)
+    expect(result.getTitle()).toBe('New title')
+    expect(result.catalog.has(PDFName.of('Outlines'))).toBe(false)
   })
 })

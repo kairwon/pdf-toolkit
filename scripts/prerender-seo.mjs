@@ -9,6 +9,16 @@ const pages = {
   '/merge': ['Merge PDF Files Without Uploading | Lab of PDF', 'Combine PDF files, reorder pages and choose exactly what to include. The complete merge runs locally in your browser with no account required.', 'Merge PDF'],
   '/split': ['Split PDF or Extract Selected Pages Privately | Lab of PDF', 'Split a PDF into separate files or extract selected pages without uploading the document. Preview and process every page in your browser.', 'Split PDF'],
   '/manage': ['Reorder, Rotate, Remove and Extract PDF Pages | Lab of PDF', 'Visually manage PDF pages in your browser. Reorder, rotate, remove or extract selected pages without sending the file to a server.', 'Manage PDF pages'],
+  '/edit': ['Visual PDF Editor: Add Text, Images & Drawings | Lab of PDF', 'Edit PDF pages visually with draggable text, images, shapes, highlights, drawings, signatures and page numbers. Processing stays in your browser.', 'Visual PDF editor'],
+  '/sign-pdf': ['Fill and Sign PDF Visually Without Uploading | Lab of PDF', 'Draw, type, place and resize signatures directly on PDF pages. Add text and page details locally in your browser.', 'Fill and sign PDF'],
+  '/redact-pdf': ['Securely Redact PDF in Your Browser | Lab of PDF', 'Draw redaction areas on a real PDF preview and permanently flatten affected pages so covered content cannot be recovered.', 'Redact PDF'],
+  '/ocr-pdf': ['Make Scanned PDF Searchable with Private OCR | Lab of PDF', 'Add a searchable text layer to scanned PDF pages with browser-based OCR while preserving pages that already contain selectable text.', 'OCR searchable PDF'],
+  '/scan-cleanup': ['Clean Scanned PDF Background and Improve Text | Lab of PDF', 'Preview and improve scan contrast, remove light backgrounds and create a clearer PDF locally without uploading the document.', 'Clean scanned PDF'],
+  '/crop-pdf': ['Visually Crop and Resize PDF Pages | Lab of PDF', 'Drag a crop frame over a real PDF page, remove unwanted borders and fit the result to cropped, A4 or Letter pages locally.', 'Crop and resize PDF'],
+  '/workflows': ['Reusable Private PDF Workflows | Lab of PDF', 'Process multiple PDFs through reusable local sequences for rotation, page numbers, watermarking and compression without uploading files.', 'PDF workflows'],
+  '/compare-pdf': ['Compare Two PDF Versions Visually | Lab of PDF', 'Compare PDF pages side by side and highlight changed pixels locally in your browser without uploading either document.', 'Compare PDF versions'],
+  '/pdf-forms': ['Fill or Create PDF Forms Visually | Lab of PDF', 'Fill existing PDF form fields or place new text and checkbox fields directly on a page preview without uploading the document.', 'PDF forms'],
+  '/document-info': ['Edit PDF Metadata and Document Structure | Lab of PDF', 'Inspect and edit PDF title, author and keywords, then remove bookmarks, attachments or page labels locally in your browser.', 'PDF document information'],
   '/to-image': ['Convert PDF Pages to PNG or JPEG Privately | Lab of PDF', 'Preview PDF pages as PNG or JPEG while choosing clarity and quality, then download selected pages locally without uploading the document.', 'PDF to images'],
   '/images-to-pdf': ['Convert Images to One PDF Without Uploading | Lab of PDF', 'Drag JPEG, PNG, or WebP page previews into order, see page size and margins visually, then create one PDF privately in your browser.', 'Images to PDF'],
   '/compress': ['Compress PDF Without Uploading the File | Lab of PDF', 'Reduce PDF file size locally with lossless, balanced or maximum-reduction modes. Compare the result and keep the original document unchanged.', 'Compress PDF'],
@@ -51,7 +61,6 @@ const staticBodies = {
 }
 const noIndexPages = {
   '/pdf-to-excel': ['PDF to Excel — Coming Soon | Lab of PDF', 'PDF table extraction to Excel is currently in development.', 'PDF to Excel'],
-  '/sign-pdf': ['Sign PDF — Coming Soon | Lab of PDF', 'Browser-based PDF signing is currently in development.', 'Sign PDF'],
   '/unlock-pdf': ['Unlock PDF — Coming Soon | Lab of PDF', 'Browser-based PDF password removal is currently in development.', 'Unlock PDF'],
 }
 

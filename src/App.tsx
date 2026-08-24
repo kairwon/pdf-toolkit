@@ -10,6 +10,13 @@ const ToImagePage = lazy(() => import('./pages/ToImagePage'))
 const ImagesToPdfPage = lazy(() => import('./pages/ImagesToPdfPage'))
 const CompressPage = lazy(() => import('./pages/CompressPage'))
 const WatermarkPage = lazy(() => import('./pages/WatermarkPage'))
+const EditPdfPage = lazy(() => import('./pages/EditPdfPage'))
+const OcrPdfPage = lazy(() => import('./pages/OcrPdfPage'))
+const CropPdfPage = lazy(() => import('./pages/CropPdfPage'))
+const WorkflowsPage = lazy(() => import('./pages/WorkflowsPage'))
+const ComparePdfPage = lazy(() => import('./pages/ComparePdfPage'))
+const PdfFormsPage = lazy(() => import('./pages/PdfFormsPage'))
+const DocumentInfoPage = lazy(() => import('./pages/DocumentInfoPage'))
 const UnwatermarkPage = lazy(() => import('./pages/UnwatermarkPage'))
 const ToWordPage = lazy(() => import('./pages/ToWordPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
@@ -61,6 +68,16 @@ export default function App() {
         <Route path="/compress/scanned" element={deferred(<CompressPage forcedGoal="scan" />)} />
         <Route path="/thesis-pdf-check" element={deferred(<CompressPage forcedGoal="thesis" />)} />
         <Route path="/watermark" element={deferred(<WatermarkPage />)} />
+        <Route path="/edit" element={deferred(<EditPdfPage />)} />
+        <Route path="/sign-pdf" element={deferred(<EditPdfPage initialMode="sign" />)} />
+        <Route path="/redact-pdf" element={deferred(<EditPdfPage initialMode="redact" />)} />
+        <Route path="/ocr-pdf" element={deferred(<OcrPdfPage />)} />
+        <Route path="/scan-cleanup" element={deferred(<OcrPdfPage mode="cleanup" />)} />
+        <Route path="/crop-pdf" element={deferred(<CropPdfPage />)} />
+        <Route path="/workflows" element={deferred(<WorkflowsPage />)} />
+        <Route path="/compare-pdf" element={deferred(<ComparePdfPage />)} />
+        <Route path="/pdf-forms" element={deferred(<PdfFormsPage />)} />
+        <Route path="/document-info" element={deferred(<DocumentInfoPage />)} />
         <Route path="/unwatermark" element={deferred(<UnwatermarkPage />)} />
         <Route path="/to-word" element={deferred(<ToWordPage />)} />
         <Route path="/privacy" element={deferred(<PrivacyPage />)} />
@@ -68,9 +85,8 @@ export default function App() {
         <Route path="/security" element={deferred(<SecurityPage />)} />
         <Route path="/visa-prep" element={deferred(<VisaPrepPage />)} />
         <Route path="/portal-ready-pdf" element={deferred(<PortalReadyPage />)} />
-        <Route path="/edit-pdf" element={<Navigate to="/manage" replace />} />
+        <Route path="/edit-pdf" element={<Navigate to="/edit" replace />} />
         <Route path="/pdf-to-excel" element={deferred(<NotFoundPage />)} />
-        <Route path="/sign-pdf" element={deferred(<NotFoundPage />)} />
         <Route path="/unlock-pdf" element={deferred(<NotFoundPage />)} />
         <Route path="*" element={deferred(<NotFoundPage />)} />
       </Route>

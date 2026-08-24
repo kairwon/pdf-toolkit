@@ -24,12 +24,21 @@ const breadcrumbFor = (path: string): object | null => {
       'watermark': 'Add Watermark',
       'unwatermark': 'Remove Watermark',
       'manage': 'Manage Pages',
+      'edit': 'Visual PDF Editor',
+      'redact-pdf': 'Securely Redact PDF',
+      'crop-pdf': 'Crop and Resize PDF',
+      'ocr-pdf': 'Make PDF Searchable',
+      'scan-cleanup': 'Clean Scanned PDF',
+      'workflows': 'Reusable PDF Workflows',
+      'compare-pdf': 'Compare PDFs',
+      'pdf-forms': 'PDF Forms',
+      'document-info': 'PDF Document Information',
       'visa-prep': 'Visa Document Pack',
       'portal-ready-pdf': 'Portal-Ready PDF',
       'privacy': 'Privacy Policy',
       'terms': 'Terms of Service',
       'security': 'Security',
-      'edit-pdf': 'Edit PDF',
+      'edit-pdf': 'Visual PDF Editor',
       'pdf-to-excel': 'PDF to Excel',
       'sign-pdf': 'Sign PDF',
       'unlock-pdf': 'Unlock PDF',
@@ -220,9 +229,9 @@ export default function JsonLd() {
   const path = location.pathname
   const breadcrumb = breadcrumbFor(path)
   const howTo = howTos[path]
-  const pageSchema = schemas[path] || schemas['/']
+  const pageSchema = schemas[path]
 
-  const scripts = [pageSchema]
+  const scripts: object[] = pageSchema ? [pageSchema] : []
   if (breadcrumb) scripts.push(breadcrumb)
   if (howTo) scripts.push(howTo)
 

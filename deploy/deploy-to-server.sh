@@ -161,8 +161,11 @@ if 'error_page 404 /404.html;' not in text:
         1,
     )
 
-edit_redirect = '    location = /edit-pdf { return 301 https://labofpdf.com/manage; }'
-if edit_redirect not in text:
+old_edit_redirect = '    location = /edit-pdf { return 301 https://labofpdf.com/manage; }'
+edit_redirect = '    location = /edit-pdf { return 301 https://labofpdf.com/edit; }'
+if old_edit_redirect in text:
+    text = text.replace(old_edit_redirect, edit_redirect, 1)
+elif edit_redirect not in text:
     text = text.replace(
         '    error_page 404 /404.html;',
         f'{edit_redirect}\n\n    error_page 404 /404.html;',

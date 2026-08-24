@@ -1,0 +1,13 @@
+{
+  "name": "Lab of PDF — Private PDF Tools",
+  "short_name": "Lab of PDF",
+  "description": "Private browser-based PDF editing, OCR, conversion and document preparation tools.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f8f6",
+  "theme_color": "#087f5b",
+  "icons": [
+    { "src": "/logo-google.png", "sizes": "112x112", "type": "image/png", "purpose": "any" },
+    { "src": "/apple-touch-icon-v2.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}

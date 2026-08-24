@@ -4,6 +4,16 @@ import { ChevronDown, Menu, ShieldCheck, X } from 'lucide-react'
 
 const navGroups = [
   {
+    label: 'Edit & sign',
+    items: [
+      { label: 'Visual PDF editor', path: '/edit' },
+      { label: 'Fill & sign PDF', path: '/sign-pdf' },
+      { label: 'Securely redact PDF', path: '/redact-pdf' },
+      { label: 'Crop and resize', path: '/crop-pdf' },
+      { label: 'PDF forms', path: '/pdf-forms' },
+    ],
+  },
+  {
     label: 'Real-world tasks',
     items: [
       { label: 'Thesis PDF check', path: '/thesis-pdf-check' },
@@ -28,6 +38,8 @@ const navGroups = [
       { label: 'PDF to Word', path: '/to-word' },
       { label: 'PDF to images', path: '/to-image' },
       { label: 'Images to PDF', path: '/images-to-pdf' },
+      { label: 'OCR searchable PDF', path: '/ocr-pdf' },
+      { label: 'Clean scanned PDF', path: '/scan-cleanup' },
     ],
   },
   {
@@ -35,6 +47,9 @@ const navGroups = [
     items: [
       { label: 'Add watermark', path: '/watermark' },
       { label: 'Remove watermark', path: '/unwatermark' },
+      { label: 'Compare PDFs', path: '/compare-pdf' },
+      { label: 'Document information', path: '/document-info' },
+      { label: 'Reusable workflows', path: '/workflows' },
     ],
   },
 ]

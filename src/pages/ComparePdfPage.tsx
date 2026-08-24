@@ -1,0 +1,19 @@
+import { useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight, Files, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import FileUpload from '../components/ui/FileUpload'
+import ToolHeader from '../components/ui/ToolHeader'
+import ToolPageWrapper from '../components/ui/ToolPageWrapper'
+import usePageTitle from '../hooks/usePageTitle'
+import { getPageCount } from '../lib/pdf'
+import { comparePdfPages, type PdfPageComparison } from '../lib/pdfCompare'
+
+export default function ComparePdfPage() {
+  usePageTitle('/compare-pdf')
+  const [files,setFiles]=useState<File[]>([]); const [counts,setCounts]=useState<number[]>([]); const [page,setPage]=useState(1); const [view,setView]=useState<'side'|'difference'>('difference'); const [comparison,setComparison]=useState<PdfPageComparison|null>(null); const [loading,setLoading]=useState(false)
+  const handleFiles=async(next:File[])=>{const chosen=next.slice(0,2);if(chosen.length<2){toast.info('Choose two PDF versions together');return}try{setFiles(chosen);setCounts(await Promise.all(chosen.map(getPageCount)));setPage(1)}catch{toast.error('One of the PDFs could not be opened')}}
+  useEffect(()=>{if(files.length!==2||page>Math.min(...counts))return;let active=true;setLoading(true);void comparePdfPages(files[0],files[1],page).then(value=>{if(active)setComparison(value)}).catch(()=>toast.error('Could not compare this page')).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[files,counts,page])
+  if(files.length!==2)return <ToolPageWrapper><ToolHeader title="Compare Two PDF Versions" description="Open two PDF versions side by side and highlight changed pixels locally without uploading either document."/><FileUpload onFiles={handleFiles} multiple/></ToolPageWrapper>
+  const comparable=Math.min(...counts)
+  return <ToolPageWrapper><ToolHeader title="Compare Two PDF Versions" description="Review both versions together or switch to the difference view where changed pixels are highlighted in red."/><div className="compare-summary"><div><strong>{files[0].name}</strong><span>{counts[0]} pages</span></div><Files/><div><strong>{files[1].name}</strong><span>{counts[1]} pages</span></div><button className="btn-ghost" onClick={()=>{setFiles([]);setComparison(null)}}>Change files</button></div>{counts[0]!==counts[1]&&<div className="editor-danger-note">The documents have different page counts ({counts[0]} and {counts[1]}). The comparison covers their first {comparable} matching positions.</div>}<div className="compare-toolbar"><div><button className={view==='side'?'active':''} onClick={()=>setView('side')}>Side by side</button><button className={view==='difference'?'active':''} onClick={()=>setView('difference')}>Highlight differences</button></div><div className="watermark-page-switcher"><button aria-label="Previous page" disabled={page===1} onClick={()=>setPage(value=>value-1)}><ChevronLeft/></button><span>Page {page} of {comparable}</span><button aria-label="Next page" disabled={page===comparable} onClick={()=>setPage(value=>value+1)}><ChevronRight/></button></div></div><section className={`compare-canvas is-${view}`}>{loading||!comparison?<Loader2 className="animate-spin"/>:view==='side'?<><figure><figcaption>Original A</figcaption><img src={comparison.left} alt={`First PDF page ${page}`}/></figure><figure><figcaption>Original B</figcaption><img src={comparison.right} alt={`Second PDF page ${page}`}/></figure></>:<figure><figcaption>{comparison.changedPercent<.01?'No material pixel differences detected':`${comparison.changedPercent.toFixed(2)}% of pixels differ on this page`}</figcaption><img src={comparison.difference} alt={`Highlighted differences on page ${page}`}/></figure>}</section><p className="compare-note">Pixel comparison catches layout, image and text appearance changes. It does not determine the legal or semantic meaning of a revision.</p></ToolPageWrapper>
+}

@@ -4,7 +4,7 @@ import { useDropzone } from 'react-dropzone'
 import {
   ArrowRight, BadgeCheck, BookOpenCheck, BriefcaseBusiness, Combine, FileDown,
   FileType, Gift, Image, Layers, LockKeyhole, ScanLine, Stamp,
-  ShieldCheck, Split, Target, Upload, WifiOff, Eraser,
+  ShieldCheck, Split, Target, Upload, WifiOff, Eraser, FilePenLine, ScanText,
   type LucideIcon,
 } from 'lucide-react'
 import usePageTitle from '../hooks/usePageTitle'
@@ -73,6 +73,8 @@ const popularTools: Card[] = [
   { title: 'PDF to Word', description: 'Create an editable document with OCR.', path: '/to-word', icon: FileType, tone: 'blue' },
   { title: 'Images to PDF', description: 'Combine application photos or scans into one PDF.', path: '/images-to-pdf', icon: Image, tone: 'purple' },
   { title: 'Manage Pages', description: 'Delete, rotate, and reorder visually.', path: '/manage', icon: Layers, tone: 'cyan' },
+  { title: 'Visual PDF Editor', description: 'Add text, drawings, signatures and redactions.', path: '/edit', icon: FilePenLine, tone: 'green' },
+  { title: 'OCR Searchable PDF', description: 'Add searchable text to scanned pages locally.', path: '/ocr-pdf', icon: ScanText, tone: 'orange' },
 ]
 
 const featuredSingleWorkflows = [
@@ -95,6 +97,8 @@ const singleFileShortcuts = [
   { label: 'PDF to Word', path: '/to-word', icon: FileType },
   { label: 'Add watermark', path: '/watermark', icon: Stamp },
   { label: 'Remove watermark', path: '/unwatermark', icon: Eraser },
+  { label: 'Edit, fill & sign', path: '/edit', icon: FilePenLine },
+  { label: 'OCR searchable PDF', path: '/ocr-pdf', icon: ScanText },
 ] as const
 
 const multiFileShortcuts = [

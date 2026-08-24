@@ -33,7 +33,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The intended production release represented by this handoff uses the immutable
-tag `production-2026-08-24-brand-site-name`. Verify its exact
+tag `production-2026-08-24-visual-pdf-workspaces`. Verify its exact
 commit in the live `release.json` manifest and in GitHub before every subsequent
 deployment.
 
@@ -55,7 +55,33 @@ locally and on GitHub. Never move or reuse a production tag.
 - Featured workflows include thesis submission, visa preparation, upload
   portal preparation, and page management.
 - Core tools include compress, merge, split, manage pages, PDF to image,
-  PDF to Word, watermark removal, and watermarking.
+  PDF to Word, watermark removal, watermarking, visual editing, signing,
+  redaction, OCR, scan cleanup, cropping, comparison, forms, metadata, and
+  reusable multi-file workflows.
+- `/edit`, `/sign-pdf`, and `/redact-pdf` share a direct-manipulation editor.
+  Users can drag and resize text, images, highlights, shapes, typed or drawn
+  signatures, freehand ink, and secure redaction areas. The editor includes
+  undo/redo, object duplication, page navigation, and page-number placement.
+  Secure redaction rasterizes affected pages before drawing opaque boxes so
+  covered source content is not left recoverable underneath.
+- `/ocr-pdf` adds a searchable text layer to scanned pages with selectable OCR
+  languages, while `/scan-cleanup` provides grayscale, background removal,
+  contrast, deskew, render scale, quality, and a live preview. OCR is loaded
+  only when the user starts the local operation.
+- `/crop-pdf` provides a draggable crop frame, per-page or all-page scope,
+  margins, and A4/Letter fitting. `/compare-pdf` renders two versions locally
+  and reports page-level visual differences with red overlays.
+- `/pdf-forms` fills existing AcroForm fields and lets users place new text or
+  checkbox fields visually, with optional flattening. `/document-info` edits
+  title, author, subject, keywords and dates, and can remove bookmarks,
+  attachments, or page labels after inspecting the file.
+- `/workflows` runs a repeatable local pipeline over multiple files in the
+  documented order: rotate, page numbers, watermark, then compression. It
+  includes university, visa, and archive presets, local custom settings, and
+  ZIP output.
+- The installable offline shell caches only same-origin static GET resources;
+  API calls and `release.json` are excluded, and PDF file bytes remain local
+  browser objects rather than service-worker cache entries.
 - Merge PDF uses a stable identity for every page across files. Selection,
   thumbnail reordering, and preview rotation are applied to the downloaded PDF
   in exactly the order shown in the interface.
@@ -158,7 +184,7 @@ locally and on GitHub. Never move or reuse a production tag.
   homepage-only, and prerendered non-home routes replace it with page-specific
   structured data.
 - `npm run build` runs TypeScript, Vite, and `scripts/prerender-seo.mjs`.
-- The prerender step currently creates 28 indexable route HTML files, three
+- The prerender step currently creates 38 indexable route HTML files, two
   noindex route files, and a noindex 404 document.
 - Trust and discovery content now includes `/guides`, `/editorial-policy`,
   `/about/editorial-team`, and five long-tail study/submission/compression guides. The
@@ -172,7 +198,7 @@ locally and on GitHub. Never move or reuse a production tag.
   editorial outreach copy.
 - Crawl improvements replace homepage task/tool buttons
   with real links, give prerendered tool routes crawlable fallback copy and
-  internal links, redirect the duplicate `/edit-pdf` alias to `/manage`, and
+  internal links, redirect the duplicate `/edit-pdf` alias to `/edit`, and
   refresh sitemap last-modified dates. Do not re-add `/edit-pdf` to the sitemap.
 - A 2026-08-13 Search Console review reported 5 indexed pages, 21 excluded
   pages (including 16 discovered but not indexed), 18 clicks, 43 impressions,
@@ -248,12 +274,13 @@ history rewrite and is not part of ordinary deployment.
 ## Verification checklist
 
 1. Run `npm ci` and `npm run build`.
-2. Confirm the build reports 28 indexable routes, 3 noindex routes, and 404.
-3. Confirm `dist/to-image.html` and `dist/images-to-pdf.html` have their own
+2. Confirm the build reports 38 indexable routes, 2 noindex routes, and 404.
+3. Confirm `dist/to-image.html`, `dist/edit.html`, and `dist/ocr-pdf.html` have their own
    titles, descriptions, and canonicals.
 4. Deploy only after the build succeeds.
 5. Run `nginx -t` before any reload when Nginx configuration changed.
-6. Check `/`, `/to-image`, one featured workflow, privacy, and an unknown URL.
+6. Check `/`, `/edit`, `/ocr-pdf`, `/crop-pdf`, one featured workflow, privacy,
+   and an unknown URL.
 7. Test click-to-upload, real drag-and-drop, processing, download, sharing,
    mobile navigation, and browser Back.
 8. Check cache and security headers without making PDF assets uncacheable.
