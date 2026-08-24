@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
-import { Copy, Download, Hash, Highlighter, ImagePlus, Loader2, Pencil, Redo2, ShieldX, Square, Type, Undo2 } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { AlertTriangle, Copy, Download, Grid3X3, Hash, Highlighter, ImagePlus, Loader2, Pencil, Redo2, ShieldX, Square, Type, Undo2 } from 'lucide-react'
 import { toast } from 'sonner'
 import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
@@ -9,8 +9,8 @@ import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import VisualEditorCanvas from '../components/ui/VisualEditorCanvas'
 import usePageTitle from '../hooks/usePageTitle'
 import usePendingFiles from '../hooks/usePendingFiles'
-import { getPageCount } from '../lib/pdf'
-import { applyVisualEdits, DEFAULT_PAGE_NUMBERS, type NormalizedPoint, type PageNumberOptions, type VisualEdit } from '../lib/visualEdits'
+import { getPageCount, inspectPdfStructure, type PdfStructureInspection } from '../lib/pdf'
+import { alignVisualEdit, applyVisualEdits, DEFAULT_PAGE_NUMBERS, duplicateVisualEditToPages, type NormalizedPoint, type PageNumberOptions, type VisualAlignment, type VisualEdit } from '../lib/visualEdits'
 import { downloadBlob, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
 
 type Props = { initialMode?: 'edit' | 'sign' | 'redact' }
@@ -39,6 +39,8 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
   const [inkColor, setInkColor] = useState('#176f52')
   const [inkWidth, setInkWidth] = useState(2)
   const [pageNumbers, setPageNumbers] = useState<PageNumberOptions>(DEFAULT_PAGE_NUMBERS)
+  const [snapToGrid, setSnapToGrid] = useState(true)
+  const [structure, setStructure] = useState<PdfStructureInspection | null>(null)
   const [processing, setProcessing] = useState(false)
   const [progress, setProgress] = useState('')
   const abortRef = useRef<AbortController | null>(null)
@@ -55,12 +57,13 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
     const next = files[0]
     if (!next) return
     try {
-      const total = await getPageCount(next)
+      const [total, detectedStructure] = await Promise.all([getPageCount(next), inspectPdfStructure(next)])
       setFile(next)
       setPageCount(total)
       setPageIndex(0)
       setSelectedId(null)
       setHistory({ past: [], present: [], future: [] })
+      setStructure(detectedStructure)
       toast.success(`Opened ${total} pages in the visual editor`)
     } catch {
       toast.error('This PDF could not be opened. Password-protected files must be unlocked first.')
@@ -105,8 +108,40 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
     if (!selected) return
     addEdit({ ...selected, id: newId(), x: Math.min(0.9, selected.x + 0.03), y: Math.min(0.9, selected.y + 0.03) })
   }
+  const alignSelected = (alignment: VisualAlignment) => {
+    if (!selected || selected.type === 'ink') return
+    commit(edits.map((edit) => edit.id === selected.id ? alignVisualEdit(edit, alignment) : edit))
+  }
+  const copySelectedToPages = (scope: 'next' | 'all') => {
+    if (!selected) return
+    const pages = scope === 'next' ? [selected.pageIndex + 1] : Array.from({ length: pageCount }, (_, index) => index)
+    const copies = duplicateVisualEditToPages(selected, pages.filter((index) => index < pageCount), newId)
+    if (!copies.length) return
+    commit([...edits, ...copies])
+    toast.success(scope === 'next' ? 'Copied to the next page' : `Copied to ${copies.length} other pages`)
+  }
   const undo = () => setHistory((current) => current.past.length ? { past: current.past.slice(0, -1), present: current.past[current.past.length - 1], future: [current.present, ...current.future] } : current)
   const redo = () => setHistory((current) => current.future.length ? { past: [...current.past, current.present], present: current.future[0], future: current.future.slice(1) } : current)
+
+  useEffect(() => {
+    const handleKeyboard = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (target?.matches('input, textarea, select, [contenteditable="true"]')) return
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
+        event.preventDefault()
+        if (event.shiftKey) redo()
+        else undo()
+      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'y') {
+        event.preventDefault()
+        redo()
+      } else if (selectedId && (event.key === 'Delete' || event.key === 'Backspace')) {
+        event.preventDefault()
+        deleteEdit(selectedId)
+      }
+    }
+    window.addEventListener('keydown', handleKeyboard)
+    return () => window.removeEventListener('keydown', handleKeyboard)
+  })
 
   const download = async () => {
     if (!file || (edits.length === 0 && !pageNumbers.enabled)) return
@@ -140,6 +175,7 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
         <div><strong>{file.name}</strong><span>{formatFileSize(file.size)} · {pageCount} pages · {edits.length} objects</span></div>
         <button type="button" className="btn-ghost" onClick={() => setFile(null)}>Change file</button>
       </div>
+      {structure && (structure.hasForm || structure.hasDigitalSignature || structure.hasBookmarks || structure.hasAttachments || structure.hasPageLabels) && <div className="editor-structure-warning"><AlertTriangle /><div><strong>Complex document features detected</strong><span>{[structure.hasForm && 'form fields', structure.hasDigitalSignature && 'digital signatures', structure.hasBookmarks && 'bookmarks', structure.hasAttachments && 'attachments', structure.hasPageLabels && 'page labels'].filter(Boolean).join(', ')}. Visual edits create a new PDF copy and may change or invalidate these structures.</span></div></div>}
 
       <div className="editor-command-bar" aria-label="PDF editing tools">
         <button type="button" onClick={() => addText(false)}><Type />Text</button>
@@ -149,6 +185,7 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
         <label className="editor-upload-button"><ImagePlus />Image<input type="file" accept="image/png,image/jpeg" onChange={(event) => { const image = event.target.files?.[0]; if (image) void addImage(image); event.target.value = '' }} /></label>
         <button type="button" onClick={() => addText(true)}>Typed signature</button>
         <button type="button" className="danger" onClick={() => addRectangle('redact')}><ShieldX />Redact</button>
+        <label className="editor-snap-toggle"><input type="checkbox" checked={snapToGrid} onChange={(event) => setSnapToGrid(event.target.checked)} /><Grid3X3 />Snap</label>
         <span className="editor-command-spacer" />
         <button type="button" disabled={!history.past.length} onClick={undo} aria-label="Undo"><Undo2 /></button>
         <button type="button" disabled={!history.future.length} onClick={redo} aria-label="Redo"><Redo2 /></button>
@@ -156,13 +193,14 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
       </div>
 
       <div className="editor-workspace-grid">
-        <VisualEditorCanvas file={file} pageCount={pageCount} pageIndex={pageIndex} edits={edits} selectedId={selectedId} disabled={processing} drawInk={inkMode ? { color: inkColor, strokeWidth: inkWidth } : null} onPageChange={(value) => { setPageIndex(value); setSelectedId(null) }} onSelect={setSelectedId} onChange={updateEdit} onChangeStart={startEditGesture} onChangeEnd={finishEditGesture} onDelete={deleteEdit} onAddInk={addInk} />
+        <VisualEditorCanvas file={file} pageCount={pageCount} pageIndex={pageIndex} edits={edits} selectedId={selectedId} disabled={processing} drawInk={inkMode ? { color: inkColor, strokeWidth: inkWidth } : null} snapToGrid={snapToGrid} onPageChange={(value) => { setPageIndex(value); setSelectedId(null) }} onSelect={setSelectedId} onChange={updateEdit} onChangeStart={startEditGesture} onChangeEnd={finishEditGesture} onDelete={deleteEdit} onAddInk={addInk} />
         <aside className="editor-inspector">
           {inkMode && <section><h3>Drawing</h3><label>Ink color<input type="color" value={inkColor} onChange={(event) => setInkColor(event.target.value)} /></label><label>Stroke width<input type="range" min={1} max={12} value={inkWidth} onChange={(event) => setInkWidth(Number(event.target.value))} /></label><button type="button" className="btn-ghost" onClick={() => setInkMode(false)}>Finish drawing</button></section>}
           {selected && selected.type !== 'ink' && <section><h3>Selected {selected.type}</h3>
-            {selected.type === 'text' && <><label>Text<textarea value={selected.text} onChange={(event) => updateEdit({ ...selected, text: event.target.value })} /></label><label>Text color<input type="color" value={selected.color} onChange={(event) => updateEdit({ ...selected, color: event.target.value })} /></label><label>Font size<input type="range" min={7} max={60} value={selected.fontSize} onChange={(event) => updateEdit({ ...selected, fontSize: Number(event.target.value) })} /><span>{selected.fontSize} pt</span></label></>}
-            {selected.type === 'rectangle' && !selected.redaction && <><label>Fill color<input type="color" value={selected.color} onChange={(event) => updateEdit({ ...selected, color: event.target.value })} /></label><label>Opacity<input type="range" min={10} max={100} value={Math.round(selected.opacity * 100)} onChange={(event) => updateEdit({ ...selected, opacity: Number(event.target.value) / 100 })} /><span>{Math.round(selected.opacity * 100)}%</span></label></>}
+            {selected.type === 'text' && <><label>Text<textarea value={selected.text} onFocus={startEditGesture} onBlur={finishEditGesture} onChange={(event) => updateEdit({ ...selected, text: event.target.value })} /></label><small className="editor-text-note">Chinese, Arabic, emoji and other non-Latin text is embedded locally as a visual layer for reliable display.</small><label>Text color<input type="color" value={selected.color} onFocus={startEditGesture} onBlur={finishEditGesture} onChange={(event) => updateEdit({ ...selected, color: event.target.value })} /></label><label>Font size<input type="range" min={7} max={60} value={selected.fontSize} onFocus={startEditGesture} onBlur={finishEditGesture} onChange={(event) => updateEdit({ ...selected, fontSize: Number(event.target.value) })} /><span>{selected.fontSize} pt</span></label></>}
+            {selected.type === 'rectangle' && !selected.redaction && <><label>Fill color<input type="color" value={selected.color} onFocus={startEditGesture} onBlur={finishEditGesture} onChange={(event) => updateEdit({ ...selected, color: event.target.value })} /></label><label>Opacity<input type="range" min={10} max={100} value={Math.round(selected.opacity * 100)} onFocus={startEditGesture} onBlur={finishEditGesture} onChange={(event) => updateEdit({ ...selected, opacity: Number(event.target.value) / 100 })} /><span>{Math.round(selected.opacity * 100)}%</span></label></>}
             {selected.type === 'rectangle' && selected.redaction && <p className="editor-danger-note">This area will be permanently burned into a flattened page. Searchable text and interactive content on that page will be removed.</p>}
+            <div className="editor-align-grid" aria-label="Align selected object"><button type="button" onClick={() => alignSelected('left')}>Left</button><button type="button" onClick={() => alignSelected('center')}>Center</button><button type="button" onClick={() => alignSelected('right')}>Right</button><button type="button" onClick={() => alignSelected('top')}>Top</button><button type="button" onClick={() => alignSelected('middle')}>Middle</button><button type="button" onClick={() => alignSelected('bottom')}>Bottom</button></div><div className="editor-copy-row"><button type="button" className="btn-ghost" disabled={selected.pageIndex + 1 >= pageCount} onClick={() => copySelectedToPages('next')}>Copy to next page</button><button type="button" className="btn-ghost" disabled={pageCount < 2} onClick={() => copySelectedToPages('all')}>Copy to all pages</button></div>
           </section>}
           <section><h3>Draw signature</h3><SignaturePad disabled={processing} onUse={addSignature} /></section>
           <section><h3><Hash size={15} /> Page numbers</h3><label className="editor-check"><input type="checkbox" checked={pageNumbers.enabled} onChange={(event) => setPageNumbers({ ...pageNumbers, enabled: event.target.checked })} />Add page numbers</label>

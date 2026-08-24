@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
-import { ChevronLeft, ChevronRight, Grip, Maximize2, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Grip, Maximize2, Minus, Plus, Trash2 } from 'lucide-react'
 import { renderPageToCanvas } from '../../lib/pdf'
-import { clampNormalizedBox, type NormalizedPoint, type VisualEdit } from '../../lib/visualEdits'
+import { clampNormalizedBox, snapVisualEdit, type NormalizedPoint, type VisualEdit } from '../../lib/visualEdits'
 
 type Props = {
   file: File
@@ -11,6 +11,7 @@ type Props = {
   selectedId: string | null
   disabled?: boolean
   drawInk?: { color: string; strokeWidth: number } | null
+  snapToGrid?: boolean
   onPageChange: (pageIndex: number) => void
   onSelect: (id: string | null) => void
   onChange: (edit: VisualEdit) => void
@@ -29,7 +30,7 @@ type PointerAction = {
 }
 
 export default function VisualEditorCanvas({
-  file, pageCount, pageIndex, edits, selectedId, disabled, drawInk,
+  file, pageCount, pageIndex, edits, selectedId, disabled, drawInk, snapToGrid,
   onPageChange, onSelect, onChange, onChangeStart, onChangeEnd, onDelete, onAddInk,
 }: Props) {
   const [preview, setPreview] = useState('')
@@ -38,6 +39,7 @@ export default function VisualEditorCanvas({
   const pointerAction = useRef<PointerAction | null>(null)
   const inkPoints = useRef<NormalizedPoint[] | null>(null)
   const [activeInk, setActiveInk] = useState<NormalizedPoint[]>([])
+  const [zoom, setZoom] = useState(100)
 
   useEffect(() => {
     let active = true
@@ -74,9 +76,10 @@ export default function VisualEditorCanvas({
     event.preventDefault()
     const dx = (event.clientX - action.startX) / bounds.width
     const dy = (event.clientY - action.startY) / bounds.height
-    onChange(clampNormalizedBox(action.kind === 'move'
+    const changed = clampNormalizedBox(action.kind === 'move'
       ? { ...action.edit, x: action.edit.x + dx, y: action.edit.y + dy }
-      : { ...action.edit, width: action.edit.width + dx, height: action.edit.height + dy }))
+      : { ...action.edit, width: action.edit.width + dx, height: action.edit.height + dy }) as VisualEdit
+    onChange(snapToGrid ? snapVisualEdit(changed) : changed)
   }
 
   const endObject = (event: ReactPointerEvent<HTMLElement>) => {
@@ -100,7 +103,8 @@ export default function VisualEditorCanvas({
     if (movement[event.key]) {
       event.preventDefault()
       onChangeStart?.()
-      onChange(clampNormalizedBox({ ...edit, ...movement[event.key] }))
+      const changed = clampNormalizedBox({ ...edit, ...movement[event.key] }) as VisualEdit
+      onChange(snapToGrid ? snapVisualEdit(changed) : changed)
       onChangeEnd?.()
     }
   }
@@ -136,15 +140,23 @@ export default function VisualEditorCanvas({
     <section className="visual-editor" aria-labelledby="visual-editor-heading">
       <header className="visual-editor-head">
         <div><span>LIVE PAGE CANVAS</span><h2 id="visual-editor-heading">Place objects directly on the PDF</h2><p>Drag objects, resize from the corner, or use arrow keys for precise positioning.</p></div>
-        <div className="watermark-page-switcher" aria-label="Editor page">
+        <div className="visual-editor-navigation">
+          <div className="visual-zoom-controls" aria-label="Canvas zoom">
+            <button type="button" aria-label="Zoom out" disabled={zoom <= 70} onClick={() => setZoom((value) => Math.max(70, value - 10))}><Minus /></button>
+            <span>{zoom}%</span>
+            <button type="button" aria-label="Zoom in" disabled={zoom >= 160} onClick={() => setZoom((value) => Math.min(160, value + 10))}><Plus /></button>
+          </div>
+          <div className="watermark-page-switcher" aria-label="Editor page">
           <button type="button" aria-label="Previous page" disabled={disabled || pageIndex === 0} onClick={() => onPageChange(pageIndex - 1)}><ChevronLeft /></button>
           <span>Page {pageIndex + 1} of {pageCount}</span>
           <button type="button" aria-label="Next page" disabled={disabled || pageIndex + 1 === pageCount} onClick={() => onPageChange(pageIndex + 1)}><ChevronRight /></button>
+          </div>
         </div>
       </header>
-      <div
+      <div className="visual-editor-stage-scroll"><div
         className={`visual-editor-stage${drawInk ? ' is-drawing' : ''}`}
         ref={stageRef}
+        style={{ width: `${zoom}%`, maxWidth: `${7.6 * zoom}px` }}
         aria-busy={loading}
         onPointerDown={startInk}
         onPointerMove={moveInk}
@@ -187,7 +199,7 @@ export default function VisualEditorCanvas({
             </div>
           )
         })}
-      </div>
+      </div></div>
     </section>
   )
 }

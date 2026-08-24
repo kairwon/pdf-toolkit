@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clampNormalizedBox, hexToRgb, pagesRequiringSecureFlattening, type VisualEdit } from './visualEdits'
+import { alignVisualEdit, clampNormalizedBox, duplicateVisualEditToPages, hexToRgb, pagesRequiringSecureFlattening, requiresRasterText, snapVisualEdit, type VisualEdit } from './visualEdits'
 
 describe('visual edit geometry', () => {
   it('keeps resized objects inside the normalized page', () => {
@@ -19,5 +19,25 @@ describe('visual edit geometry', () => {
       { id: 'c', pageIndex: 2, type: 'text', x: 0, y: 0, width: 0.2, height: 0.1, text: 'x', color: '#000000', fontSize: 12 },
     ]
     expect([...pagesRequiringSecureFlattening(edits)]).toEqual([2])
+  })
+
+  it('snaps and aligns draggable objects', () => {
+    const edit: VisualEdit = { id: 'text', pageIndex: 0, type: 'text', x: .133, y: .247, width: .31, height: .08, text: 'A', color: '#000000', fontSize: 12 }
+    expect(snapVisualEdit(edit, .05)).toMatchObject({ x: .15, y: .25, width: .3, height: .1 })
+    expect(alignVisualEdit(edit, 'center').x).toBeCloseTo(.345)
+    expect(alignVisualEdit(edit, 'bottom').y).toBeCloseTo(.92)
+  })
+
+  it('duplicates an object to requested pages with fresh identities', () => {
+    const edit: VisualEdit = { id: 'shape', pageIndex: 1, type: 'rectangle', x: .1, y: .1, width: .2, height: .2, color: '#000000', opacity: 1 }
+    let next = 0
+    const copies = duplicateVisualEditToPages(edit, [0, 1, 2], () => `copy-${++next}`)
+    expect(copies.map(({ id, pageIndex }) => ({ id, pageIndex }))).toEqual([{ id: 'copy-1', pageIndex: 0 }, { id: 'copy-2', pageIndex: 2 }])
+  })
+
+  it('uses a browser-rendered fallback for multilingual added text', () => {
+    expect(requiresRasterText('Private PDF 2026')).toBe(false)
+    expect(requiresRasterText('私人 PDF')).toBe(true)
+    expect(requiresRasterText('مرحبا')).toBe(true)
   })
 })

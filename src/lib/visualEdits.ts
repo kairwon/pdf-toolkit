@@ -28,6 +28,8 @@ export type PageNumberOptions = {
   fontSize: number
 }
 
+export type VisualAlignment = 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom'
+
 export const DEFAULT_PAGE_NUMBERS: PageNumberOptions = {
   enabled: false,
   startPage: 1,
@@ -51,6 +53,31 @@ export function clampNormalizedBox<T extends Pick<VisualEditBase, 'x' | 'y' | 'w
   }
 }
 
+export function snapVisualEdit(edit: VisualEdit, step = 0.01): VisualEdit {
+  if (step <= 0) return edit
+  const snap = (value: number) => Number((Math.round(value / step) * step).toFixed(6))
+  return clampNormalizedBox({ ...edit, x: snap(edit.x), y: snap(edit.y), width: snap(edit.width), height: snap(edit.height) }) as VisualEdit
+}
+
+export function alignVisualEdit(edit: VisualEdit, alignment: VisualAlignment): VisualEdit {
+  if (edit.type === 'ink') return edit
+  const position = alignment === 'left' ? { x: 0 }
+    : alignment === 'center' ? { x: (1 - edit.width) / 2 }
+      : alignment === 'right' ? { x: 1 - edit.width }
+        : alignment === 'top' ? { y: 0 }
+          : alignment === 'middle' ? { y: (1 - edit.height) / 2 }
+            : { y: 1 - edit.height }
+  return clampNormalizedBox({ ...edit, ...position }) as VisualEdit
+}
+
+export function duplicateVisualEditToPages(edit: VisualEdit, pageIndices: number[], idFactory: () => string): VisualEdit[] {
+  return pageIndices.filter((pageIndex) => pageIndex !== edit.pageIndex).map((pageIndex) => ({ ...edit, id: idFactory(), pageIndex }))
+}
+
+export function requiresRasterText(text: string) {
+  return /[^\u0020-\u007e\n\r\t]/.test(text)
+}
+
 export function hexToRgb(hex: string) {
   const normalized = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : '000000'
   return {
@@ -66,6 +93,41 @@ export function pagesRequiringSecureFlattening(edits: VisualEdit[]) {
 
 async function dataUrlBytes(dataUrl: string) {
   return new Uint8Array(await (await fetch(dataUrl)).arrayBuffer())
+}
+
+async function rasterTextBytes(text: string, width: number, height: number, fontSize: number, color: string, italic?: boolean) {
+  const scale = 3
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(24, Math.ceil(width * scale))
+  canvas.height = Math.max(24, Math.ceil(height * scale))
+  const context = canvas.getContext('2d')!
+  context.scale(scale, scale)
+  context.fillStyle = color
+  context.font = `${italic ? 'italic ' : ''}${fontSize}px system-ui, sans-serif`
+  context.textBaseline = 'top'
+  const lineHeight = fontSize * 1.2
+  let y = 0
+  for (const paragraph of (text || 'Text').split(/\r?\n/)) {
+    let line = ''
+    for (const character of paragraph) {
+      const candidate = line + character
+      if (line && context.measureText(candidate).width > width) {
+        context.fillText(line, 0, y)
+        line = character
+        y += lineHeight
+        if (y + lineHeight > height) break
+      } else {
+        line = candidate
+      }
+    }
+    if (y + lineHeight <= height) context.fillText(line, 0, y)
+    y += lineHeight
+    if (y >= height) break
+  }
+  const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error('Text rendering failed')), 'image/png'))
+  canvas.width = 1
+  canvas.height = 1
+  return new Uint8Array(await blob.arrayBuffer())
 }
 
 function pageNumberCoordinates(
@@ -130,15 +192,20 @@ export async function applyVisualEdits(
       } else if (edit.type === 'text') {
         const color = hexToRgb(edit.color)
         const size = Math.max(6, Math.min(72, edit.fontSize))
-        page.drawText(edit.text || 'Text', {
-          x,
-          y: Math.max(0, height - edit.y * height - size),
-          size,
-          maxWidth: Math.max(8, editWidth),
-          lineHeight: size * 1.2,
-          font: edit.italic ? italicFont : font,
-          color: rgb(color.r, color.g, color.b),
-        })
+        if (requiresRasterText(edit.text)) {
+          const rasterText = await output.embedPng(await rasterTextBytes(edit.text, editWidth, editHeight, size, edit.color, edit.italic))
+          page.drawImage(rasterText, { x, y, width: editWidth, height: editHeight })
+        } else {
+          page.drawText(edit.text || 'Text', {
+            x,
+            y: Math.max(0, height - edit.y * height - size),
+            size,
+            maxWidth: Math.max(8, editWidth),
+            lineHeight: size * 1.2,
+            font: edit.italic ? italicFont : font,
+            color: rgb(color.r, color.g, color.b),
+          })
+        }
       } else if (edit.type === 'image') {
         let embedded = imageCache.get(edit.dataUrl)
         if (!embedded) {

@@ -33,7 +33,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The intended production release represented by this handoff uses the immutable
-tag `production-2026-08-24-visual-pdf-workspaces-seo`. Verify its exact
+tag `production-2026-08-24-precision-visual-editor`. Verify its exact
 commit in the live `release.json` manifest and in GitHub before every subsequent
 deployment.
 
@@ -64,6 +64,14 @@ locally and on GitHub. Never move or reuse a production tag.
   undo/redo, object duplication, page navigation, and page-number placement.
   Secure redaction rasterizes affected pages before drawing opaque boxes so
   covered source content is not left recoverable underneath.
+- The visual editor supports 70–160% zoom, optional grid snapping, six-way
+  object alignment, copying an object to the next or every page, and standard
+  keyboard undo/redo and delete shortcuts. Text, colour, size, and opacity
+  inspector changes participate in undo history.
+- The editor warns before rewriting PDFs that contain form fields, digital
+  signatures, bookmarks, attachments, or page labels. Added Chinese, Arabic,
+  emoji, and other non-Latin text is rendered locally into a visual layer so
+  downloads remain reliable without uploading document content or fonts.
 - `/ocr-pdf` adds a searchable text layer to scanned pages with selectable OCR
   languages, while `/scan-cleanup` provides grayscale, background removal,
   contrast, deskew, render scale, quality, and a live preview. OCR is loaded
