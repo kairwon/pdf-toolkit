@@ -33,7 +33,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The intended production release represented by this handoff uses the immutable
-tag `production-2026-08-24-visual-conversion-workspaces`. Verify its exact
+tag `production-2026-08-24-brand-site-name`. Verify its exact
 commit in the live `release.json` manifest and in GitHub before every subsequent
 deployment.
 
