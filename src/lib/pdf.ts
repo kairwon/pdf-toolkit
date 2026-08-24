@@ -1,6 +1,7 @@
 import './promiseTryPolyfill'
 import { PDFDocument, rgb, StandardFonts, degrees, PDFName, PDFArray, PDFDict } from 'pdf-lib'
 import * as pdfjsLib from 'pdfjs-dist'
+import { DEFAULT_WATERMARK_ANCHOR, resolveWatermarkCoordinates, type WatermarkAnchor } from './watermarkPlacement'
 
 // Set up the worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -431,7 +432,9 @@ export async function addWatermark(
     angle?: number
     fontSize?: number
     color?: { r: number; g: number; b: number }
-    position?: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'tile'
+    position?: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'custom' | 'tile'
+    anchor?: WatermarkAnchor
+    widthRatio?: number
     pageIndices?: number[]
     image?: { bytes: ArrayBuffer; mimeType: 'image/png' | 'image/jpeg' }
   } = {},
@@ -449,6 +452,8 @@ export async function addWatermark(
   const fontSize = opts.fontSize ?? 48
   const color = opts.color ?? { r: 0.5, g: 0.5, b: 0.5 }
   const position = opts.position ?? 'center'
+  const anchor = opts.anchor ?? DEFAULT_WATERMARK_ANCHOR
+  const widthRatio = Math.min(0.9, Math.max(0.08, opts.widthRatio ?? 0.35))
   const selectedPages = opts.pageIndices ? new Set(opts.pageIndices) : null
 
   const pages = pdfDoc.getPages()
@@ -456,10 +461,14 @@ export async function addWatermark(
     if (selectedPages && !selectedPages.has(pageIndex)) continue
     const { width, height } = page.getSize()
     const margin = 28
-    const imageScale = embeddedImage ? Math.min(1, (width * 0.35) / embeddedImage.width, (height * 0.22) / embeddedImage.height) : 1
-    const markWidth = embeddedImage ? embeddedImage.width * imageScale : helvetica!.widthOfTextAtSize(text, fontSize)
-    const markHeight = embeddedImage ? embeddedImage.height * imageScale : fontSize
+    const resolvedFontSize = opts.widthRatio && !embeddedImage
+      ? Math.min(height * 0.35, width * widthRatio / Math.max(helvetica!.widthOfTextAtSize(text, 1), 0.01))
+      : fontSize
+    const imageScale = embeddedImage ? Math.min((width * widthRatio) / embeddedImage.width, (height * 0.65) / embeddedImage.height) : 1
+    const markWidth = embeddedImage ? embeddedImage.width * imageScale : helvetica!.widthOfTextAtSize(text, resolvedFontSize)
+    const markHeight = embeddedImage ? embeddedImage.height * imageScale : resolvedFontSize
     const coordinates = (slot: Exclude<typeof position, 'tile'>) => {
+      if (slot === 'custom') return resolveWatermarkCoordinates(width, height, markWidth, markHeight, anchor, angle)
       if (slot === 'top-left') return { x: margin, y: height - markHeight - margin }
       if (slot === 'top-right') return { x: width - markWidth - margin, y: height - markHeight - margin }
       if (slot === 'bottom-left') return { x: margin, y: margin }
@@ -468,10 +477,10 @@ export async function addWatermark(
     }
     const slots = position === 'tile'
       ? [
-          { x: width * 0.12, y: height * 0.22 },
-          { x: width * 0.52, y: height * 0.22 },
-          { x: width * 0.12, y: height * 0.62 },
-          { x: width * 0.52, y: height * 0.62 },
+          resolveWatermarkCoordinates(width, height, markWidth, markHeight, { x: 0.25, y: 0.28 }, angle),
+          resolveWatermarkCoordinates(width, height, markWidth, markHeight, { x: 0.72, y: 0.28 }, angle),
+          resolveWatermarkCoordinates(width, height, markWidth, markHeight, { x: 0.25, y: 0.72 }, angle),
+          resolveWatermarkCoordinates(width, height, markWidth, markHeight, { x: 0.72, y: 0.72 }, angle),
         ]
       : [coordinates(position)]
 
@@ -482,7 +491,7 @@ export async function addWatermark(
         page.drawText(text, {
           x,
           y,
-          size: fontSize,
+          size: resolvedFontSize,
           font: helvetica!,
           color: rgb(color.r, color.g, color.b),
           opacity,

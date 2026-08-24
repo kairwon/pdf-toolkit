@@ -108,11 +108,11 @@ const howTos: Record<string, object> = {
     '@context': 'https://schema.org',
     '@type': 'HowTo',
     name: 'How to Add Watermark to PDF Online Free',
-    description: 'Add a text watermark to every page of your PDF in your browser.',
+    description: 'Drag a text or image watermark onto a PDF page preview, resize it visually and apply it locally in your browser.',
     step: [
       { '@type': 'HowToStep', position: 1, name: 'Upload PDF', text: 'Upload the PDF you want to watermark.' },
-      { '@type': 'HowToStep', position: 2, name: 'Customize text and opacity', text: 'Enter your watermark text and adjust opacity to your preference.' },
-      { '@type': 'HowToStep', position: 3, name: 'Download', text: 'Download the watermarked PDF with your text on every page.' },
+      { '@type': 'HowToStep', position: 2, name: 'Place and resize visually', text: 'Drag the watermark frame on the page preview, resize it from the corner, then adjust angle and opacity.' },
+      { '@type': 'HowToStep', position: 3, name: 'Download', text: 'Choose the pages and download the watermarked PDF.' },
     ],
   },
   '/manage': {

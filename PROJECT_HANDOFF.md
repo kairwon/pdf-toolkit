@@ -32,9 +32,9 @@ that its commit matches the intended Git release before and after switching
 Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
-The production release represented by this handoff uses the immutable tag
-`production-2026-08-14-scanned-pdf-growth`. Verify its exact commit in the live
-`release.json` manifest and in GitHub before every subsequent deployment.
+The intended production release represented by this handoff uses the immutable
+tag `production-2026-08-24-visual-watermark`. Verify its exact commit in the
+live `release.json` manifest and in GitHub before every subsequent deployment.
 
 The deployment script uses `/var/www/labofpdf-next` and
 `/var/www/labofpdf-prev` only during its atomic switch. Both are removed after
@@ -113,8 +113,12 @@ locally and on GitHub. Never move or reuse a production tag.
   stamps, reports the actual number removed, and warns when a digital signature
   may be invalidated. It deliberately does not claim to remove content-stream
   or scanned-image watermarks.
-- Watermark creation supports text or PNG/JPEG marks, selected page ranges,
-  placement (including tiled marks), angle, opacity, text colour, and text size.
+- Watermark creation provides a real PDF page preview for text and PNG/JPEG
+  marks. Users can drag the watermark frame, resize it from its corner, nudge it
+  with the keyboard, switch preview pages, use nine quick positions, or repeat
+  it across the page. Normalized position and width are applied consistently to
+  selected pages with different dimensions; angle, opacity, colour, and page
+  range remain configurable.
 - Target-size compression now tries progressively stronger modes up to the
   quality level selected by the user and stops at the first result that meets
   the target. Lossless preserves searchable text; balanced and maximum modes

@@ -88,8 +88,8 @@ const seo: Record<string, SeoEntry> = {
     tool: true,
   },
   '/watermark': {
-    title: 'Add a Text Watermark to PDF Pages Privately | Lab of PDF',
-    description: 'Add a custom text watermark to every PDF page in your browser. Choose the text and opacity without uploading the source document.',
+    title: 'Drag and Add a Watermark to PDF Visually | Lab of PDF',
+    description: 'Drag, resize and rotate a text or image watermark on a real PDF page preview, then apply it locally without uploading the document.',
     name: 'Add PDF watermark',
     tool: true,
   },

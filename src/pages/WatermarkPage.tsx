@@ -1,11 +1,13 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Loader2, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import ToolHeader from '../components/ui/ToolHeader'
 import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
+import WatermarkCanvas from '../components/ui/WatermarkCanvas'
 import { addWatermark, getPageCount } from '../lib/pdf'
+import type { WatermarkAnchor } from '../lib/watermarkPlacement'
 import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 import usePageTitle from '../hooks/usePageTitle'
 import usePendingFiles from '../hooks/usePendingFiles'
@@ -18,12 +20,21 @@ export default function WatermarkPage() {
   const [opacity, setOpacity] = useState(20)
   const [mode, setMode] = useState<'text' | 'image'>('text')
   const [imageFile, setImageFile] = useState<File | null>(null)
-  const [position, setPosition] = useState<'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'tile'>('center')
+  const [position, setPosition] = useState<'custom' | 'tile'>('custom')
+  const [anchor, setAnchor] = useState<WatermarkAnchor>({ x: 0.5, y: 0.5 })
+  const [widthRatio, setWidthRatio] = useState(0.35)
   const [angle, setAngle] = useState(-35)
-  const [fontSize, setFontSize] = useState(52)
   const [color, setColor] = useState('#64706a')
   const [pageRange, setPageRange] = useState('')
   const [processing, setProcessing] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!imageFile) { setImagePreview(null); return }
+    const preview = URL.createObjectURL(imageFile)
+    setImagePreview(preview)
+    return () => URL.revokeObjectURL(preview)
+  }, [imageFile])
 
   const selectedPageIndices = () => {
     if (!pageRange.trim()) return undefined
@@ -60,8 +71,9 @@ export default function WatermarkPage() {
       const result = await addWatermark(file, text.trim(), {
         opacity: opacity / 100,
         angle,
-        fontSize,
         position,
+        anchor,
+        widthRatio,
         pageIndices: selectedPageIndices(),
         image,
         color: {
@@ -97,7 +109,7 @@ export default function WatermarkPage() {
 
   return (
     <ToolPageWrapper>
-      <ToolHeader title="Add Watermark" description="Choose text or an image, placement, pages, angle, size, and opacity." />
+      <ToolHeader title="Add Watermark" description="Drag a text or image watermark directly onto the PDF preview, resize it visually, then choose pages, angle, and opacity." />
       <div className="p-4 mb-5 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
         <div>
           <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{file.name}</p>
@@ -126,20 +138,30 @@ export default function WatermarkPage() {
             {imageFile && <small className="block mt-1 text-gray-400">Selected: {imageFile.name}</small>}
           </label>
         )}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Placement
-            <select value={position} onChange={(event) => setPosition(event.target.value as typeof position)} className="mt-1.5 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm">
-              <option value="center">Center</option><option value="tile">Tiled</option><option value="top-left">Top left</option><option value="top-right">Top right</option><option value="bottom-left">Bottom left</option><option value="bottom-right">Bottom right</option>
-            </select>
-          </label>
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Pages <span className="font-normal text-gray-400">(blank = all)</span>
-            <input value={pageRange} onChange={(event) => setPageRange(event.target.value)} placeholder="1-3,5" className="mt-1.5 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm" />
-          </label>
-        </div>
+        <WatermarkCanvas
+          file={file}
+          pageCount={pageCount}
+          mode={mode}
+          text={text}
+          imagePreview={imagePreview}
+          color={color}
+          opacity={opacity}
+          angle={angle}
+          widthRatio={widthRatio}
+          anchor={anchor}
+          tiled={position === 'tile'}
+          disabled={processing}
+          onAnchorChange={(next) => { setPosition('custom'); setAnchor(next) }}
+          onWidthChange={setWidthRatio}
+          onTiledChange={(tiled) => setPosition(tiled ? 'tile' : 'custom')}
+        />
+        <label className="text-sm font-medium text-gray-600 dark:text-gray-300 block">Pages <span className="font-normal text-gray-400">(blank = all)</span>
+          <input value={pageRange} onChange={(event) => setPageRange(event.target.value)} placeholder="1-3,5" className="mt-1.5 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm" />
+        </label>
         <div className="grid gap-4 sm:grid-cols-3">
           <label className="text-sm text-gray-600 dark:text-gray-300">Opacity: {opacity}%<input type="range" min={5} max={90} value={opacity} onChange={(e) => setOpacity(Number(e.target.value))} className="block w-full mt-2 accent-jade" /></label>
           <label className="text-sm text-gray-600 dark:text-gray-300">Angle: {angle}°<input type="range" min={-90} max={90} value={angle} onChange={(e) => setAngle(Number(e.target.value))} className="block w-full mt-2 accent-jade" /></label>
-          {mode === 'text' && <label className="text-sm text-gray-600 dark:text-gray-300">Text size: {fontSize}<input type="range" min={16} max={120} value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))} className="block w-full mt-2 accent-jade" /></label>}
+          <label className="text-sm text-gray-600 dark:text-gray-300">Watermark width: {Math.round(widthRatio * 100)}%<input type="range" min={8} max={90} value={Math.round(widthRatio * 100)} onChange={(e) => setWidthRatio(Number(e.target.value) / 100)} className="block w-full mt-2 accent-jade" /></label>
         </div>
       </div>
 
@@ -156,9 +178,9 @@ export default function WatermarkPage() {
       <section className="portal-seo-copy" style={{ marginTop: '24px' }}>
         <span>FREE ONLINE PDF WATERMARK TOOL</span>
         <h2>Add watermark to PDF online free — private browser-based tool</h2>
-        <p>Add custom text or image watermarks to selected PDF pages entirely in your browser. Choose placement, page range, angle, size, color, and opacity before downloading.</p>
+        <p>Add custom text or image watermarks to selected PDF pages entirely in your browser. Drag the watermark on a real page preview, resize its frame, and adjust the page range, angle, color, and opacity before downloading.</p>
         <div>
-          <article><h3>How to add watermark to PDF for free?</h3><p>Upload your PDF, type the watermark text (e.g. CONFIDENTIAL, DRAFT), adjust the opacity slider, and download the watermarked PDF. Processing is done locally.</p></article>
+          <article><h3>How to add watermark to PDF for free?</h3><p>Upload your PDF, type the watermark text, drag it to the exact position on the preview, resize it from the corner, and download. Processing is done locally.</p></article>
           <article><h3>Is it safe to add watermark to PDF online?</h3><p>Yes. Your PDF stays in your browser — it is never uploaded to any server. The watermark is applied locally using pdf-lib.</p></article>
           <article><h3>Can I add watermark without uploading?</h3><p>Yes. All processing runs client-side in your browser. Choose a file, customize the watermark, and download the result directly.</p></article>
         </div>

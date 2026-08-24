@@ -16,7 +16,7 @@ const pages = {
   '/compress/exact': ['Compress PDF to a Specific MB Size Target | Lab of PDF', 'Enter the PDF file-size limit shown by an upload portal, create a smaller copy and verify whether the finished file meets that target.', 'Target-size PDF compressor'],
   '/compress/scanned': ['Make a Scanned PDF Smaller — Reduce MB Size | Lab of PDF', 'Compress a scanned PDF to a smaller MB size. Detect image-based pages, choose a safe reduction level and process the document locally without uploading.', 'Scanned PDF compressor'],
   '/thesis-pdf-check': ['Check a Thesis PDF Before University Submission | Lab of PDF', 'Check thesis PDF size, page count, searchable text, page format and orientation before submitting it to a university portal.', 'Thesis PDF check'],
-  '/watermark': ['Add a Text Watermark to PDF Pages Privately | Lab of PDF', 'Add a custom text watermark to every PDF page in your browser without uploading the source document.', 'Add PDF watermark'],
+  '/watermark': ['Drag and Add a Watermark to PDF Visually | Lab of PDF', 'Drag, resize and rotate a text or image watermark on a real PDF page preview, then apply it locally without uploading the document.', 'Add PDF watermark'],
   '/unwatermark': ['Remove Supported PDF Watermark Annotations | Lab of PDF', 'Remove supported Stamp and Watermark annotations from an authorized PDF locally. Page content is not uploaded.', 'Remove PDF watermark'],
   '/to-word': ['Convert PDF to Word with Browser-Based OCR | Lab of PDF', 'Convert text PDFs and scanned pages into an editable Word-compatible document. Text extraction and OCR run locally in your browser.', 'PDF to Word'],
   '/visa-prep': ['Organize a Visa Document PDF Pack Privately | Lab of PDF', 'Label, reorder, combine and size visa application PDFs for government portals. Passport and financial documents stay on your device.', 'Visa document pack'],
@@ -153,7 +153,7 @@ await writeFile(join(DIST.pathname, '404.html'), notFound)
 const sitemapUrl = new URL('sitemap.xml', DIST)
 const sitemap = await readFile(sitemapUrl, 'utf8')
 await writeFile(sitemapUrl, sitemap
-  .replace(/<lastmod>[^<]+<\/lastmod>/g, '<lastmod>2026-08-14</lastmod>')
-  .replace(/<loc>([^<]+)<\/loc>(?!<lastmod>)/g, '<loc>$1</loc><lastmod>2026-08-14</lastmod>'))
+  .replace(/<lastmod>[^<]+<\/lastmod>/g, '<lastmod>2026-08-24</lastmod>')
+  .replace(/<loc>([^<]+)<\/loc>(?!<lastmod>)/g, '<loc>$1</loc><lastmod>2026-08-24</lastmod>'))
 
 console.log(`Prerendered ${Object.keys(pages).length} indexable routes, ${Object.keys(noIndexPages).length} noindex routes, and a noindex 404 page.`)
