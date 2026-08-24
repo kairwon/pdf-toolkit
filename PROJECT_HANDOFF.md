@@ -152,6 +152,11 @@ locally and on GitHub. Never move or reuse a production tag.
 
 ## SEO and production behavior
 
+- The homepage exposes one static `WebSite` structured-data node and
+  `og:site_name=Lab of PDF` in its initial HTML so Google can distinguish the
+  brand name from the displayed domain. Client-side navigation keeps that node
+  homepage-only, and prerendered non-home routes replace it with page-specific
+  structured data.
 - `npm run build` runs TypeScript, Vite, and `scripts/prerender-seo.mjs`.
 - The prerender step currently creates 28 indexable route HTML files, three
   noindex route files, and a noindex 404 document.

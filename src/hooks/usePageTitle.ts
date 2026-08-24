@@ -214,15 +214,21 @@ export default function usePageTitle(path: string) {
     setMeta('meta[name="twitter:image"]', 'content', `${BASE}/og-v3.jpg`)
 
     const graph: Record<string, unknown>[] = []
+    document.getElementById('website-structured-data')?.remove()
     if (path === '/') {
-      graph.push({
+      const websiteScript = document.createElement('script')
+      websiteScript.id = 'website-structured-data'
+      websiteScript.type = 'application/ld+json'
+      websiteScript.textContent = JSON.stringify({
+        '@context': 'https://schema.org',
         '@type': 'WebSite',
         '@id': `${BASE}/#website`,
         name: 'Lab of PDF',
+        alternateName: ['LabOfPDF', 'LabofPDF'],
         url: `${BASE}/`,
-        description: entry.description,
         publisher: { '@id': `${BASE}/#organization` },
       })
+      document.head.appendChild(websiteScript)
       graph.push({
         '@type': 'FAQPage',
         mainEntity: [
@@ -302,6 +308,9 @@ export default function usePageTitle(path: string) {
       document.head.appendChild(script)
     }
 
-    return () => document.getElementById('page-structured-data')?.remove()
+    return () => {
+      document.getElementById('page-structured-data')?.remove()
+      document.getElementById('website-structured-data')?.remove()
+    }
   }, [path])
 }

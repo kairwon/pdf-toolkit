@@ -108,6 +108,7 @@ function graphFor(path, title, description, name) {
 function renderRoute(source, path, [title, description, name]) {
   const url = `${BASE}${path}`
   const structuredData = `<script type="application/ld+json">${JSON.stringify(graphFor(path, title, description, name))}</script>`
+  const websiteStructuredDataPattern = /<script\s+id=["']website-structured-data["'][^>]*>[\s\S]*?<\/script>/i
   let html = source
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(title)}</title>`)
     .replace(/(<link\s+rel=["']canonical["'][^>]*href=["'])[^"']*(["'][^>]*>)/i, `$1${url}$2`)
@@ -117,7 +118,9 @@ function renderRoute(source, path, [title, description, name]) {
   html = html.replace(/(<meta\s+property=["']og:url["'][^>]*content=["'])[^"']*(["'][^>]*>)/i, `$1${url}$2`)
   html = html.replace(/(<meta\s+name=["']twitter:title["'][^>]*content=["'])[^"']*(["'][^>]*>)/i, `$1${escapeHtml(title)}$2`)
   html = html.replace(/(<meta\s+name=["']twitter:description["'][^>]*content=["'])[^"']*(["'][^>]*>)/i, `$1${escapeHtml(description)}$2`)
-  if (/<script\s+type=["']application\/ld\+json["']>[\s\S]*?<\/script>/i.test(html)) {
+  if (websiteStructuredDataPattern.test(html)) {
+    html = html.replace(websiteStructuredDataPattern, structuredData)
+  } else if (/<script\s+type=["']application\/ld\+json["']>[\s\S]*?<\/script>/i.test(html)) {
     html = html.replace(/<script\s+type=["']application\/ld\+json["']>[\s\S]*?<\/script>/i, structuredData)
   } else {
     html = html.replace('</head>', `    ${structuredData}\n  </head>`)
@@ -148,6 +151,7 @@ for (const [path, entry] of Object.entries(noIndexPages)) {
 const notFound = source
   .replace(/<title>[\s\S]*?<\/title>/i, '<title>Page Not Found | Lab of PDF</title>')
   .replace(/(<meta\s+name=["']robots["'][^>]*content=["'])[^"']*(["'][^>]*>)/i, '$1noindex, follow$2')
+  .replace(/\s*<script\s+id=["']website-structured-data["'][^>]*>[\s\S]*?<\/script>/i, '')
 await writeFile(join(DIST.pathname, '404.html'), notFound)
 
 const sitemapUrl = new URL('sitemap.xml', DIST)
