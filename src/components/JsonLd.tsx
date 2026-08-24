@@ -100,7 +100,7 @@ const howTos: Record<string, object> = {
     description: 'Convert PDF pages to PNG or JPEG images in your browser.',
     step: [
       { '@type': 'HowToStep', position: 1, name: 'Upload PDF', text: 'Upload the PDF you want to convert to images.' },
-      { '@type': 'HowToStep', position: 2, name: 'Choose format and quality', text: 'Select PNG or JPEG and choose the image scale (1x to 3x).' },
+      { '@type': 'HowToStep', position: 2, name: 'Preview format and clarity', text: 'Select PNG or JPEG, choose the image scale, and inspect the live output preview.' },
       { '@type': 'HowToStep', position: 3, name: 'Download', text: 'Download individual images or all pages as a ZIP file.' },
     ],
   },

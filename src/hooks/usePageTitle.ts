@@ -47,13 +47,13 @@ const seo: Record<string, SeoEntry> = {
   },
   '/to-image': {
     title: 'Convert PDF Pages to PNG or JPEG Privately | Lab of PDF',
-    description: 'Turn selected PDF pages into high-quality PNG or JPEG images and download them individually or in a ZIP file. No document upload required.',
+    description: 'Preview PDF pages as PNG or JPEG while choosing clarity and quality, then download selected pages locally without uploading the document.',
     name: 'PDF to images',
     tool: true,
   },
   '/images-to-pdf': {
     title: 'Convert Images to One PDF Without Uploading | Lab of PDF',
-    description: 'Combine JPEG, PNG, or WebP images into an ordered A4, Letter, or image-sized PDF. Rotate photos and create the file privately in your browser.',
+    description: 'Drag JPEG, PNG, or WebP page previews into order, see page size and margins visually, then create one PDF privately in your browser.',
     name: 'Images to PDF',
     tool: true,
   },

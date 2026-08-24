@@ -42,6 +42,7 @@ interface PdfViewerProps {
   initialPage?: number
   interactionDisabled?: boolean
   goToRequest?: { index: number; token: number } | null
+  onCurrentChange?: (pageIndex: number) => void
 }
 
 export default function PdfViewer({
@@ -58,6 +59,7 @@ export default function PdfViewer({
   initialPage = 0,
   interactionDisabled = false,
   goToRequest = null,
+  onCurrentChange,
 }: PdfViewerProps) {
   const [current, setCurrent] = useState(initialPage)
   const [rendered, setRendered] = useState<Record<string, string>>({})
@@ -142,6 +144,11 @@ export default function PdfViewer({
   useEffect(() => {
     setCurrent((value) => Math.min(value, Math.max(pages.length - 1, 0)))
   }, [pages.length])
+
+  useEffect(() => {
+    const page = pages[current]
+    if (page) onCurrentChange?.(controlIndexFor(page))
+  }, [current, onCurrentChange, pages])
 
   useEffect(() => {
     if (goToRequest) goTo(goToRequest.index)

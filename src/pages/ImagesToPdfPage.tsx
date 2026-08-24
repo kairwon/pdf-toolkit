@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowDown, ArrowUp, Download, Loader2, RotateCw, Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { ArrowDown, ArrowUp, Download, GripVertical, Loader2, RotateCw, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
@@ -14,7 +14,19 @@ type ImageItem = {
   file: File
   preview: string
   rotation: 0 | 90 | 180 | 270
+  width: number
+  height: number
 }
+
+const pageSizeOptions = [
+  { value: 'a4', label: 'A4', detail: '210 × 297 mm' },
+  { value: 'letter', label: 'Letter', detail: '8.5 × 11 in' },
+  { value: 'image', label: 'Match image', detail: 'No white page border' },
+] as const
+
+const marginOptions = [
+  { value: 0, label: 'None' }, { value: 12, label: 'Tight' }, { value: 24, label: 'Normal' }, { value: 48, label: 'Wide' },
+] as const
 
 export default function ImagesToPdfPage() {
   usePageTitle('/images-to-pdf')
@@ -24,23 +36,34 @@ export default function ImagesToPdfPage() {
   const [margin, setMargin] = useState(24)
   const [processing, setProcessing] = useState(false)
   const [progress, setProgress] = useState('')
+  const [dragFrom, setDragFrom] = useState<number | null>(null)
+  const [dragOver, setDragOver] = useState<number | null>(null)
+  const directDrag = useRef<{ from: number; pointerId: number } | null>(null)
+  const dragTarget = useRef<number | null>(null)
   const operationAbort = useRef<AbortController | null>(null)
   const itemsRef = useRef(items)
   itemsRef.current = items
 
   useEffect(() => () => itemsRef.current.forEach((item) => URL.revokeObjectURL(item.preview)), [])
 
-  const addFiles = useCallback((files: File[]) => {
+  const addFiles = useCallback(async (files: File[]) => {
     const supported = files.filter((file) => ['image/jpeg', 'image/png', 'image/webp'].includes(file.type))
     if (supported.length !== files.length) toast.error('Use JPEG, PNG, or WebP images')
-    setItems((current) => [
-      ...current,
-      ...supported.map((file, index) => ({
+    const additions = await Promise.all(supported.map(async (file, index) => {
+      const bitmap = await createImageBitmap(file)
+      const dimensions = { width: bitmap.width, height: bitmap.height }
+      bitmap.close()
+      return {
         id: `${Date.now()}-${index}-${file.name}`,
         file,
         preview: URL.createObjectURL(file),
         rotation: 0 as const,
-      })),
+        ...dimensions,
+      }
+    }))
+    setItems((current) => [
+      ...current,
+      ...additions,
     ])
   }, [])
 
@@ -54,6 +77,52 @@ export default function ImagesToPdfPage() {
     })
   }
 
+  const reorder = (from: number, to: number) => {
+    if (from === to) return
+    setItems((current) => {
+      const next = [...current]
+      const [moved] = next.splice(from, 1)
+      next.splice(to, 0, moved)
+      return next
+    })
+  }
+
+  const setDirectDragTarget = (index: number | null) => {
+    dragTarget.current = index
+    setDragOver(index)
+  }
+
+  const beginDirectDrag = (event: ReactPointerEvent<HTMLElement>, index: number) => {
+    if (processing) return
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    directDrag.current = { from: index, pointerId: event.pointerId }
+    setDragFrom(index)
+    setDirectDragTarget(index)
+  }
+
+  const moveDirectDrag = (event: ReactPointerEvent<HTMLElement>) => {
+    if (directDrag.current?.pointerId !== event.pointerId) return
+    event.preventDefault()
+    const card = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-image-index]')
+    if (card) setDirectDragTarget(Number(card.dataset.imageIndex))
+  }
+
+  const endDirectDrag = (event: ReactPointerEvent<HTMLElement>) => {
+    const action = directDrag.current
+    if (!action || action.pointerId !== event.pointerId) return
+    if (dragTarget.current !== null) reorder(action.from, dragTarget.current)
+    directDrag.current = null
+    setDragFrom(null)
+    setDirectDragTarget(null)
+  }
+
+  const cancelDirectDrag = () => {
+    directDrag.current = null
+    setDragFrom(null)
+    setDirectDragTarget(null)
+  }
+
   const remove = (id: string) => {
     setItems((current) => {
       const removed = current.find((item) => item.id === id)
@@ -65,6 +134,17 @@ export default function ImagesToPdfPage() {
   const rotate = (id: string) => setItems((current) => current.map((item) => item.id === id
     ? { ...item, rotation: ((item.rotation + 90) % 360) as ImageItem['rotation'] }
     : item))
+
+  const pagePreviewSize = (item: ImageItem) => {
+    const quarterTurn = item.rotation === 90 || item.rotation === 270
+    const imageWidth = quarterTurn ? item.height : item.width
+    const imageHeight = quarterTurn ? item.width : item.height
+    if (pageSize === 'image') return { width: imageWidth, height: imageHeight, inset: 0 }
+    let width = pageSize === 'a4' ? 595.28 : 612
+    let height = pageSize === 'a4' ? 841.89 : 792
+    if (orientation === 'landscape' || (orientation === 'auto' && imageWidth > imageHeight)) [width, height] = [height, width]
+    return { width, height, inset: margin / width * 100 }
+  }
 
   const createPdf = async () => {
     if (items.length === 0) return
@@ -106,33 +186,39 @@ export default function ImagesToPdfPage() {
 
       {items.length > 0 && <>
         <section className="image-pdf-settings" aria-label="PDF page settings">
-          <label>Page size
-            <select value={pageSize} onChange={(event) => setPageSize(event.target.value as typeof pageSize)} disabled={processing}>
-              <option value="a4">A4</option><option value="letter">Letter</option><option value="image">Match each image</option>
-            </select>
-          </label>
-          {pageSize !== 'image' && <label>Orientation
-            <select value={orientation} onChange={(event) => setOrientation(event.target.value as typeof orientation)} disabled={processing}>
-              <option value="auto">Automatic</option><option value="portrait">Portrait</option><option value="landscape">Landscape</option>
-            </select>
-          </label>}
-          {pageSize !== 'image' && <label>Margin: {margin} pt
-            <input aria-label="Page margin" type="range" min="0" max="72" value={margin} disabled={processing} onChange={(event) => setMargin(Number(event.target.value))} />
-          </label>}
+          <div className="image-pdf-setting-group"><strong>Page shape</strong><div className="image-pdf-choice-grid" role="radiogroup" aria-label="Page size">
+            {pageSizeOptions.map((option) => <button type="button" role="radio" aria-checked={pageSize === option.value} className={pageSize === option.value ? 'active' : ''} disabled={processing} onClick={() => setPageSize(option.value)} key={option.value}><span className={`image-pdf-paper-icon is-${option.value}`} /><b>{option.label}</b><small>{option.detail}</small></button>)}
+          </div></div>
+          {pageSize !== 'image' && <div className="image-pdf-setting-group"><strong>Orientation</strong><div className="image-pdf-segments" role="radiogroup" aria-label="Page orientation">
+            {(['auto', 'portrait', 'landscape'] as const).map((value) => <button type="button" role="radio" aria-checked={orientation === value} className={orientation === value ? 'active' : ''} disabled={processing} onClick={() => setOrientation(value)} key={value}>{value === 'auto' ? 'Fit each image' : value[0].toUpperCase() + value.slice(1)}</button>)}
+          </div></div>}
+          {pageSize !== 'image' && <div className="image-pdf-setting-group"><strong>White border</strong><div className="image-pdf-segments" role="radiogroup" aria-label="Page margin">
+            {marginOptions.map((option) => <button type="button" role="radio" aria-checked={margin === option.value} className={margin === option.value ? 'active' : ''} disabled={processing} onClick={() => setMargin(option.value)} key={option.value}>{option.label}</button>)}
+          </div></div>}
         </section>
 
+        <div className="image-pdf-order-heading"><div><strong>Arrange PDF pages</strong><small>Drag a page to reorder it. The white sheet shows the final page, border, and orientation.</small></div><span>{items.length} page{items.length === 1 ? '' : 's'}</span></div>
         <ol className="image-pdf-list">
-          {items.map((item, index) => <li key={item.id}>
+          {items.map((item, index) => {
+            const previewSize = pagePreviewSize(item)
+            return <li
+              key={item.id}
+              data-image-index={index}
+              className={`${dragFrom === index ? 'is-dragging' : ''}${dragOver === index ? ' is-drag-over' : ''}`}
+            >
             <span className="image-pdf-number">{index + 1}</span>
-            <img src={item.preview} alt="" style={{ transform: `rotate(${item.rotation}deg)` }} />
-            <div><strong>{item.file.name}</strong><small>{item.rotation ? `Rotated ${item.rotation}°` : 'Original orientation'}</small></div>
+            <button type="button" className="image-pdf-drag" aria-label={`Drag ${item.file.name} to reorder`} disabled={processing} onPointerDown={(event) => beginDirectDrag(event, index)} onPointerMove={moveDirectDrag} onPointerUp={endDirectDrag} onPointerCancel={cancelDirectDrag}><GripVertical /></button>
+            <div className="image-pdf-sheet" style={{ aspectRatio: `${previewSize.width} / ${previewSize.height}`, padding: `${previewSize.inset}%` }} onPointerDown={(event) => beginDirectDrag(event, index)} onPointerMove={moveDirectDrag} onPointerUp={endDirectDrag} onPointerCancel={cancelDirectDrag}>
+              <img src={item.preview} alt={`Page ${index + 1}: ${item.file.name}`} draggable={false} style={{ transform: `rotate(${item.rotation}deg)` }} />
+            </div>
+            <div className="image-pdf-name"><strong>{item.file.name}</strong><small>{item.rotation ? `Rotated ${item.rotation}°` : 'Original orientation'} · drag to reorder</small></div>
             <div className="image-pdf-actions">
               <button type="button" aria-label={`Move ${item.file.name} up`} disabled={processing || index === 0} onClick={() => move(index, -1)}><ArrowUp /></button>
               <button type="button" aria-label={`Move ${item.file.name} down`} disabled={processing || index === items.length - 1} onClick={() => move(index, 1)}><ArrowDown /></button>
               <button type="button" aria-label={`Rotate ${item.file.name}`} disabled={processing} onClick={() => rotate(item.id)}><RotateCw /></button>
               <button type="button" aria-label={`Remove ${item.file.name}`} disabled={processing} onClick={() => remove(item.id)}><Trash2 /></button>
             </div>
-          </li>)}
+          </li>})}
         </ol>
 
         <div className="sticky-bar image-pdf-download">

@@ -33,8 +33,9 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The intended production release represented by this handoff uses the immutable
-tag `production-2026-08-24-visual-watermark`. Verify its exact commit in the
-live `release.json` manifest and in GitHub before every subsequent deployment.
+tag `production-2026-08-24-visual-conversion-workspaces`. Verify its exact
+commit in the live `release.json` manifest and in GitHub before every subsequent
+deployment.
 
 The deployment script uses `/var/www/labofpdf-next` and
 `/var/www/labofpdf-prev` only during its atomic switch. Both are removed after
@@ -99,12 +100,16 @@ locally and on GitHub. Never move or reuse a production tag.
 - Split PDF preserves the visible thumbnail order and applied rotations in both
   extracted and split outputs. It also supports visible-position ranges,
   odd/even/inverse selection, per-page progress, and cancellation.
-- PDF to Images emits real PNG bytes when PNG is selected, exposes JPEG quality,
-  supports ranges and odd/even/inverse selection, and processes long documents
-  sequentially with progress and cancellation.
+- PDF to Images emits real PNG bytes when PNG is selected, supports ranges and
+  odd/even/inverse selection, and processes long documents sequentially with
+  progress and cancellation. Its visual output workspace renders a live sample
+  with the selected PNG/JPEG format, resolution and JPEG quality, and reports
+  the exact resulting pixel dimensions before download.
 - Images to PDF is a first-class local tool at `/images-to-pdf`. It accepts
-  JPEG, PNG, and WebP images, supports ordering, rotation, A4/Letter/image-sized
-  pages, orientation and margins, and provides progress and cancellation.
+  JPEG, PNG, and WebP images and shows each as a composed PDF page with the
+  selected A4/Letter/image-sized sheet, orientation, and white border. Pages
+  support pointer/touch drag ordering, accessible move buttons, rotation,
+  progress, and cancellation.
 - PDF previews reuse one parsed PDF.js document per selected file, and the
   filmstrip lazily renders nearby visible thumbnails instead of repeatedly
   reading the same file or leaving long-document thumbnails blank.

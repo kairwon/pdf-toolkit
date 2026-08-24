@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef } from 'react'
-import { Loader2, Download, Image as ImageIcon } from 'lucide-react'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { Check, Download, Image as ImageIcon, Loader2, ScanSearch } from 'lucide-react'
 import { toast } from 'sonner'
 import ToolHeader from '../components/ui/ToolHeader'
 import FileUpload from '../components/ui/FileUpload'
@@ -22,8 +22,36 @@ export default function ToImagePage() {
   const [format, setFormat] = useState<'png' | 'jpg'>('png')
   const [scale, setScale] = useState(2)
   const [quality, setQuality] = useState(85)
+  const [previewPageIndex, setPreviewPageIndex] = useState(0)
+  const [outputPreview, setOutputPreview] = useState<{ url: string; width: number; height: number } | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
   const [progress, setProgress] = useState('')
   const operationAbort = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    if (selected.size === 0 || selected.has(previewPageIndex)) return
+    let first = Number.POSITIVE_INFINITY
+    selected.forEach((index) => { first = Math.min(first, index) })
+    if (Number.isFinite(first)) setPreviewPageIndex(first)
+  }, [previewPageIndex, selected])
+
+  useEffect(() => {
+    if (!file || previewItems.length === 0) return
+    let active = true
+    const timer = window.setTimeout(() => {
+      setPreviewLoading(true)
+      void renderPageToCanvas(file, previewPageIndex + 1, scale, format === 'png' ? 'png' : 'jpeg', quality / 100)
+        .then(async (url) => {
+          const image = new Image()
+          image.src = url
+          await image.decode()
+          if (active) setOutputPreview({ url, width: image.naturalWidth, height: image.naturalHeight })
+        })
+        .catch(() => { if (active) setOutputPreview(null) })
+        .finally(() => { if (active) setPreviewLoading(false) })
+    }, 180)
+    return () => { active = false; window.clearTimeout(timer) }
+  }, [file, format, previewItems.length, previewPageIndex, quality, scale])
 
   const handleFile = useCallback(async (files: File[]) => {
     const f = files[0]
@@ -39,6 +67,7 @@ export default function ToImagePage() {
       setFile(f)
       setPreviewItems(items)
       setSelected(new Set(items.map((p) => p.index))) // Select all by default for convert
+      setPreviewPageIndex(0)
       toast.success(`Loaded ${total} pages`)
     } catch {
       toast.error('Failed to load PDF')
@@ -95,7 +124,7 @@ export default function ToImagePage() {
 
   return (
     <ToolPageWrapper>
-      <ToolHeader title="PDF to Image" description="Choose PNG or JPEG format and quality — free online PDF to image converter." />
+      <ToolHeader title="PDF to Image" description="Preview the actual PNG or JPEG result while choosing clarity, file type, and pages." />
 
       <div className="p-4 mb-5 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
         <div className="flex items-center gap-3">
@@ -103,20 +132,28 @@ export default function ToImagePage() {
           <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{file.name}</span>
           <span className="text-xs text-gray-400">{formatFileSize(file.size)} · {previewItems.length} pages</span>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex gap-1.5">
-            <button onClick={() => setFormat('png')} className={`pill text-xs ${format === 'png' ? 'pill-active' : 'pill-inactive'}`}>PNG</button>
-            <button onClick={() => setFormat('jpg')} className={`pill text-xs ${format === 'jpg' ? 'pill-active' : 'pill-inactive'}`}>JPEG</button>
-          </div>
-          <div className="flex gap-1.5">
-            {[1, 1.5, 2, 3].map((s) => (
-              <button key={s} onClick={() => setScale(s)} className={`pill text-xs ${scale === s ? 'pill-active' : 'pill-inactive'}`}>{s}×</button>
-            ))}
-          </div>
-          {format === 'jpg' && <label className="text-xs text-gray-500">Quality {quality}% <input aria-label="JPEG quality" type="range" min="40" max="100" value={quality} onChange={(event) => setQuality(Number(event.target.value))} /></label>}
-          <button onClick={() => { setFile(null); setPreviewItems([]); setSelected(new Set()) }} className="btn-ghost text-xs">Change file</button>
-        </div>
+        <button onClick={() => { setFile(null); setPreviewItems([]); setSelected(new Set()); setOutputPreview(null) }} className="btn-ghost text-xs">Change file</button>
       </div>
+
+      <section className="image-export-workbench" aria-label="Image output preview and settings">
+        <div className="image-export-controls">
+          <div><strong>1. Choose the image type</strong><div className="image-export-format" role="radiogroup" aria-label="Image format">
+            <button type="button" role="radio" aria-checked={format === 'png'} className={format === 'png' ? 'active' : ''} disabled={converting} onClick={() => setFormat('png')}><span>PNG</span><small>Sharp text and graphics · larger files</small>{format === 'png' && <Check />}</button>
+            <button type="button" role="radio" aria-checked={format === 'jpg'} className={format === 'jpg' ? 'active' : ''} disabled={converting} onClick={() => setFormat('jpg')}><span>JPEG</span><small>Smaller files · best for scans and photos</small>{format === 'jpg' && <Check />}</button>
+          </div></div>
+          <div><strong>2. Choose the clarity</strong><div className="image-export-scale" role="radiogroup" aria-label="Image resolution">
+            {[{ value: 1, label: 'Screen', detail: '1×' }, { value: 1.5, label: 'Balanced', detail: '1.5×' }, { value: 2, label: 'Sharp', detail: '2×' }, { value: 3, label: 'Print', detail: '3×' }].map((option) => <button type="button" role="radio" aria-checked={scale === option.value} className={scale === option.value ? 'active' : ''} disabled={converting} onClick={() => setScale(option.value)} key={option.value}><b>{option.label}</b><small>{option.detail}</small></button>)}
+          </div></div>
+          {format === 'jpg' && <div><strong>3. Balance detail and file size</strong><div className="image-export-quality-presets">
+            {[{ value: 60, label: 'Smaller' }, { value: 85, label: 'Balanced' }, { value: 100, label: 'Maximum' }].map((option) => <button type="button" className={quality === option.value ? 'active' : ''} disabled={converting} onClick={() => setQuality(option.value)} key={option.value}>{option.label}</button>)}
+          </div><label className="image-export-quality">JPEG quality <span>{quality}%</span><input aria-label="JPEG quality" type="range" min="40" max="100" value={quality} disabled={converting} onChange={(event) => setQuality(Number(event.target.value))} /></label></div>}
+        </div>
+        <div className="image-export-preview" aria-busy={previewLoading}>
+          <div className="image-export-preview-head"><span><ScanSearch /> Output preview</span><small>Page {previewPageIndex + 1} · {format.toUpperCase()}</small></div>
+          <div className="image-export-preview-stage">{outputPreview && <img src={outputPreview.url} alt={`Page ${previewPageIndex + 1} ${format.toUpperCase()} output preview`} />}{previewLoading && <span>Updating preview…</span>}</div>
+          <p>{outputPreview ? `${outputPreview.width.toLocaleString()} × ${outputPreview.height.toLocaleString()} pixels` : 'Preparing the selected page'} · the downloaded image uses these settings</p>
+        </div>
+      </section>
 
       <PdfViewer
         pages={previewItems}
@@ -124,6 +161,7 @@ export default function ToImagePage() {
         onToggle={togglePage}
         onSelectAll={() => setSelected(new Set(previewItems.map((p) => p.index)))}
         onDeselectAll={() => setSelected(new Set())}
+        onCurrentChange={setPreviewPageIndex}
       />
 
       <PageSelectionControls
