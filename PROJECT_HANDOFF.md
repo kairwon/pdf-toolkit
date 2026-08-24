@@ -33,7 +33,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The intended production release represented by this handoff uses the immutable
-tag `production-2026-08-24-visual-pdf-workspaces`. Verify its exact
+tag `production-2026-08-24-visual-pdf-workspaces-seo`. Verify its exact
 commit in the live `release.json` manifest and in GitHub before every subsequent
 deployment.
 
@@ -200,6 +200,9 @@ locally and on GitHub. Never move or reuse a production tag.
   with real links, give prerendered tool routes crawlable fallback copy and
   internal links, redirect the duplicate `/edit-pdf` alias to `/edit`, and
   refresh sitemap last-modified dates. Do not re-add `/edit-pdf` to the sitemap.
+- Nginx redirects `/about` and `/about/` to `/about/editorial-team`; this avoids
+  the directory-style `/about/` URL returning 403 and resolves the corresponding
+  Search Console indexing issue without creating a duplicate About page.
 - A 2026-08-13 Search Console review reported 5 indexed pages, 21 excluded
   pages (including 16 discovered but not indexed), 18 clicks, 43 impressions,
   41.9% CTR, average position 3.7, and one recognized external link from

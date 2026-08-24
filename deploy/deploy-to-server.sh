@@ -172,6 +172,15 @@ elif edit_redirect not in text:
         1,
     )
 
+about_redirects = '''    location = /about { return 301 https://labofpdf.com/about/editorial-team; }
+    location = /about/ { return 301 https://labofpdf.com/about/editorial-team; }'''
+if about_redirects not in text:
+    text = text.replace(
+        edit_redirect,
+        f'{edit_redirect}\n{about_redirects}',
+        1,
+    )
+
 old_asset_cache = '''            expires 1h;
             add_header Cache-Control public;'''
 new_asset_cache = '''            expires 1y;
