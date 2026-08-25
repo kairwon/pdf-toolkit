@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowRight,
@@ -18,11 +19,13 @@ import {
   LockKeyhole,
   Scissors,
   ScanText,
+  Search,
   ShieldX,
   Signature,
   Stamp,
   Tags,
   Workflow,
+  X,
 } from 'lucide-react'
 import usePageTitle from '../hooks/usePageTitle'
 import PdfToolIcon, { pdfIconKindForPath } from '../components/ui/PdfToolIcon'
@@ -35,7 +38,6 @@ const groups = [
       { title: 'Thesis PDF check', note: 'Check submission readiness and common issues.', path: '/thesis-pdf-check', icon: GraduationCap },
       { title: 'Visa application prep', note: 'Prepare documents for a visa upload workflow.', path: '/visa-prep', icon: BriefcaseBusiness },
       { title: 'Portal-ready PDF', note: 'Make a PDF easier to upload to online portals.', path: '/portal-ready-pdf', icon: FileCheck2 },
-      { title: 'Images to PDF', note: 'Build a clean PDF from application photos or scans.', path: '/images-to-pdf', icon: Images },
       { title: 'Reusable workflows', note: 'Process multiple PDFs with one saved local sequence.', path: '/workflows', icon: Workflow },
     ],
   },
@@ -97,6 +99,27 @@ const commonRequirements = [
 
 export default function AllToolsPage() {
   usePageTitle('/tools')
+  const [query, setQuery] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
+  const normalizedQuery = query.trim().toLowerCase()
+  const filteredGroups = useMemo(() => groups.map((group) => ({
+    ...group,
+    tools: group.tools.filter((tool) => `${tool.title} ${tool.note} ${group.title}`.toLowerCase().includes(normalizedQuery)),
+  })).filter((group) => group.tools.length > 0), [normalizedQuery])
+  const resultCount = filteredGroups.reduce((total, group) => total + group.tools.length, 0)
+
+  useEffect(() => {
+    const focusSearch = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (target?.matches('input, textarea, select, [contenteditable="true"]')) return
+      if (event.key === '/' || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k')) {
+        event.preventDefault()
+        searchRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', focusSearch)
+    return () => window.removeEventListener('keydown', focusSearch)
+  }, [])
 
   return (
     <div className="tools-directory">
@@ -104,10 +127,12 @@ export default function AllToolsPage() {
         <span className="lop-eyebrow"><FileCheck2 size={15} /> One toolkit, practical outcomes</span>
         <h1>Every PDF tool, organized by what you need to finish.</h1>
         <p>Choose a complete workflow for a real requirement, or open a focused utility for one specific task.</p>
+        <div className="tools-search"><Search aria-hidden="true" /><input ref={searchRef} type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by task, such as scan, sign, OCR or 5 MB…" aria-label="Search PDF tools" />{query ? <button type="button" aria-label="Clear tool search" onClick={() => { setQuery(''); searchRef.current?.focus() }}><X /></button> : <kbd>⌘ K</kbd>}</div>
+        {normalizedQuery && <small className="tools-search-count">{resultCount} matching tool{resultCount === 1 ? '' : 's'}</small>}
       </section>
 
       <div className="tools-directory-groups">
-        {groups.map((group) => (
+        {filteredGroups.map((group) => (
           <section key={group.title} className="tools-directory-group">
             <div className="tools-directory-heading">
               <h2>{group.title}</h2>
@@ -130,9 +155,10 @@ export default function AllToolsPage() {
             </div>
           </section>
         ))}
+        {normalizedQuery && filteredGroups.length === 0 && <div className="tools-search-empty"><Search /><h2>No matching tool yet</h2><p>Try a result such as compress, scan, sign, images, pages, or Word.</p><button type="button" className="btn-ghost" onClick={() => setQuery('')}>Show all tools</button></div>}
       </div>
 
-      <section className="tools-use-cases">
+      {!normalizedQuery && <section className="tools-use-cases">
         <div className="tools-directory-heading">
           <h2>Common PDF requirements</h2>
           <p>Direct answers for the document problems people usually need to solve.</p>
@@ -146,7 +172,7 @@ export default function AllToolsPage() {
             </Link>
           ))}
         </div>
-      </section>
+      </section>}
     </div>
   )
 }

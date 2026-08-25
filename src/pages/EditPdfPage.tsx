@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { AlertTriangle, Copy, Download, Grid3X3, Hash, Highlighter, ImagePlus, Loader2, Pencil, Redo2, ShieldX, Square, Type, Undo2 } from 'lucide-react'
+import { AlertTriangle, Copy, Download, Eye, EyeOff, Grid3X3, Hash, Highlighter, ImagePlus, Layers3, Loader2, Lock, Pencil, Redo2, ShieldX, Square, Trash2, Type, Undo2, Unlock } from 'lucide-react'
 import { toast } from 'sonner'
 import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
@@ -10,7 +10,7 @@ import VisualEditorCanvas from '../components/ui/VisualEditorCanvas'
 import usePageTitle from '../hooks/usePageTitle'
 import usePendingFiles from '../hooks/usePendingFiles'
 import { getPageCount, inspectPdfStructure, type PdfStructureInspection } from '../lib/pdf'
-import { alignVisualEdit, applyVisualEdits, DEFAULT_PAGE_NUMBERS, duplicateVisualEditToPages, type NormalizedPoint, type PageNumberOptions, type VisualAlignment, type VisualEdit } from '../lib/visualEdits'
+import { alignVisualEdit, applyVisualEdits, DEFAULT_PAGE_NUMBERS, duplicateVisualEditToPages, moveVisualEditLayer, type NormalizedPoint, type PageNumberOptions, type VisualAlignment, type VisualEdit, type VisualLayerMove } from '../lib/visualEdits'
 import { downloadBlob, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
 
 type Props = { initialMode?: 'edit' | 'sign' | 'redact' }
@@ -45,9 +45,12 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
   const [progress, setProgress] = useState('')
   const abortRef = useRef<AbortController | null>(null)
   const editGestureRef = useRef<{ before: VisualEdit[]; changed: boolean } | null>(null)
+  const clipboardRef = useRef<VisualEdit | null>(null)
 
   const edits = history.present
   const selected = useMemo(() => edits.find((edit) => edit.id === selectedId) ?? null, [edits, selectedId])
+  const currentPageEdits = useMemo(() => edits.filter((edit) => edit.pageIndex === pageIndex), [edits, pageIndex])
+  const activeEditCount = useMemo(() => edits.filter((edit) => !edit.hidden).length, [edits])
 
   const commit = useCallback((next: VisualEdit[]) => {
     setHistory((current) => ({ past: [...current.past.slice(-29), current.present], present: next, future: [] }))
@@ -106,7 +109,7 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
   const deleteEdit = (id: string) => { commit(edits.filter((edit) => edit.id !== id)); setSelectedId(null) }
   const duplicateSelected = () => {
     if (!selected) return
-    addEdit({ ...selected, id: newId(), x: Math.min(0.9, selected.x + 0.03), y: Math.min(0.9, selected.y + 0.03) })
+    addEdit({ ...selected, id: newId(), x: Math.min(0.9, selected.x + 0.03), y: Math.min(0.9, selected.y + 0.03), hidden: false, locked: false })
   }
   const alignSelected = (alignment: VisualAlignment) => {
     if (!selected || selected.type === 'ink') return
@@ -119,6 +122,13 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
     if (!copies.length) return
     commit([...edits, ...copies])
     toast.success(scope === 'next' ? 'Copied to the next page' : `Copied to ${copies.length} other pages`)
+  }
+  const toggleSelectedFlag = (id: string, flag: 'hidden' | 'locked') => {
+    commit(edits.map((edit) => edit.id === id ? { ...edit, [flag]: !edit[flag] } : edit))
+  }
+  const moveLayer = (id: string, direction: VisualLayerMove) => {
+    const next = moveVisualEditLayer(edits, id, direction)
+    if (next !== edits) commit(next)
   }
   const undo = () => setHistory((current) => current.past.length ? { past: current.past.slice(0, -1), present: current.past[current.past.length - 1], future: [current.present, ...current.future] } : current)
   const redo = () => setHistory((current) => current.future.length ? { past: [...current.past, current.present], present: current.future[0], future: current.future.slice(1) } : current)
@@ -134,7 +144,15 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
       } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'y') {
         event.preventDefault()
         redo()
-      } else if (selectedId && (event.key === 'Delete' || event.key === 'Backspace')) {
+      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'c' && selected) {
+        event.preventDefault()
+        clipboardRef.current = selected
+        toast.success('Object copied')
+      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'v' && clipboardRef.current) {
+        event.preventDefault()
+        const copied = clipboardRef.current
+        addEdit({ ...copied, id: newId(), pageIndex, x: Math.min(0.9, copied.x + 0.02), y: Math.min(0.9, copied.y + 0.02), hidden: false, locked: false })
+      } else if (selectedId && !selected?.locked && (event.key === 'Delete' || event.key === 'Backspace')) {
         event.preventDefault()
         deleteEdit(selectedId)
       }
@@ -144,7 +162,7 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
   })
 
   const download = async () => {
-    if (!file || (edits.length === 0 && !pageNumbers.enabled)) return
+    if (!file || (activeEditCount === 0 && !pageNumbers.enabled)) return
     setProcessing(true)
     const controller = new AbortController()
     abortRef.current = controller
@@ -172,7 +190,7 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
     <ToolPageWrapper>
       <ToolHeader title={initialMode === 'sign' ? 'Fill & Sign PDF' : initialMode === 'redact' ? 'Securely Redact PDF' : 'Visual PDF Editor'} description="Place and resize objects directly on each page. Secure redaction flattens affected pages so covered content cannot be recovered." />
       <div className="editor-file-bar">
-        <div><strong>{file.name}</strong><span>{formatFileSize(file.size)} · {pageCount} pages · {edits.length} objects</span></div>
+        <div><strong>{file.name}</strong><span>{formatFileSize(file.size)} · {pageCount} pages · {activeEditCount} visible object{activeEditCount === 1 ? '' : 's'}{activeEditCount !== edits.length ? ` · ${edits.length - activeEditCount} hidden` : ''}</span></div>
         <button type="button" className="btn-ghost" onClick={() => setFile(null)}>Change file</button>
       </div>
       {structure && (structure.hasForm || structure.hasDigitalSignature || structure.hasBookmarks || structure.hasAttachments || structure.hasPageLabels) && <div className="editor-structure-warning"><AlertTriangle /><div><strong>Complex document features detected</strong><span>{[structure.hasForm && 'form fields', structure.hasDigitalSignature && 'digital signatures', structure.hasBookmarks && 'bookmarks', structure.hasAttachments && 'attachments', structure.hasPageLabels && 'page labels'].filter(Boolean).join(', ')}. Visual edits create a new PDF copy and may change or invalidate these structures.</span></div></div>}
@@ -195,6 +213,13 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
       <div className="editor-workspace-grid">
         <VisualEditorCanvas file={file} pageCount={pageCount} pageIndex={pageIndex} edits={edits} selectedId={selectedId} disabled={processing} drawInk={inkMode ? { color: inkColor, strokeWidth: inkWidth } : null} snapToGrid={snapToGrid} onPageChange={(value) => { setPageIndex(value); setSelectedId(null) }} onSelect={setSelectedId} onChange={updateEdit} onChangeStart={startEditGesture} onChangeEnd={finishEditGesture} onDelete={deleteEdit} onAddInk={addInk} />
         <aside className="editor-inspector">
+          <section className="editor-layers-section"><h3><Layers3 size={15} /> Layers on page {pageIndex + 1}<span>{currentPageEdits.length}</span></h3>
+            {currentPageEdits.length === 0 ? <p className="editor-empty-layers">Add text, a shape, image or drawing to start.</p> : <div className="editor-layer-list">{[...currentPageEdits].reverse().map((edit) => {
+              const label = edit.type === 'text' ? (edit.text.trim() || 'Text').slice(0, 24) : edit.type === 'rectangle' ? (edit.redaction ? 'Secure redaction' : edit.opacity < 1 ? 'Highlight' : 'Shape') : edit.type === 'image' ? edit.alt : 'Drawing'
+              return <div key={edit.id} className={`editor-layer-row${selectedId === edit.id ? ' active' : ''}${edit.hidden ? ' hidden' : ''}`}><button type="button" className="editor-layer-select" onClick={() => { setSelectedId(edit.id); setInkMode(false) }}><span>{label}</span><small>{edit.type}</small></button><div className="editor-layer-actions"><button type="button" title={edit.hidden ? 'Show layer' : 'Hide layer'} aria-label={edit.hidden ? `Show ${label}` : `Hide ${label}`} onClick={() => toggleSelectedFlag(edit.id, 'hidden')}>{edit.hidden ? <EyeOff /> : <Eye />}</button><button type="button" title={edit.locked ? 'Unlock layer' : 'Lock layer'} aria-label={edit.locked ? `Unlock ${label}` : `Lock ${label}`} onClick={() => toggleSelectedFlag(edit.id, 'locked')}>{edit.locked ? <Lock /> : <Unlock />}</button><button type="button" disabled={edit.locked} title="Delete layer" aria-label={`Delete ${label}`} onClick={() => deleteEdit(edit.id)}><Trash2 /></button></div></div>
+            })}</div>}
+            {selected && selected.pageIndex === pageIndex && <div className="editor-layer-order"><button type="button" onClick={() => moveLayer(selected.id, 'back')}>To back</button><button type="button" onClick={() => moveLayer(selected.id, 'backward')}>Lower</button><button type="button" onClick={() => moveLayer(selected.id, 'forward')}>Raise</button><button type="button" onClick={() => moveLayer(selected.id, 'front')}>To front</button></div>}
+          </section>
           {inkMode && <section><h3>Drawing</h3><label>Ink color<input type="color" value={inkColor} onChange={(event) => setInkColor(event.target.value)} /></label><label>Stroke width<input type="range" min={1} max={12} value={inkWidth} onChange={(event) => setInkWidth(Number(event.target.value))} /></label><button type="button" className="btn-ghost" onClick={() => setInkMode(false)}>Finish drawing</button></section>}
           {selected && selected.type !== 'ink' && <section><h3>Selected {selected.type}</h3>
             {selected.type === 'text' && <><label>Text<textarea value={selected.text} onFocus={startEditGesture} onBlur={finishEditGesture} onChange={(event) => updateEdit({ ...selected, text: event.target.value })} /></label><small className="editor-text-note">Chinese, Arabic, emoji and other non-Latin text is embedded locally as a visual layer for reliable display.</small><label>Text color<input type="color" value={selected.color} onFocus={startEditGesture} onBlur={finishEditGesture} onChange={(event) => updateEdit({ ...selected, color: event.target.value })} /></label><label>Font size<input type="range" min={7} max={60} value={selected.fontSize} onFocus={startEditGesture} onBlur={finishEditGesture} onChange={(event) => updateEdit({ ...selected, fontSize: Number(event.target.value) })} /><span>{selected.fontSize} pt</span></label></>}
@@ -209,7 +234,7 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
         </aside>
       </div>
 
-      <div className="sticky bottom-4 sticky-bar p-4 flex items-center justify-between gap-3"><span className="text-sm text-gray-400">{edits.length} visual edits · files never leave this device</span><button type="button" className="btn-primary flex items-center gap-2" disabled={processing || (edits.length === 0 && !pageNumbers.enabled)} onClick={download}>{processing ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}{processing ? 'Preparing…' : 'Apply edits & download'}</button></div>
+      <div className="sticky bottom-4 sticky-bar p-4 flex items-center justify-between gap-3"><span className="text-sm text-gray-400">{activeEditCount} visible edit{activeEditCount === 1 ? '' : 's'} · files never leave this device</span><button type="button" className="btn-primary flex items-center gap-2" disabled={processing || (activeEditCount === 0 && !pageNumbers.enabled)} onClick={download}>{processing ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}{processing ? 'Preparing…' : 'Apply edits & download'}</button></div>
       {processing && <ProcessingOverlay message={progress || 'Preparing your edited PDF…'} onCancel={() => abortRef.current?.abort()} />}
     </ToolPageWrapper>
   )

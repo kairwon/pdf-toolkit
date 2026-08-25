@@ -63,8 +63,9 @@ export default function VisualEditorCanvas({
     if (disabled || drawInk) return
     event.preventDefault()
     event.stopPropagation()
-    event.currentTarget.setPointerCapture(event.pointerId)
     onSelect(edit.id)
+    if (edit.locked) return
+    event.currentTarget.setPointerCapture(event.pointerId)
     onChangeStart?.()
     pointerAction.current = { kind, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, edit }
   }
@@ -90,6 +91,7 @@ export default function VisualEditorCanvas({
   }
 
   const nudge = (event: ReactKeyboardEvent<HTMLElement>, edit: VisualEdit) => {
+    if (edit.locked) return
     const step = event.shiftKey ? 0.025 : 0.005
     if (event.key === 'Delete' || event.key === 'Backspace') {
       event.preventDefault()
@@ -134,7 +136,7 @@ export default function VisualEditorCanvas({
   }
 
   const pathFor = (points: NormalizedPoint[]) => points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x * 100} ${point.y * 100}`).join(' ')
-  const pageEdits = edits.filter((edit) => edit.pageIndex === pageIndex)
+  const pageEdits = edits.filter((edit) => edit.pageIndex === pageIndex && !edit.hidden)
 
   return (
     <section className="visual-editor" aria-labelledby="visual-editor-heading">
@@ -174,7 +176,7 @@ export default function VisualEditorCanvas({
           return (
             <div
               key={edit.id}
-              className={`visual-edit-object is-${edit.type}${selected ? ' is-selected' : ''}${edit.type === 'rectangle' && edit.redaction ? ' is-redaction' : ''}`}
+              className={`visual-edit-object is-${edit.type}${selected ? ' is-selected' : ''}${edit.locked ? ' is-locked' : ''}${edit.type === 'rectangle' && edit.redaction ? ' is-redaction' : ''}`}
               style={{
                 ...style,
                 ...(edit.type === 'rectangle' ? { background: edit.redaction ? '#000' : edit.color, opacity: edit.redaction ? 1 : edit.opacity } : {}),
@@ -182,7 +184,7 @@ export default function VisualEditorCanvas({
               }}
               role="group"
               tabIndex={disabled ? undefined : 0}
-              aria-label={`${edit.type} object. Drag to move; arrow keys nudge; Delete removes.`}
+              aria-label={`${edit.type} object${edit.locked ? ', locked' : ''}. ${edit.locked ? 'Select it in Layers to unlock.' : 'Drag to move; arrow keys nudge; Delete removes.'}`}
               onKeyDown={(event) => nudge(event, edit)}
               onPointerDown={(event) => beginObjectAction(event, edit, 'move')}
               onPointerMove={moveObject}
@@ -193,8 +195,8 @@ export default function VisualEditorCanvas({
               {edit.type === 'image' && <img src={edit.dataUrl} alt={edit.alt} draggable={false} />}
               {selected && <>
                 <span className="visual-object-grip" aria-hidden="true"><Grip /></span>
-                <button type="button" className="visual-object-delete" aria-label="Delete selected object" onClick={(event) => { event.stopPropagation(); onDelete(edit.id) }}><Trash2 /></button>
-                <button type="button" className="visual-object-resize" aria-label="Resize selected object" onPointerDown={(event) => beginObjectAction(event, edit, 'resize')}><Maximize2 /></button>
+                {!edit.locked && <><button type="button" className="visual-object-delete" aria-label="Delete selected object" onClick={(event) => { event.stopPropagation(); onDelete(edit.id) }}><Trash2 /></button>
+                <button type="button" className="visual-object-resize" aria-label="Resize selected object" onPointerDown={(event) => beginObjectAction(event, edit, 'resize')}><Maximize2 /></button></>}
               </>}
             </div>
           )

@@ -112,8 +112,8 @@ const seo: Record<string, SeoEntry> = {
     tool: true,
   },
   '/images-to-pdf': {
-    title: 'Convert Images to One PDF Without Uploading | Lab of PDF',
-    description: 'Drag JPEG, PNG, or WebP page previews into order, see page size and margins visually, then create one PDF privately in your browser.',
+    title: 'Convert JPG, PNG or WebP Images to PDF Privately | Lab of PDF',
+    description: 'Turn JPG, PNG or WebP images into one ordered PDF. Preview page size, orientation and margins before creating it locally without uploads.',
     name: 'Images to PDF',
     tool: true,
   },
@@ -160,8 +160,8 @@ const seo: Record<string, SeoEntry> = {
     tool: true,
   },
   '/to-word': {
-    title: 'Convert PDF to Word with Browser-Based OCR | Lab of PDF',
-    description: 'Convert text PDFs and scanned pages into an editable Word-compatible document. Text extraction and OCR run locally in your browser.',
+    title: 'Convert PDF to Editable Word with Private OCR | Lab of PDF',
+    description: 'Convert text or scanned PDFs into an editable Word document. Browser-based text extraction and OCR run locally without uploading the PDF.',
     name: 'PDF to Word',
     tool: true,
   },
@@ -232,9 +232,9 @@ const seo: Record<string, SeoEntry> = {
     article: true,
   },
   '/guides/reduce-scanned-pdf-file-size': {
-    title: 'Make a Scanned PDF Smaller: Reduce MB File Size',
-    description: 'Learn how to reduce the MB size of a scanned PDF, protect handwriting and signatures, and compress the file locally without uploading it.',
-    name: 'Make a scanned PDF smaller',
+    title: 'How to Reduce Scanned PDF Size Without Losing Readability',
+    description: 'Learn why scanned documents are large and how to reduce scanned PDF MB size while protecting handwriting, signatures and small print.',
+    name: 'Reduce scanned PDF size without losing readability',
     article: true,
   },
   '/guides/pdf-submission-checklist': {
@@ -331,13 +331,14 @@ export default function usePageTitle(path: string) {
     }
     if (entry.article) {
       const articleDate = path === '/guides/pdf-submission-checklist' ? '2026-08-13' : '2026-08-08'
+      const modifiedDate = path === '/guides/reduce-scanned-pdf-file-size' ? '2026-08-25' : articleDate
       graph.push({
         '@type': 'Article',
         headline: entry.name,
         url,
         description: entry.description,
         datePublished: articleDate,
-        dateModified: articleDate,
+        dateModified: modifiedDate,
         author: { '@type': 'Organization', name: 'Lab of PDF editorial team', url: `${BASE}/about/editorial-team` },
         reviewedBy: { '@type': 'Organization', name: 'Lab of PDF product and privacy review', url: `${BASE}/editorial-policy` },
         publisher: { '@type': 'Organization', name: 'Lab of PDF', url: `${BASE}/`, logo: { '@type': 'ImageObject', url: `${BASE}/logo-google.png` } },

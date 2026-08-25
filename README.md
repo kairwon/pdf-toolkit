@@ -2,7 +2,7 @@
 
 > Free online PDF tools — merge, split, compress, watermark, and convert PDFs entirely in your browser. No document uploads or sign-up; practical capacity depends on the device and browser.
 
-Use the production tools at **[labofpdf.com](https://labofpdf.com/)**, make a large scan smaller with the **[private scanned PDF compressor](https://labofpdf.com/compress/scanned)**, or start with the **[printable PDF submission checklist](https://labofpdf.com/guides/pdf-submission-checklist)** before uploading a document to a university, visa, government, job, grant, or client portal.
+Use the production tools at **[labofpdf.com](https://labofpdf.com/)**, make a large scan smaller with the **[private scanned PDF compressor](https://labofpdf.com/compress/scanned)**, read **[why scanned PDFs become large and how to reduce them](https://labofpdf.com/guides/reduce-scanned-pdf-file-size)**, or start with the **[printable PDF submission checklist](https://labofpdf.com/guides/pdf-submission-checklist)** before uploading a document to a university, visa, government, job, grant, or client portal.
 
 ## Features
 
@@ -17,6 +17,8 @@ Use the production tools at **[labofpdf.com](https://labofpdf.com/)**, make a la
 | **Remove Watermark Annotations** | Inspect supported Stamp/Watermark annotations and remove only selected candidates. |
 | **Manage Pages** | Reorder, rotate, remove, restore, duplicate, extract, or insert blank pages with a visual preview. |
 | **PDF to Image** | Convert PDF pages to PNG or JPEG images. Download individually or as ZIP. |
+| **Images to PDF** | Arrange JPG, PNG, or WebP images visually and create A4, Letter, or image-sized PDF pages. |
+| **Visual PDF Editor** | Drag, resize, align, layer, lock, hide, copy, sign, highlight, draw, and securely redact objects on real PDF pages. |
 
 All processing happens **locally in your browser** using [pdf-lib](https://github.com/Hopding/pdf-lib) and [pdfjs-dist](https://github.com/mozilla/pdf.js). Your files never leave your device.
 

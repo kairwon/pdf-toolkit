@@ -42,6 +42,8 @@ export default function CompressPage({ forcedGoal }: { forcedGoal?: 'thesis' | '
   const [processing, setProcessing] = useState(false)
   const [analysis, setAnalysis] = useState<SubmissionAnalysis | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
+  const selectedTargetBytes = targetMb > 0 ? targetMb * 1024 * 1024 : 0
+  const reductionNeeded = file && selectedTargetBytes > 0 ? Math.max(0, (file.size - selectedTargetBytes) / file.size * 100) : 0
 
   const handleFile = useCallback(async (files: File[]) => {
     const f = files[0]
@@ -288,9 +290,13 @@ export default function CompressPage({ forcedGoal }: { forcedGoal?: 'thesis' | '
           </div>
         )}
         {goal === 'scan' && (
-          <div className="target-presets scan-target-presets" aria-label="Common scanned PDF size targets">
+          <><div className="target-presets scan-target-presets" aria-label="Common scanned PDF size targets">
             {[2, 5, 10].map((size) => <button type="button" className={targetMb === size ? 'active' : ''} onClick={() => setTargetMb(size)} key={size}>{size} MB</button>)}
-          </div>
+          </div><div className={`scan-size-gap${reductionNeeded > 0 ? ' needs-reduction' : ' already-fits'}`}>
+            <div><span>Current <strong>{formatFileSize(file.size)}</strong></span><span>Target <strong>≤ {targetMb} MB</strong></span></div>
+            <div className="scan-size-gap-track"><i style={{ width: `${Math.min(100, selectedTargetBytes / file.size * 100)}%` }} /></div>
+            <p>{reductionNeeded > 0 ? `The copy needs to be about ${Math.ceil(reductionNeeded)}% smaller. We will try progressively stronger modes up to your selection.` : 'This PDF already fits the target. Use lossless mode if you only want a clean optimized copy.'}</p>
+          </div></>
         )}
         <label className="text-sm font-medium text-gray-600 dark:text-gray-300 block mb-1">Compression level</label>
         {(Object.entries(levelInfo) as [Level, typeof levelInfo[Level]][]).map(([key, info]) => (

@@ -7,7 +7,7 @@ const guides = [
   { icon: ScanText, href: '/guides/make-scanned-notes-searchable', label: 'SCANNED NOTES', title: 'Make scanned lecture notes searchable for faster revision', text: 'Use OCR carefully, verify recognition errors, and turn a folder of scans into notes you can actually search.' },
   { icon: Files, href: '/guides/organize-pdf-study-notes', label: 'EXAM REVISION', title: 'Organize PDF study notes into one useful revision pack', text: 'Remove duplicate pages, arrange topics, add a predictable order, and create a smaller master PDF.' },
   { icon: FileDown, href: '/guides/compress-pdf-without-losing-quality', label: 'READABLE COMPRESSION', title: 'Compress a PDF without making it unreadable', text: 'Find what makes the document large, reduce it deliberately, and inspect the downloaded copy before sending or submitting it.' },
-  { icon: ScanText, href: '/guides/reduce-scanned-pdf-file-size', label: 'LARGE SCANS', title: 'Make a scanned PDF smaller and reduce its MB size', text: 'Detect image-based pages, clean the scan, choose a target and protect small print, handwriting, stamps and signatures.' },
+  { icon: ScanText, href: '/guides/reduce-scanned-pdf-file-size', label: 'LARGE SCANS', title: 'Reduce scanned PDF size without losing readability', text: 'Understand why scans are large, detect image-based pages, choose a target and protect small print, handwriting, stamps and signatures.' },
   { icon: ClipboardCheck, href: '/guides/pdf-submission-checklist', label: 'BEFORE YOU UPLOAD', title: 'PDF submission checklist: 10 checks before upload', text: 'Print or download a neutral checklist for file size, page order, readability, signatures, filenames, and portal confirmation.' },
 ]
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { alignVisualEdit, clampNormalizedBox, duplicateVisualEditToPages, hexToRgb, pagesRequiringSecureFlattening, requiresRasterText, snapVisualEdit, type VisualEdit } from './visualEdits'
+import { alignVisualEdit, clampNormalizedBox, duplicateVisualEditToPages, hexToRgb, moveVisualEditLayer, pagesRequiringSecureFlattening, requiresRasterText, snapVisualEdit, type VisualEdit } from './visualEdits'
 
 describe('visual edit geometry', () => {
   it('keeps resized objects inside the normalized page', () => {
@@ -17,6 +17,7 @@ describe('visual edit geometry', () => {
       { id: 'a', pageIndex: 0, type: 'rectangle', x: 0, y: 0, width: 0.2, height: 0.1, color: '#ffff00', opacity: 0.4 },
       { id: 'b', pageIndex: 2, type: 'rectangle', x: 0, y: 0, width: 0.2, height: 0.1, color: '#000000', opacity: 1, redaction: true },
       { id: 'c', pageIndex: 2, type: 'text', x: 0, y: 0, width: 0.2, height: 0.1, text: 'x', color: '#000000', fontSize: 12 },
+      { id: 'hidden-redaction', pageIndex: 4, type: 'rectangle', x: 0, y: 0, width: 0.2, height: 0.1, color: '#000000', opacity: 1, redaction: true, hidden: true },
     ]
     expect([...pagesRequiringSecureFlattening(edits)]).toEqual([2])
   })
@@ -39,5 +40,16 @@ describe('visual edit geometry', () => {
     expect(requiresRasterText('Private PDF 2026')).toBe(false)
     expect(requiresRasterText('私人 PDF')).toBe(true)
     expect(requiresRasterText('مرحبا')).toBe(true)
+  })
+
+  it('changes layer order only among objects on the selected page', () => {
+    const edits: VisualEdit[] = [
+      { id: 'a', pageIndex: 0, type: 'rectangle', x: 0, y: 0, width: .2, height: .2, color: '#000000', opacity: 1 },
+      { id: 'other-page', pageIndex: 1, type: 'rectangle', x: 0, y: 0, width: .2, height: .2, color: '#000000', opacity: 1 },
+      { id: 'b', pageIndex: 0, type: 'rectangle', x: 0, y: 0, width: .2, height: .2, color: '#000000', opacity: 1 },
+      { id: 'c', pageIndex: 0, type: 'rectangle', x: 0, y: 0, width: .2, height: .2, color: '#000000', opacity: 1 },
+    ]
+    expect(moveVisualEditLayer(edits, 'a', 'front').map((edit) => edit.id)).toEqual(['b', 'other-page', 'c', 'a'])
+    expect(moveVisualEditLayer(edits, 'c', 'backward').map((edit) => edit.id)).toEqual(['a', 'other-page', 'c', 'b'])
   })
 })

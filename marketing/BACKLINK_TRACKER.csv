@@ -1,0 +1,7 @@
+date,channel,target_url,promoted_url,status,next_action,notes
+2026-08-25,GitHub repository,https://github.com/kairwon/pdf-toolkit,https://labofpdf.com/guides/reduce-scanned-pdf-file-size,ready,push updated README,Deep link added beside product and checklist links
+2026-08-25,Product Hunt,https://www.producthunt.com/posts/new,https://labofpdf.com/,ready,confirm account and create draft,Use logo-v2.png and og-v3.jpg; personal maker account required
+2026-08-25,AlternativeTo,https://alternativeto.net/faq/#add-a-new-application,https://labofpdf.com/,ready,confirm account and submit application,Email verification is required by AlternativeTo
+2026-08-25,SaaSHub,https://www.saashub.com/submit,https://labofpdf.com/,ready,confirm account and submit product,Verify ownership if requested
+2026-08-25,University resource outreach,,https://labofpdf.com/guides/pdf-submission-checklist,researching,identify relevant official resource pages,Personalize every message and request no reciprocal link
+2026-08-25,Scanner help outreach,,https://labofpdf.com/guides/reduce-scanned-pdf-file-size,researching,identify scanner and records guidance pages,Offer guide only where it adds relevant detail

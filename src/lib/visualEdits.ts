@@ -9,6 +9,8 @@ type VisualEditBase = {
   y: number
   width: number
   height: number
+  hidden?: boolean
+  locked?: boolean
 }
 
 export type VisualEdit =
@@ -29,6 +31,7 @@ export type PageNumberOptions = {
 }
 
 export type VisualAlignment = 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom'
+export type VisualLayerMove = 'back' | 'backward' | 'forward' | 'front'
 
 export const DEFAULT_PAGE_NUMBERS: PageNumberOptions = {
   enabled: false,
@@ -71,7 +74,27 @@ export function alignVisualEdit(edit: VisualEdit, alignment: VisualAlignment): V
 }
 
 export function duplicateVisualEditToPages(edit: VisualEdit, pageIndices: number[], idFactory: () => string): VisualEdit[] {
-  return pageIndices.filter((pageIndex) => pageIndex !== edit.pageIndex).map((pageIndex) => ({ ...edit, id: idFactory(), pageIndex }))
+  return pageIndices.filter((pageIndex) => pageIndex !== edit.pageIndex).map((pageIndex) => ({ ...edit, id: idFactory(), pageIndex, hidden: false }))
+}
+
+export function moveVisualEditLayer(edits: VisualEdit[], id: string, direction: VisualLayerMove): VisualEdit[] {
+  const selected = edits.find((edit) => edit.id === id)
+  if (!selected) return edits
+  const slots = edits.map((edit, index) => edit.pageIndex === selected.pageIndex ? index : -1).filter((index) => index >= 0)
+  const pageEdits = slots.map((index) => edits[index])
+  const current = pageEdits.findIndex((edit) => edit.id === id)
+  if (current < 0) return edits
+  const target = direction === 'back' ? 0
+    : direction === 'front' ? pageEdits.length - 1
+      : direction === 'backward' ? Math.max(0, current - 1)
+        : Math.min(pageEdits.length - 1, current + 1)
+  if (target === current) return edits
+  const reordered = [...pageEdits]
+  const [moved] = reordered.splice(current, 1)
+  reordered.splice(target, 0, moved)
+  const result = [...edits]
+  slots.forEach((slot, index) => { result[slot] = reordered[index] })
+  return result
 }
 
 export function requiresRasterText(text: string) {
@@ -88,7 +111,7 @@ export function hexToRgb(hex: string) {
 }
 
 export function pagesRequiringSecureFlattening(edits: VisualEdit[]) {
-  return new Set(edits.filter((edit) => edit.type === 'rectangle' && edit.redaction).map((edit) => edit.pageIndex))
+  return new Set(edits.filter((edit) => !edit.hidden && edit.type === 'rectangle' && edit.redaction).map((edit) => edit.pageIndex))
 }
 
 async function dataUrlBytes(dataUrl: string) {
@@ -180,7 +203,7 @@ export async function applyVisualEdits(
       page = output.addPage(copied)
     }
 
-    for (const edit of edits.filter((item) => item.pageIndex === pageIndex)) {
+    for (const edit of edits.filter((item) => item.pageIndex === pageIndex && !item.hidden)) {
       const x = edit.x * width
       const y = height - (edit.y + edit.height) * height
       const editWidth = edit.width * width

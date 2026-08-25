@@ -13,7 +13,10 @@ This file is a manual, quality-first promotion checklist. Do not automate submis
 
 Use the most relevant deep link. Do not point every mention at the homepage.
 
-Search Console on 2026-08-14 showed early impressions for queries such as
+Search Console on 2026-08-25 showed 388 impressions and 20 clicks over the
+available three-month period. The scanned PDF guide had 197 impressions but no
+clicks yet, and the links report still recognized only one external domain
+(`uicomet.com`). Visible queries included
 “make scanned pdf smaller”, “how to resize a scanned document”, and “how to
 reduce mb size of scanned pdf”. For scanner-help, records-management, student
 support, or upload-limit resource pages, promote the scanned PDF guide rather
@@ -64,6 +67,49 @@ First comment:
 I built Lab of PDF because most people do not want a “compression level”—they need a university, visa, government, or client portal to accept the final document. The tools run locally in the browser, require no account, and now include visual page management, exact-size workflows, OCR, practical guides, and a printable submission checklist. I would especially value feedback on which real submission workflow still feels confusing.
 
 Do not ask people to upvote. Ask relevant users to try a workflow and leave honest feedback.
+
+Submission assets already in the repository:
+
+- Square product thumbnail: `public/logo-v2.png` (2048 × 2048)
+- Product gallery/social image: `public/og-v3.jpg` (1200 × 628)
+- Direct product URL: `https://labofpdf.com/`
+- Pricing: Free
+- Suggested topics: Productivity; Privacy; Open Source; PDF
+
+Short description (under 260 characters):
+
+Free, open-source PDF tools for real upload requirements. Merge, compress,
+convert, sign, redact and visually manage pages locally in your browser—without
+uploading the document or creating an account.
+
+## AlternativeTo draft
+
+- Name: Lab of PDF
+- Platform: Web
+- License: MIT / Open Source
+- Official URL: `https://labofpdf.com/`
+- Source: `https://github.com/kairwon/pdf-toolkit`
+- Tags: PDF Editor; PDF Compressor; PDF Converter; OCR; Local Processing;
+  Privacy; No Registration
+- Suggested accurate alternatives: iLovePDF, Smallpdf, PDF24 Tools, Stirling
+  PDF. Do not claim feature parity where it does not exist.
+
+Description:
+
+Lab of PDF is a free, open-source browser toolkit for merging, splitting,
+compressing, converting, signing, redacting, watermarking and visually managing
+PDF pages. Supported processing runs locally on the user’s device, so document
+contents are not uploaded and no account is required.
+
+## SaaSHub draft
+
+- Product: Lab of PDF
+- Website: `https://labofpdf.com/`
+- Category: PDF Tools / Office & Productivity
+- Pricing: Free
+- Open source: Yes
+- Primary comparison angle: private, browser-local alternative for practical
+  document preparation rather than a cloud document service
 
 ## Resource-page outreach draft
 

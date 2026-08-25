@@ -33,7 +33,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The intended production release represented by this handoff uses the immutable
-tag `production-2026-08-24-precision-visual-editor`. Verify its exact
+tag `production-2026-08-25-editor-layers-search-growth`. Verify its exact
 commit in the live `release.json` manifest and in GitHub before every subsequent
 deployment.
 
@@ -68,6 +68,11 @@ locally and on GitHub. Never move or reuse a production tag.
   object alignment, copying an object to the next or every page, and standard
   keyboard undo/redo and delete shortcuts. Text, colour, size, and opacity
   inspector changes participate in undo history.
+- The editor has a per-page Layers panel. Users can select every object type
+  including ink, hide or lock layers, delete them, and move them backward,
+  forward, to the back, or to the front. Hidden objects are excluded from the
+  PDF export; locked objects cannot be moved, resized, nudged, or deleted until
+  unlocked. Cmd/Ctrl+C and V copy and paste an object onto the current page.
 - The editor warns before rewriting PDFs that contain form fields, digital
   signatures, bookmarks, attachments, or page labels. Added Chinese, Arabic,
   emoji, and other non-Latin text is rendered locally into a visual layer so
@@ -179,6 +184,9 @@ locally and on GitHub. Never move or reuse a production tag.
   optional 300-character comment, and release commit. It never sends the PDF,
   file name, document content, or IP address.
 - Tool icons use task-specific PDF metaphors rather than generic document icons.
+- `/tools` includes instant task search with `/` and Cmd/Ctrl+K shortcuts,
+  filtered result counts, and a useful empty state. Duplicate directory entries
+  were removed.
 - Browser back actions should use history when available and fall back safely.
 - The PandaCard feature remains in source, but large obsolete
   `thankspanda.mov`, `thankspanda.mp4`, and `thankspanda.json` assets were
@@ -225,6 +233,17 @@ locally and on GitHub. Never move or reuse a production tag.
   external link from `uicomet.com`. The scanned workflow, guide metadata,
   internal links, GitHub README deep link, and outreach copy were updated from
   these signals.
+- A 2026-08-25 Search Console review reported 20 clicks, 388 impressions, 5.2%
+  CTR, and average position 68 over the available three-month period. The
+  scanned PDF size guide accounted for 197 impressions and no clicks, with
+  queries centered on reducing or resizing large scanned documents. Its title,
+  description, direct answer, scan-size explanation, crop/OCR links, static
+  fallback HTML, and modified date were updated. Images-to-PDF and PDF-to-Word
+  metadata were also refined after receiving 43 and 33 impressions. Indexing
+  showed 25 indexed and 10 excluded URLs; the sitemap was successfully read on
+  2026-08-24 with 29 discovered URLs. The links report still showed one external
+  domain, so the GitHub deep links and quality-first directory outreach package
+  were expanded and a tracking CSV was added.
 - The same review found no manual action or security issue. PageSpeed mobile
   scored 89 performance, 96 accessibility, 96 best practices, and 92 SEO. The
   release fixes remove the broken Umami request and render-blocking Google font,
