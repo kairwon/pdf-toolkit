@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { alignVisualEdit, clampNormalizedBox, duplicateVisualEditToPages, hexToRgb, moveVisualEditLayer, pagesRequiringSecureFlattening, requiresRasterText, snapVisualEdit, type VisualEdit } from './visualEdits'
+import { alignVisualEdit, clampNormalizedBox, duplicateVisualEditToPages, hexToRgb, moveVisualEditLayer, normalizeVisualRotation, pagesRequiringSecureFlattening, requiresRasterText, rotatedBoxOrigin, snapVisualEdit, type VisualEdit } from './visualEdits'
 
 describe('visual edit geometry', () => {
+  it('normalizes rotation and keeps the rotated PDF object centred', () => {
+    expect(normalizeVisualRotation(270)).toBe(-90)
+    expect(normalizeVisualRotation(-540)).toBe(-180)
+    expect(normalizeVisualRotation(Number.NaN)).toBe(0)
+    const origin = rotatedBoxOrigin(10, 20, 40, 20, 90)
+    expect(origin.x).toBeCloseTo(40)
+    expect(origin.y).toBeCloseTo(10)
+  })
+
   it('keeps resized objects inside the normalized page', () => {
     expect(clampNormalizedBox({ x: 0.95, y: -0.2, width: 0.2, height: 0.1 })).toEqual({ x: 0.8, y: 0, width: 0.2, height: 0.1 })
   })

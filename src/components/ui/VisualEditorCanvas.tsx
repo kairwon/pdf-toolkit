@@ -172,7 +172,7 @@ export default function VisualEditorCanvas({
         </svg>
         {pageEdits.filter((edit) => edit.type !== 'ink').map((edit) => {
           const selected = selectedId === edit.id
-          const style = { left: `${edit.x * 100}%`, top: `${edit.y * 100}%`, width: `${edit.width * 100}%`, height: `${edit.height * 100}%` }
+          const style = { left: `${edit.x * 100}%`, top: `${edit.y * 100}%`, width: `${edit.width * 100}%`, height: `${edit.height * 100}%`, transform: `rotate(${edit.rotation ?? 0}deg)` }
           return (
             <div
               key={edit.id}

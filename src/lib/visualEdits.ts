@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { degrees, PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 
 export type NormalizedPoint = { x: number; y: number }
 
@@ -9,6 +9,7 @@ type VisualEditBase = {
   y: number
   width: number
   height: number
+  rotation?: number
   hidden?: boolean
   locked?: boolean
 }
@@ -32,6 +33,24 @@ export type PageNumberOptions = {
 
 export type VisualAlignment = 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom'
 export type VisualLayerMove = 'back' | 'backward' | 'forward' | 'front'
+
+export function normalizeVisualRotation(value: number) {
+  if (!Number.isFinite(value)) return 0
+  const normalized = ((value + 180) % 360 + 360) % 360 - 180
+  return Object.is(normalized, -0) ? 0 : normalized
+}
+
+export function rotatedBoxOrigin(x: number, y: number, width: number, height: number, rotation = 0) {
+  const radians = normalizeVisualRotation(rotation) * Math.PI / 180
+  const cosine = Math.cos(radians)
+  const sine = Math.sin(radians)
+  const centerX = x + width / 2
+  const centerY = y + height / 2
+  return {
+    x: centerX - (width * cosine) / 2 + (height * sine) / 2,
+    y: centerY - (width * sine) / 2 - (height * cosine) / 2,
+  }
+}
 
 export const DEFAULT_PAGE_NUMBERS: PageNumberOptions = {
   enabled: false,
@@ -208,16 +227,19 @@ export async function applyVisualEdits(
       const y = height - (edit.y + edit.height) * height
       const editWidth = edit.width * width
       const editHeight = edit.height * height
+      const rotation = normalizeVisualRotation(edit.rotation ?? 0)
+      const origin = rotatedBoxOrigin(x, y, editWidth, editHeight, rotation)
+      const rotated = rotation ? { x: origin.x, y: origin.y, rotate: degrees(rotation) } : { x, y }
 
       if (edit.type === 'rectangle') {
         const color = hexToRgb(edit.redaction ? '#000000' : edit.color)
-        page.drawRectangle({ x, y, width: editWidth, height: editHeight, color: rgb(color.r, color.g, color.b), opacity: edit.redaction ? 1 : edit.opacity })
+        page.drawRectangle({ ...rotated, width: editWidth, height: editHeight, color: rgb(color.r, color.g, color.b), opacity: edit.redaction ? 1 : edit.opacity })
       } else if (edit.type === 'text') {
         const color = hexToRgb(edit.color)
         const size = Math.max(6, Math.min(72, edit.fontSize))
-        if (requiresRasterText(edit.text)) {
+        if (requiresRasterText(edit.text) || rotation) {
           const rasterText = await output.embedPng(await rasterTextBytes(edit.text, editWidth, editHeight, size, edit.color, edit.italic))
-          page.drawImage(rasterText, { x, y, width: editWidth, height: editHeight })
+          page.drawImage(rasterText, { ...rotated, width: editWidth, height: editHeight })
         } else {
           page.drawText(edit.text || 'Text', {
             x,
@@ -236,7 +258,7 @@ export async function applyVisualEdits(
           embedded = edit.dataUrl.startsWith('data:image/jpeg') ? await output.embedJpg(bytes) : await output.embedPng(bytes)
           imageCache.set(edit.dataUrl, embedded)
         }
-        page.drawImage(embedded, { x, y, width: editWidth, height: editHeight })
+        page.drawImage(embedded, { ...rotated, width: editWidth, height: editHeight })
       } else if (edit.type === 'ink' && edit.points.length > 1) {
         const color = hexToRgb(edit.color)
         for (let pointIndex = 1; pointIndex < edit.points.length; pointIndex++) {

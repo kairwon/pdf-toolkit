@@ -33,7 +33,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The intended production release represented by this handoff uses the immutable
-tag `production-2026-08-25-editor-layers-search-growth`. Verify its exact
+tag `production-2026-08-27-visual-object-rotation`. Verify its exact
 commit in the live `release.json` manifest and in GitHub before every subsequent
 deployment.
 
@@ -73,6 +73,11 @@ locally and on GitHub. Never move or reuse a production tag.
   forward, to the back, or to the front. Hidden objects are excluded from the
   PDF export; locked objects cannot be moved, resized, nudged, or deleted until
   unlocked. Cmd/Ctrl+C and V copy and paste an object onto the current page.
+- Text, images, signatures, highlights, shapes, and redaction areas can be
+  rotated around their visual centre with an angle slider, quick 90-degree
+  controls, and reset. The same inspector exposes precise Left, Top, Width, and
+  Height percentage inputs. Rotation and geometry are reflected in the live
+  canvas and final PDF, respect layer locks, and participate in Undo/Redo.
 - The editor warns before rewriting PDFs that contain form fields, digital
   signatures, bookmarks, attachments, or page labels. Added Chinese, Arabic,
   emoji, and other non-Latin text is rendered locally into a visual layer so

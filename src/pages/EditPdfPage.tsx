@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { AlertTriangle, Copy, Download, Eye, EyeOff, Grid3X3, Hash, Highlighter, ImagePlus, Layers3, Loader2, Lock, Pencil, Redo2, ShieldX, Square, Trash2, Type, Undo2, Unlock } from 'lucide-react'
+import { AlertTriangle, Copy, Download, Eye, EyeOff, Grid3X3, Hash, Highlighter, ImagePlus, Layers3, Loader2, Lock, Pencil, Redo2, RotateCcw, RotateCw, ShieldX, Square, Trash2, Type, Undo2, Unlock } from 'lucide-react'
 import { toast } from 'sonner'
 import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
@@ -10,7 +10,7 @@ import VisualEditorCanvas from '../components/ui/VisualEditorCanvas'
 import usePageTitle from '../hooks/usePageTitle'
 import usePendingFiles from '../hooks/usePendingFiles'
 import { getPageCount, inspectPdfStructure, type PdfStructureInspection } from '../lib/pdf'
-import { alignVisualEdit, applyVisualEdits, DEFAULT_PAGE_NUMBERS, duplicateVisualEditToPages, moveVisualEditLayer, type NormalizedPoint, type PageNumberOptions, type VisualAlignment, type VisualEdit, type VisualLayerMove } from '../lib/visualEdits'
+import { alignVisualEdit, applyVisualEdits, clampNormalizedBox, DEFAULT_PAGE_NUMBERS, duplicateVisualEditToPages, moveVisualEditLayer, normalizeVisualRotation, type NormalizedPoint, type PageNumberOptions, type VisualAlignment, type VisualEdit, type VisualLayerMove } from '../lib/visualEdits'
 import { downloadBlob, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
 
 type Props = { initialMode?: 'edit' | 'sign' | 'redact' }
@@ -114,6 +114,14 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
   const alignSelected = (alignment: VisualAlignment) => {
     if (!selected || selected.type === 'ink') return
     commit(edits.map((edit) => edit.id === selected.id ? alignVisualEdit(edit, alignment) : edit))
+  }
+  const setSelectedRotation = (rotation: number) => {
+    if (!selected || selected.type === 'ink' || selected.locked) return
+    updateEdit({ ...selected, rotation: normalizeVisualRotation(rotation) })
+  }
+  const setSelectedGeometry = (field: 'x' | 'y' | 'width' | 'height', percent: number) => {
+    if (!selected || selected.type === 'ink' || selected.locked || !Number.isFinite(percent)) return
+    updateEdit(clampNormalizedBox({ ...selected, [field]: percent / 100 }) as VisualEdit)
   }
   const copySelectedToPages = (scope: 'next' | 'all') => {
     if (!selected) return
@@ -225,6 +233,11 @@ export default function EditPdfPage({ initialMode = 'edit' }: Props) {
             {selected.type === 'text' && <><label>Text<textarea value={selected.text} onFocus={startEditGesture} onBlur={finishEditGesture} onChange={(event) => updateEdit({ ...selected, text: event.target.value })} /></label><small className="editor-text-note">Chinese, Arabic, emoji and other non-Latin text is embedded locally as a visual layer for reliable display.</small><label>Text color<input type="color" value={selected.color} onFocus={startEditGesture} onBlur={finishEditGesture} onChange={(event) => updateEdit({ ...selected, color: event.target.value })} /></label><label>Font size<input type="range" min={7} max={60} value={selected.fontSize} onFocus={startEditGesture} onBlur={finishEditGesture} onChange={(event) => updateEdit({ ...selected, fontSize: Number(event.target.value) })} /><span>{selected.fontSize} pt</span></label></>}
             {selected.type === 'rectangle' && !selected.redaction && <><label>Fill color<input type="color" value={selected.color} onFocus={startEditGesture} onBlur={finishEditGesture} onChange={(event) => updateEdit({ ...selected, color: event.target.value })} /></label><label>Opacity<input type="range" min={10} max={100} value={Math.round(selected.opacity * 100)} onFocus={startEditGesture} onBlur={finishEditGesture} onChange={(event) => updateEdit({ ...selected, opacity: Number(event.target.value) / 100 })} /><span>{Math.round(selected.opacity * 100)}%</span></label></>}
             {selected.type === 'rectangle' && selected.redaction && <p className="editor-danger-note">This area will be permanently burned into a flattened page. Searchable text and interactive content on that page will be removed.</p>}
+            <div className="editor-geometry-grid" aria-label="Selected object geometry">
+              {(['x', 'y', 'width', 'height'] as const).map((field) => <label key={field}>{field === 'x' ? 'Left' : field === 'y' ? 'Top' : field[0].toUpperCase() + field.slice(1)} %<input type="number" min={0} max={100} step={0.5} disabled={selected.locked} value={Number((selected[field] * 100).toFixed(1))} onFocus={startEditGesture} onBlur={finishEditGesture} onChange={(event) => setSelectedGeometry(field, Number(event.target.value))} /></label>)}
+            </div>
+            <label>Rotation<input type="range" min={-180} max={180} step={1} disabled={selected.locked} value={selected.rotation ?? 0} onFocus={startEditGesture} onBlur={finishEditGesture} onChange={(event) => setSelectedRotation(Number(event.target.value))} /><span>{selected.rotation ?? 0}°</span></label>
+            <div className="editor-rotation-row"><button type="button" disabled={selected.locked} aria-label="Rotate 90 degrees counter-clockwise" onClick={() => { startEditGesture(); setSelectedRotation((selected.rotation ?? 0) - 90); finishEditGesture() }}><RotateCcw />−90°</button><button type="button" disabled={selected.locked || !(selected.rotation ?? 0)} onClick={() => { startEditGesture(); setSelectedRotation(0); finishEditGesture() }}>Reset</button><button type="button" disabled={selected.locked} aria-label="Rotate 90 degrees clockwise" onClick={() => { startEditGesture(); setSelectedRotation((selected.rotation ?? 0) + 90); finishEditGesture() }}><RotateCw />+90°</button></div>
             <div className="editor-align-grid" aria-label="Align selected object"><button type="button" onClick={() => alignSelected('left')}>Left</button><button type="button" onClick={() => alignSelected('center')}>Center</button><button type="button" onClick={() => alignSelected('right')}>Right</button><button type="button" onClick={() => alignSelected('top')}>Top</button><button type="button" onClick={() => alignSelected('middle')}>Middle</button><button type="button" onClick={() => alignSelected('bottom')}>Bottom</button></div><div className="editor-copy-row"><button type="button" className="btn-ghost" disabled={selected.pageIndex + 1 >= pageCount} onClick={() => copySelectedToPages('next')}>Copy to next page</button><button type="button" className="btn-ghost" disabled={pageCount < 2} onClick={() => copySelectedToPages('all')}>Copy to all pages</button></div>
           </section>}
           <section><h3>Draw signature</h3><SignaturePad disabled={processing} onUse={addSignature} /></section>
