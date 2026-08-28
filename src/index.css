@@ -488,6 +488,34 @@ html {
 .target-control input { width: 82px; padding: 8px 10px; outline: none; color: #26382e; font-size: 14px; font-weight: 700; }
 .target-control span { padding: 8px 10px; border-left: 1px solid #e7ece8; color: #7a867e; font-size: 11px; font-weight: 700; }
 
+.compact-pdf-preview { display:grid; grid-template-columns:minmax(150px,210px) minmax(0,1fr); gap:18px; align-items:center; margin:0 0 16px; padding:14px; border:1px solid rgba(30,88,57,.13); border-radius:15px; background:rgba(255,255,255,.88); box-shadow:0 6px 18px rgba(38,77,52,.04); }
+.portal-file + .compact-pdf-preview { margin-top:12px; }
+.compact-pdf-preview-surface { display:flex; align-items:center; justify-content:center; height:220px; overflow:hidden; border:1px solid #dfe7e2; border-radius:10px; color:#7f8d85; background:linear-gradient(135deg,#edf2ef 25%,#f7f9f8 25%,#f7f9f8 50%,#edf2ef 50%,#edf2ef 75%,#f7f9f8 75%); background-size:18px 18px; font-size:11px; }
+.compact-pdf-preview-surface img { display:block; max-width:100%; max-height:100%; object-fit:contain; background:#fff; box-shadow:0 5px 16px rgba(25,55,40,.16); }
+.compact-pdf-preview-surface svg { width:20px; color:#087f5b; }
+.compact-pdf-preview-label { display:flex; align-items:center; gap:6px; color:#087f5b; font-size:9px; font-weight:850; letter-spacing:.13em; }
+.compact-pdf-preview-info h3 { margin-top:7px; color:var(--lop-ink); font-size:18px; font-weight:760; letter-spacing:-.02em; }
+.compact-pdf-preview-info p { max-width:520px; margin-top:7px; color:var(--lop-subtle); font-size:11px; line-height:1.55; }
+.compact-pdf-preview-navigation { display:inline-flex; align-items:center; gap:9px; margin-top:14px; padding:4px; border:1px solid var(--lop-line); border-radius:10px; background:var(--lop-canvas); }
+.compact-pdf-preview-navigation button { display:grid; width:30px; height:30px; place-items:center; border-radius:7px; color:#087f5b; background:#fff; }
+.compact-pdf-preview-navigation button:disabled { color:#aeb8b2; opacity:.55; }
+.compact-pdf-preview-navigation button svg { width:14px; }
+.compact-pdf-preview-navigation span { min-width:86px; color:var(--lop-muted); font-size:10px; font-weight:760; text-align:center; }
+.dark .compact-pdf-preview { background:rgba(24,39,33,.9); }
+.dark .compact-pdf-preview-navigation { background:#182a22; }
+.dark .compact-pdf-preview-navigation button { background:#243a31; }
+
+@media (max-width:640px) {
+  .compact-pdf-preview { grid-template-columns:120px minmax(0,1fr); gap:12px; padding:11px; }
+  .compact-pdf-preview-surface { height:160px; }
+  .compact-pdf-preview-info p { font-size:10px; }
+}
+
+@media (max-width:430px) {
+  .compact-pdf-preview { grid-template-columns:1fr; }
+  .compact-pdf-preview-surface { height:230px; }
+}
+
 /* Thesis submission workspace */
 .thesis-workspace { width: 100%; color: #24342b; }
 .thesis-stepper { display: grid; grid-template-columns: repeat(4, 1fr); margin-bottom: 24px; border: 1px solid rgba(38,89,62,.11); border-radius: 14px; background: rgba(255,255,255,.78); overflow: hidden; }

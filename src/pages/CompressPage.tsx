@@ -9,6 +9,7 @@ import ToolHeader from '../components/ui/ToolHeader'
 import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
+import CompactPdfPreview from '../components/ui/CompactPdfPreview'
 import { analyzePdfForSubmission, compressPdf, getPageCount, type SubmissionAnalysis } from '../lib/pdf'
 import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 import usePageTitle from '../hooks/usePageTitle'
@@ -202,6 +203,7 @@ export default function CompressPage({ forcedGoal }: { forcedGoal?: 'thesis' | '
           <div className="thesis-file-name"><strong>{file.name}</strong><span>{pageCount} pages · {formatFileSize(file.size)}</span></div>
           <div className="thesis-file-private"><ShieldCheck size={15} /><span><strong>Private</strong><small>Not uploaded</small></span></div>
         </div>
+        <CompactPdfPreview file={file} pageCount={pageCount} title="Thesis PDF preview" />
 
         <div className="thesis-dashboard">
           <section className="thesis-checks">
@@ -270,6 +272,7 @@ export default function CompressPage({ forcedGoal }: { forcedGoal?: 'thesis' | '
         </div>
         <button onClick={() => { setFile(null); setPageCount(0) }} className="btn-ghost">Change file</button>
       </div>
+      <CompactPdfPreview file={file} pageCount={pageCount} title="PDF before compression" />
 
       <div className="p-5 mb-5 space-y-2.5" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
         {goal === 'scan' && analysis && (

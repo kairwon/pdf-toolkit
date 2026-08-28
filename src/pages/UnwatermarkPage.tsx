@@ -5,6 +5,7 @@ import ToolHeader from '../components/ui/ToolHeader'
 import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
+import CompactPdfPreview from '../components/ui/CompactPdfPreview'
 import { inspectWatermarks, removeWatermark, type WatermarkInspection } from '../lib/pdf'
 import { formatFileSize, downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 import usePageTitle from '../hooks/usePageTitle'
@@ -87,6 +88,7 @@ export default function UnwatermarkPage() {
         </div>
         <button onClick={reset} className="btn-ghost">Change file</button>
       </div>
+      <CompactPdfPreview file={file} pageCount={pageCount} title="PDF annotation preview" />
 
       <div className="p-5 mb-5 space-y-4" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
         {analyzing ? (

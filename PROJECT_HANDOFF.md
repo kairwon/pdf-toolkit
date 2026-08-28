@@ -33,7 +33,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The intended production release represented by this handoff uses the immutable
-tag `production-2026-08-27-visual-object-rotation`. Verify its exact
+tag `production-2026-08-28-compact-document-previews`. Verify its exact
 commit in the live `release.json` manifest and in GitHub before every subsequent
 deployment.
 
@@ -157,6 +157,12 @@ locally and on GitHub. Never move or reuse a production tag.
 - PDF previews reuse one parsed PDF.js document per selected file, and the
   filmstrip lazily renders nearby visible thumbnails instead of repeatedly
   reading the same file or leaving long-document thumbnails blank.
+- Single-document analysis and conversion workflows now share a compact local
+  PDF preview with previous/next page navigation. Portal Ready, compression and
+  thesis checks, PDF to Word, watermark annotation removal, and document
+  information let users visually confirm the uploaded file before processing.
+  Multi-file package and workflow pages retain lighter file lists to avoid
+  rendering many large PDFs at once.
 - Watermark removal now inspects `/Stamp` and `/Watermark` annotations, shows
   every candidate, recommends only likely watermarks, preserves unselected
   stamps, reports the actual number removed, and warns when a digital signature

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import FileUpload from '../components/ui/FileUpload'
+import CompactPdfPreview from '../components/ui/CompactPdfPreview'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import { analyzePdfForSubmission, compressPdf, type SubmissionAnalysis } from '../lib/pdf'
 import { downloadBlob, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
@@ -153,10 +154,10 @@ export default function PortalReadyPage() {
               </div>
             )}
             {file && analysis && (
-              <div className="portal-check-grid">
+              <><CompactPdfPreview file={file} pageCount={analysis.pageCount} title="Uploaded PDF preview" /><div className="portal-check-grid">
                 <div className={fileFits ? 'pass' : 'warn'}><Gauge size={16} /><span><strong>{fileFits ? 'Within current target' : 'Above current target'}</strong><small>{formatFileSize(file.size)} / {targetMb}MB</small></span></div>
                 <div><FileCheck2 size={16} /><span><strong>{analysis.textStatus === 'searchable' ? 'Searchable text' : analysis.textStatus === 'mixed' ? 'Mixed text and scans' : 'Scanned PDF'}</strong><small>{analysis.pageFormat} · {analysis.landscapePages} landscape</small></span></div>
-              </div>
+              </div></>
             )}
           </section>
 
