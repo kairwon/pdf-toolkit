@@ -88,9 +88,8 @@ export default function UnwatermarkPage() {
         </div>
         <button onClick={reset} className="btn-ghost">Change file</button>
       </div>
-      <CompactPdfPreview file={file} pageCount={pageCount} title="PDF annotation preview" />
-
-      <div className="p-5 mb-5 space-y-4" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
+      <div className="compact-tool-workspace"><CompactPdfPreview file={file} pageCount={pageCount} title="PDF annotation preview" />
+      <div className="compact-tool-panel p-5 space-y-4">
         {analyzing ? (
           <div className="flex items-center gap-2 text-sm text-gray-500"><Loader2 size={16} className="animate-spin" /> Inspecting annotation layers…</div>
         ) : inspection?.candidates.length ? (
@@ -124,7 +123,7 @@ export default function UnwatermarkPage() {
           <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm"><AlertTriangle size={17} className="shrink-0 mt-0.5" /><span>This PDF appears to contain a digital signature. Any saved modification can invalidate that signature.</span></div>
         )}
         <p className="text-xs text-gray-400 dark:text-gray-500">Only candidates you select are removed. Page-content and scanned-image watermarks are not altered, and the tool never covers content with white rectangles.</p>
-      </div>
+      </div></div>
 
       <div className="sticky bottom-4 sticky-bar p-4 flex items-center justify-between">
         <span className="text-sm text-gray-400">{pageCount} pages · {selected.size} selected</span>

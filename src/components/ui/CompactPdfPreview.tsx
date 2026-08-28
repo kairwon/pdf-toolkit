@@ -39,7 +39,7 @@ export default function CompactPdfPreview({ file, pageCount, title = 'Document p
       <div className="compact-pdf-preview-info">
         <span className="compact-pdf-preview-label"><Eye size={15} /> LOCAL PREVIEW</span>
         <h3>{title}</h3>
-        <p>Confirm the correct document, orientation, and visible content before processing. The preview is rendered only in this browser.</p>
+        <p>Confirm the file and page orientation before processing. Rendered locally.</p>
         <div className="compact-pdf-preview-navigation" aria-label="Preview page navigation">
           <button type="button" aria-label="Previous preview page" disabled={pageNumber <= 1} onClick={() => setPageNumber((current) => current - 1)}><ChevronLeft /></button>
           <span>{totalPages ? `Page ${pageNumber} of ${totalPages}` : 'Reading pages…'}</span>

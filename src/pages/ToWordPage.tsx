@@ -91,7 +91,7 @@ export default function ToWordPage() {
         </div>
         <button onClick={() => { setFile(null); setPageCount(0) }} className="btn-ghost">Change file</button>
       </div>
-      <CompactPdfPreview file={file} pageCount={pageCount} title="PDF to convert" />
+      <div className="compact-tool-workspace"><CompactPdfPreview file={file} pageCount={pageCount} title="PDF to convert" /><div className="compact-tool-panel">
 
       {/* PDF type detection info */}
       {!processing && (
@@ -143,6 +143,7 @@ export default function ToWordPage() {
           )}
         </div>
       )}
+      </div></div>
 
       <div className="sticky bottom-4 sticky-bar p-4 flex items-center justify-between">
         <span className="text-sm text-gray-400">{pageCount} pages</span>

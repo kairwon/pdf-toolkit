@@ -272,9 +272,8 @@ export default function CompressPage({ forcedGoal }: { forcedGoal?: 'thesis' | '
         </div>
         <button onClick={() => { setFile(null); setPageCount(0) }} className="btn-ghost">Change file</button>
       </div>
-      <CompactPdfPreview file={file} pageCount={pageCount} title="PDF before compression" />
-
-      <div className="p-5 mb-5 space-y-2.5" style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '12px', border: '1px solid rgba(221,228,216,0.3)' }}>
+      <div className="compact-tool-workspace"><CompactPdfPreview file={file} pageCount={pageCount} title="PDF before compression" />
+      <div className="compact-tool-panel p-5 space-y-2.5">
         {goal === 'scan' && analysis && (
           <div className="scan-compression-profile" role="status">
             <FileSearch size={18} />
@@ -313,7 +312,7 @@ export default function CompressPage({ forcedGoal }: { forcedGoal?: 'thesis' | '
             <p className="text-xs text-gray-400 mt-0.5">{info.desc}</p>
           </button>
         ))}
-      </div>
+      </div></div>
 
       <div className="sticky bottom-4 sticky-bar p-4 flex items-center justify-between">
         <span className="text-sm text-gray-400">{pageCount} pages{targetMb > 0 ? ` · target ≤ ${targetMb}MB` : ''}</span>

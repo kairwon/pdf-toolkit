@@ -117,6 +117,7 @@ export default function PortalReadyPage() {
 
       <div className="portal-layout">
         <main>
+          <div className="portal-start-grid">
           <section className="portal-card">
             <div className="portal-section-head"><span>01</span><div><strong>Choose the destination</strong><small>Official limits are labelled. Other presets are editable starting points.</small></div></div>
             <div className="portal-destination-grid">
@@ -160,6 +161,7 @@ export default function PortalReadyPage() {
               </div></>
             )}
           </section>
+          </div>
 
           {file && analysis && (
             <section className="portal-card portal-final-step">

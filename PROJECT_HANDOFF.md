@@ -33,7 +33,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The intended production release represented by this handoff uses the immutable
-tag `production-2026-08-28-compact-document-previews`. Verify its exact
+tag `production-2026-08-28-simplified-workspace-layout`. Verify its exact
 commit in the live `release.json` manifest and in GitHub before every subsequent
 deployment.
 
@@ -163,6 +163,11 @@ locally and on GitHub. Never move or reuse a production tag.
   information let users visually confirm the uploaded file before processing.
   Multi-file package and workflow pages retain lighter file lists to avoid
   rendering many large PDFs at once.
+- Portal Ready places destination settings and document upload/inspection side
+  by side on desktop, while compression, PDF to Word, annotation removal, and
+  document information use a consistent preview-plus-controls workspace. The
+  preview stays visible beside controls on wide screens and all layouts collapse
+  to an overflow-free single column on tablets and phones.
 - Watermark removal now inspects `/Stamp` and `/Watermark` annotations, shows
   every candidate, recommends only likely watermarks, preserves unselected
   stamps, reports the actual number removed, and warns when a digital signature
