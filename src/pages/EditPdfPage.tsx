@@ -9,7 +9,7 @@ import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import VisualEditorCanvas from '../components/ui/VisualEditorCanvas'
 import usePageTitle from '../hooks/usePageTitle'
 import usePendingFiles from '../hooks/usePendingFiles'
-import { getPageCount, inspectPdfStructure, type PdfStructureInspection } from '../lib/pdf'
+import { getPageCount, inspectPdfStructure, type PdfStructureInspection } from '../lib/pdfLazy'
 import { alignVisualEdit, applyVisualEdits, clampNormalizedBox, DEFAULT_PAGE_NUMBERS, duplicateVisualEditToPages, moveVisualEditLayer, normalizeVisualRotation, type NormalizedPoint, type PageNumberOptions, type VisualAlignment, type VisualEdit, type VisualLayerMove } from '../lib/visualEdits'
 import { downloadBlob, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
 

@@ -7,7 +7,7 @@ import ToolHeader from '../components/ui/ToolHeader'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import usePageTitle from '../hooks/usePageTitle'
 import usePendingFiles from '../hooks/usePendingFiles'
-import { classifyPdf, cleanScannedPdf, DEFAULT_SCAN_CLEANUP, getPageCount, makePdfSearchable, renderPageToCanvas, type ScanCleanupOptions } from '../lib/pdf'
+import { classifyPdf, cleanScannedPdf, DEFAULT_SCAN_CLEANUP, getPageCount, makePdfSearchable, renderPageToCanvas, type ScanCleanupOptions } from '../lib/pdfLazy'
 import { downloadBlob, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
 
 type Props = { mode?: 'ocr' | 'cleanup' }

@@ -1,4 +1,4 @@
-import { addWatermark, compressPdf, getPageCount, rotatePages } from './pdf'
+import { addWatermark, compressPdf, getPageCount, rotatePages } from './pdfLazy'
 import { applyVisualEdits, DEFAULT_PAGE_NUMBERS } from './visualEdits'
 
 export interface PdfWorkflowConfig {

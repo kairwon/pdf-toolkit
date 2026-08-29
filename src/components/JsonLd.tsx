@@ -20,6 +20,7 @@ const breadcrumbFor = (path: string): object | null => {
       'exact': 'Exact Size Compress',
       'thesis-pdf-check': 'Thesis PDF Check',
       'to-word': 'PDF to Word',
+      'word-to-pdf': 'Word to PDF',
       'to-image': 'PDF to Image',
       'watermark': 'Add Watermark',
       'unwatermark': 'Remove Watermark',
@@ -100,6 +101,17 @@ const howTos: Record<string, object> = {
       { '@type': 'HowToStep', position: 1, name: 'Upload PDF', text: 'Upload the PDF you want to convert to Word format.' },
       { '@type': 'HowToStep', position: 2, name: 'Automatic OCR', text: 'Scanned pages are processed with OCR to extract text.' },
       { '@type': 'HowToStep', position: 3, name: 'Download Word document', text: 'Download the editable .docx file with your converted content.' },
+    ],
+  },
+  '/word-to-pdf': {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: 'How to Convert Word to PDF Without Uploading',
+    description: 'Preview and convert a DOCX Word document to PDF locally in your browser.',
+    step: [
+      { '@type': 'HowToStep', position: 1, name: 'Choose a DOCX', text: 'Choose the .docx Word document you want to convert.' },
+      { '@type': 'HowToStep', position: 2, name: 'Review the preview', text: 'Inspect the locally rendered pages for layout differences.' },
+      { '@type': 'HowToStep', position: 3, name: 'Create the PDF', text: 'Convert and download the PDF created in your browser.' },
     ],
   },
   '/to-image': {

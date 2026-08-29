@@ -8,7 +8,7 @@ import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import VisualEditorCanvas from '../components/ui/VisualEditorCanvas'
 import usePageTitle from '../hooks/usePageTitle'
 import usePendingFiles from '../hooks/usePendingFiles'
-import { getPageCount, inspectPdfForm, updatePdfForm, type NewPdfFormField, type PdfFormFieldInfo } from '../lib/pdf'
+import { getPageCount, inspectPdfForm, updatePdfForm, type NewPdfFormField, type PdfFormFieldInfo } from '../lib/pdfLazy'
 import type { VisualEdit } from '../lib/visualEdits'
 import { downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 

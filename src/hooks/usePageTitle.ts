@@ -165,6 +165,12 @@ const seo: Record<string, SeoEntry> = {
     name: 'PDF to Word',
     tool: true,
   },
+  '/word-to-pdf': {
+    title: 'Convert Word to PDF Without Uploading | Lab of PDF',
+    description: 'Preview and convert a DOCX Word document to PDF locally in your browser. No file upload, account, or server-side document processing.',
+    name: 'Word to PDF',
+    tool: true,
+  },
   '/visa-prep': {
     title: 'Organize a Visa Document PDF Pack Privately | Lab of PDF',
     description: 'Label, reorder, combine and size visa application PDFs for government portals. Passport and financial documents stay on your device.',

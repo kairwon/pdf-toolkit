@@ -30,7 +30,7 @@ export function pdfIconKindForPath(path: string): PdfIconKind {
   if (path === '/compress') return 'compress'
   if (path === '/compress/exact') return 'exact'
   if (path === '/to-image') return 'image'
-  if (path === '/to-word') return 'word'
+  if (path === '/to-word' || path === '/word-to-pdf') return 'word'
   if (path === '/split') return 'split'
   if (path === '/merge') return 'merge'
   if (path === '/manage' || path === '/edit-pdf') return 'manage'

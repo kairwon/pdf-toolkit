@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Check, MoveLeft, MoveRight, RotateCw } from 'lucide-react'
-import { renderPageToCanvas } from '../../lib/pdf'
+import { renderPageToCanvas } from '../../lib/pdfLazy'
 
 export interface PreviewItem {
   id?: string

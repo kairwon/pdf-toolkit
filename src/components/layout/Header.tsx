@@ -36,6 +36,7 @@ const navGroups = [
       { label: 'Compress to exact size', path: '/compress/exact' },
       { label: 'Compress scanned PDF', path: '/compress/scanned' },
       { label: 'PDF to Word', path: '/to-word' },
+      { label: 'Word to PDF', path: '/word-to-pdf' },
       { label: 'PDF to images', path: '/to-image' },
       { label: 'Images to PDF', path: '/images-to-pdf' },
       { label: 'OCR searchable PDF', path: '/ocr-pdf' },

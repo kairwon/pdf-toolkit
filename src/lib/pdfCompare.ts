@@ -1,4 +1,4 @@
-import { renderPageToCanvas } from './pdf'
+import { renderPageToCanvas } from './pdfLazy'
 
 export interface PdfPageComparison {
   left: string

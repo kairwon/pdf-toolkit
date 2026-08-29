@@ -5,7 +5,7 @@ import FileUpload from '../components/ui/FileUpload'
 import ToolHeader from '../components/ui/ToolHeader'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import usePageTitle from '../hooks/usePageTitle'
-import { getPageCount } from '../lib/pdf'
+import { getPageCount } from '../lib/pdfLazy'
 import { comparePdfPages, type PdfPageComparison } from '../lib/pdfCompare'
 
 export default function ComparePdfPage() {

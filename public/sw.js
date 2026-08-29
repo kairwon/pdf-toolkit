@@ -1,4 +1,4 @@
-const CACHE = 'labofpdf-shell-v1'
+const CACHE = 'labofpdf-shell-v2'
 const SHELL = ['/', '/tools', '/manifest.webmanifest', '/favicon-32-v2.png', '/logo-google.png']
 
 self.addEventListener('install', (event) => {

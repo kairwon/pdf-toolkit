@@ -58,6 +58,7 @@ const groups = [
       { title: 'Compress scanned PDF', note: 'Detect image-based scans and reduce their MB size.', path: '/compress/scanned', icon: FileSearch },
       { title: 'Compress to exact size', note: 'Aim for a specific portal limit.', path: '/compress/exact', icon: FileOutput },
       { title: 'PDF to Word', note: 'Turn a PDF into an editable document.', path: '/to-word', icon: FileText },
+      { title: 'Word to PDF', note: 'Preview a DOCX and create a PDF locally.', path: '/word-to-pdf', icon: FileText },
       { title: 'PDF to images', note: 'Export PDF pages as image files.', path: '/to-image', icon: FileImage },
       { title: 'Images to PDF', note: 'Combine photos and scans into an ordered PDF.', path: '/images-to-pdf', icon: Images },
       { title: 'OCR searchable PDF', note: 'Add searchable text to scanned PDF pages locally.', path: '/ocr-pdf', icon: ScanText },
@@ -95,6 +96,7 @@ const commonRequirements = [
   { title: 'Reduce a PDF for an email attachment', text: 'Create the smallest practical copy without guessing which compression setting to use.', path: '/compress/exact' },
   { title: 'Extract selected pages from a PDF', text: 'Preview a document and create a new PDF containing only the pages you choose.', path: '/split' },
   { title: 'Convert a scanned PDF to editable Word text', text: 'Use browser-based OCR for scanned pages and direct extraction for text PDFs.', path: '/to-word' },
+  { title: 'Turn a Word document into a shareable PDF', text: 'Preview the DOCX pages first, then create a private local PDF copy.', path: '/word-to-pdf' },
 ]
 
 export default function AllToolsPage() {

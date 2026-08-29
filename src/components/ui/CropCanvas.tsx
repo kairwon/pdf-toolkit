@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react'
-import { renderPageToCanvas } from '../../lib/pdf'
+import { renderPageToCanvas } from '../../lib/pdfLazy'
 import { clampNormalizedBox } from '../../lib/visualEdits'
 
 export type CropBox = { x: number; y: number; width: number; height: number }

@@ -8,7 +8,7 @@ import ToolHeader from '../components/ui/ToolHeader'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import usePageTitle from '../hooks/usePageTitle'
 import usePendingFiles from '../hooks/usePendingFiles'
-import { cropPdfPages, getPageCount } from '../lib/pdf'
+import { cropPdfPages, getPageCount } from '../lib/pdfLazy'
 import { downloadBlob, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
 
 export default function CropPdfPage() {

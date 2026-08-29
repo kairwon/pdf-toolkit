@@ -1,33 +1,28 @@
-import { useCallback } from 'react'
-import { useDropzone } from 'react-dropzone'
 import { Upload, FileText } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import useFileDrop, { type FileAccept } from '../../hooks/useFileDrop'
 
 interface FileUploadProps {
   onFiles: (files: File[]) => void
   multiple?: boolean
-  accept?: Record<string, string[]>
+  accept?: FileAccept
   title?: string
   note?: string
 }
 
 export default function FileUpload({ onFiles, multiple = true, accept, title = 'PDF files', note = 'PDF files · processed on this device · no account required' }: FileUploadProps) {
-  const onDrop = useCallback(
-    (accepted: File[]) => {
-      if (accepted.length > 0) onFiles(accepted)
-    },
-    [onFiles],
-  )
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
+  const { rootProps, inputProps, isDragActive } = useFileDrop({
+    onFiles,
     multiple,
     accept: accept ?? { 'application/pdf': ['.pdf'] },
   })
 
   return (
     <div
-      {...getRootProps()}
+      {...rootProps}
+      role="button"
+      tabIndex={0}
+      aria-label={`Choose or drop ${title}`}
       className={cn(
         'tool-file-upload relative cursor-pointer text-center transition-all duration-300',
         isDragActive
@@ -36,7 +31,7 @@ export default function FileUpload({ onFiles, multiple = true, accept, title = '
       )}
       style={{ width: '100%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
     >
-      <input {...getInputProps()} />
+      <input {...inputProps} hidden />
 
       <div className="flex flex-col items-center gap-3">
         {isDragActive ? (

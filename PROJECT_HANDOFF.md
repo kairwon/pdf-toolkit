@@ -33,7 +33,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The intended production release represented by this handoff uses the immutable
-tag `production-2026-08-28-simplified-workspace-layout`. Verify its exact
+tag `production-2026-08-29-performance-word-to-pdf`. Verify its exact
 commit in the live `release.json` manifest and in GitHub before every subsequent
 deployment.
 
@@ -55,7 +55,7 @@ locally and on GitHub. Never move or reuse a production tag.
 - Featured workflows include thesis submission, visa preparation, upload
   portal preparation, and page management.
 - Core tools include compress, merge, split, manage pages, PDF to image,
-  PDF to Word, watermark removal, watermarking, visual editing, signing,
+  PDF to Word, Word to PDF, watermark removal, watermarking, visual editing, signing,
   redaction, OCR, scan cleanup, cropping, comparison, forms, metadata, and
   reusable multi-file workflows.
 - `/edit`, `/sign-pdf`, and `/redact-pdf` share a direct-manipulation editor.
@@ -157,6 +157,12 @@ locally and on GitHub. Never move or reuse a production tag.
 - PDF previews reuse one parsed PDF.js document per selected file, and the
   filmstrip lazily renders nearby visible thumbnails instead of repeatedly
   reading the same file or leaving long-document thumbnails blank.
+- Tool routes now load the PDF.js and pdf-lib processing engine only when a
+  document operation first needs it. The shared upload component is a small
+  native drag-and-drop/file-picker implementation instead of a large shared
+  bundle, and the homepage is its own lazy route. This reduces the former
+  868 KB FileUpload shared chunk to about 2 KB while preserving keyboard,
+  click, and drag-and-drop upload paths.
 - Single-document analysis and conversion workflows now share a compact local
   PDF preview with previous/next page navigation. Portal Ready, compression and
   thesis checks, PDF to Word, watermark annotation removal, and document
@@ -192,6 +198,11 @@ locally and on GitHub. Never move or reuse a production tag.
   languages for scanned pages. Long OCR conversions can be cancelled, report
   the current page, and always terminate the OCR worker. Complex tables,
   columns, equations, and exact typography remain documented limitations.
+- `/word-to-pdf` previews modern `.docx` documents locally before converting
+  the rendered pages into a PDF. DOCX rendering, canvas capture, and PDF
+  creation dependencies load only when this workflow is used. The current
+  output is image-based and the interface clearly asks users to review complex
+  fonts, tracked changes, SmartArt, and advanced Word layout before download.
 - `npm test` covers watermark candidate detection and selective removal with a
   synthetic PDF fixture. Keep adding representative, non-sensitive fixtures as
   PDF manipulation behavior expands.
@@ -216,7 +227,7 @@ locally and on GitHub. Never move or reuse a production tag.
   homepage-only, and prerendered non-home routes replace it with page-specific
   structured data.
 - `npm run build` runs TypeScript, Vite, and `scripts/prerender-seo.mjs`.
-- The prerender step currently creates 38 indexable route HTML files, two
+- The prerender step currently creates 39 indexable route HTML files, two
   noindex route files, and a noindex 404 document.
 - Trust and discovery content now includes `/guides`, `/editorial-policy`,
   `/about/editorial-team`, and five long-tail study/submission/compression guides. The

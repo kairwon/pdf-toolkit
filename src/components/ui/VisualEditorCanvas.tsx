@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { ChevronLeft, ChevronRight, Grip, Maximize2, Minus, Plus, Trash2 } from 'lucide-react'
-import { renderPageToCanvas } from '../../lib/pdf'
+import { renderPageToCanvas } from '../../lib/pdfLazy'
 import { clampNormalizedBox, snapVisualEdit, type NormalizedPoint, type VisualEdit } from '../../lib/visualEdits'
 
 type Props = {

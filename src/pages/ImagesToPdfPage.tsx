@@ -5,7 +5,7 @@ import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolHeader from '../components/ui/ToolHeader'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
-import { imagesToPdf } from '../lib/pdf'
+import { imagesToPdf } from '../lib/pdfLazy'
 import { downloadBlob, triggerDownloadOverlay } from '../lib/utils'
 import usePageTitle from '../hooks/usePageTitle'
 

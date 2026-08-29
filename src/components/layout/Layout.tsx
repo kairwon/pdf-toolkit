@@ -34,6 +34,7 @@ export default function Layout() {
     '/watermark': 'Add watermark',
     '/unwatermark': 'Remove watermark',
     '/to-word': 'PDF to Word',
+    '/word-to-pdf': 'Word to PDF',
     '/visa-prep': 'Visa document pack',
     '/portal-ready-pdf': 'Portal-ready PDF',
     '/privacy': 'Privacy',
@@ -52,7 +53,7 @@ export default function Layout() {
   const toolPaths = new Set([
     '/merge', '/split', '/manage', '/to-image', '/images-to-pdf', '/compress',
     '/compress/visa', '/compress/exact', '/compress/scanned', '/thesis-pdf-check', '/watermark',
-    '/unwatermark', '/to-word', '/visa-prep', '/portal-ready-pdf', '/edit', '/sign-pdf',
+    '/unwatermark', '/to-word', '/word-to-pdf', '/visa-prep', '/portal-ready-pdf', '/edit', '/sign-pdf',
     '/redact-pdf', '/crop-pdf', '/ocr-pdf', '/scan-cleanup', '/workflows', '/compare-pdf',
     '/pdf-forms', '/document-info',
   ])

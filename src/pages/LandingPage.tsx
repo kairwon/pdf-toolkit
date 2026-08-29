@@ -1,6 +1,5 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useDropzone } from 'react-dropzone'
 import {
   ArrowRight, BadgeCheck, BookOpenCheck, BriefcaseBusiness, Combine, FileDown,
   FileType, Gift, Image, Layers, LockKeyhole, ScanLine, Stamp,
@@ -12,6 +11,7 @@ import { setPendingFiles } from '../lib/fileHandoff'
 import { formatFileSize } from '../lib/utils'
 import ShareButtons from '../components/ui/ShareButtons'
 import PdfToolIcon, { pdfIconKindForPath } from '../components/ui/PdfToolIcon'
+import useFileDrop from '../hooks/useFileDrop'
 
 type Card = {
   title: string
@@ -71,6 +71,7 @@ const popularTools: Card[] = [
   { title: 'Merge PDF', description: 'Combine files and reorder their pages.', path: '/merge', icon: Combine, tone: 'purple' },
   { title: 'Split PDF', description: 'Extract a range or separate selected pages.', path: '/split', icon: Split, tone: 'green' },
   { title: 'PDF to Word', description: 'Create an editable document with OCR.', path: '/to-word', icon: FileType, tone: 'blue' },
+  { title: 'Word to PDF', description: 'Preview and convert a DOCX locally.', path: '/word-to-pdf', icon: FileType, tone: 'cyan' },
   { title: 'Images to PDF', description: 'Combine application photos or scans into one PDF.', path: '/images-to-pdf', icon: Image, tone: 'purple' },
   { title: 'Manage Pages', description: 'Delete, rotate, and reorder visually.', path: '/manage', icon: Layers, tone: 'cyan' },
   { title: 'Visual PDF Editor', description: 'Add text, drawings, signatures and redactions.', path: '/edit', icon: FilePenLine, tone: 'green' },
@@ -159,12 +160,8 @@ export default function LandingPage() {
   const navigate = useNavigate()
   const [files, setFiles] = useState<File[]>([])
 
-  const onDrop = useCallback((accepted: File[]) => {
-    if (accepted.length > 0) setFiles(accepted)
-  }, [])
-
-  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
-    onDrop,
+  const { rootProps, inputProps, isDragActive, open } = useFileDrop({
+    onFiles: setFiles,
     multiple: true,
     accept: { 'application/pdf': ['.pdf'] },
   })
@@ -236,17 +233,15 @@ export default function LandingPage() {
             <span><LockKeyhole size={13} /> LOCAL ONLY</span>
           </div>
           <div
-            {...getRootProps({
-              onClick: (event) => {
-                if ((event.target as HTMLElement).closest('button')) event.stopPropagation()
-              },
-              'aria-label': files.length > 0
-                ? 'PDF loaded. Click an empty area or drop another PDF to replace it.'
-                : 'Click anywhere or drop PDF files here to load them.',
-            })}
+            {...rootProps}
+            role="button"
+            tabIndex={0}
+            aria-label={files.length > 0
+              ? 'PDF loaded. Click an empty area or drop another PDF to replace it.'
+              : 'Click anywhere or drop PDF files here to load them.'}
             className={`lop-dropzone ${isDragActive ? 'dragging' : ''} ${files.length > 0 ? 'has-files' : ''}`}
           >
-            <input {...getInputProps()} />
+            <input {...inputProps} hidden />
             {files.length === 0 ? (
               <div className="lop-drop-empty">
                 <span className="lop-upload-icon"><Upload size={28} /></span>

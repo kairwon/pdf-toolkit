@@ -29,6 +29,7 @@ const pages = {
   '/watermark': ['Drag and Add a Watermark to PDF Visually | Lab of PDF', 'Drag, resize and rotate a text or image watermark on a real PDF page preview, then apply it locally without uploading the document.', 'Add PDF watermark'],
   '/unwatermark': ['Remove Supported PDF Watermark Annotations | Lab of PDF', 'Remove supported Stamp and Watermark annotations from an authorized PDF locally. Page content is not uploaded.', 'Remove PDF watermark'],
   '/to-word': ['Convert PDF to Editable Word with Private OCR | Lab of PDF', 'Convert text or scanned PDFs into an editable Word document. Browser-based text extraction and OCR run locally without uploading the PDF.', 'PDF to Word'],
+  '/word-to-pdf': ['Convert Word to PDF Without Uploading | Lab of PDF', 'Preview and convert a DOCX Word document to PDF locally in your browser. No file upload, account, or server-side document processing.', 'Word to PDF'],
   '/visa-prep': ['Organize a Visa Document PDF Pack Privately | Lab of PDF', 'Label, reorder, combine and size visa application PDFs for government portals. Passport and financial documents stay on your device.', 'Visa document pack'],
   '/portal-ready-pdf': ['Make a PDF Fit an Online Upload Portal Limit | Lab of PDF', 'Prepare a PDF for government, visa, university, job application or email size limits and verify the finished file before submitting.', 'Portal-ready PDF'],
   '/privacy': ['Privacy Policy and Local PDF Processing | Lab of PDF', 'Learn how Lab of PDF processes document contents in browser memory, what website requests may contain and how privacy choices work.', 'Privacy policy'],
@@ -167,7 +168,7 @@ await writeFile(join(DIST.pathname, '404.html'), notFound)
 const sitemapUrl = new URL('sitemap.xml', DIST)
 const sitemap = await readFile(sitemapUrl, 'utf8')
 await writeFile(sitemapUrl, sitemap
-  .replace(/<lastmod>[^<]+<\/lastmod>/g, '<lastmod>2026-08-25</lastmod>')
-  .replace(/<loc>([^<]+)<\/loc>(?!<lastmod>)/g, '<loc>$1</loc><lastmod>2026-08-25</lastmod>'))
+  .replace(/<lastmod>[^<]+<\/lastmod>/g, '<lastmod>2026-08-29</lastmod>')
+  .replace(/<loc>([^<]+)<\/loc>(?!<lastmod>)/g, '<loc>$1</loc><lastmod>2026-08-29</lastmod>'))
 
 console.log(`Prerendered ${Object.keys(pages).length} indexable routes, ${Object.keys(noIndexPages).length} noindex routes, and a noindex 404 page.`)

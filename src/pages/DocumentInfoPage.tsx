@@ -8,7 +8,7 @@ import ToolHeader from '../components/ui/ToolHeader'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import usePageTitle from '../hooks/usePageTitle'
 import usePendingFiles from '../hooks/usePendingFiles'
-import { getPageCount, readPdfDocumentInfo, updatePdfDocumentInfo, type PdfDocumentInfo, type PdfStructureCleanup } from '../lib/pdf'
+import { getPageCount, readPdfDocumentInfo, updatePdfDocumentInfo, type PdfDocumentInfo, type PdfStructureCleanup } from '../lib/pdfLazy'
 import { downloadBlob, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
 
 const cleanupDefault: PdfStructureCleanup = { removeBookmarks: false, removeAttachments: false, removePageLabels: false }

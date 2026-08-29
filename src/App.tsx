@@ -1,8 +1,8 @@
 import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Routes, Route } from 'react-router-dom'
 import Layout from './components/layout/Layout'
-import LandingPage from './pages/LandingPage'
 
+const LandingPage = lazy(() => import('./pages/LandingPage'))
 const MergePage = lazy(() => import('./pages/MergePage'))
 const SplitPage = lazy(() => import('./pages/SplitPage'))
 const ManagePage = lazy(() => import('./pages/ManagePage'))
@@ -19,6 +19,7 @@ const PdfFormsPage = lazy(() => import('./pages/PdfFormsPage'))
 const DocumentInfoPage = lazy(() => import('./pages/DocumentInfoPage'))
 const UnwatermarkPage = lazy(() => import('./pages/UnwatermarkPage'))
 const ToWordPage = lazy(() => import('./pages/ToWordPage'))
+const WordToPdfPage = lazy(() => import('./pages/WordToPdfPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/TermsPage'))
 const SecurityPage = lazy(() => import('./pages/SecurityPage'))
@@ -38,7 +39,7 @@ const PdfSubmissionChecklistPage = lazy(() => import('./pages/PdfSubmissionCheck
 
 export default function App() {
   const deferred = (page: ReactNode) => (
-    <Suspense fallback={<div className="route-loading" role="status" aria-live="polite">Opening your private PDF workspace…</div>}>
+    <Suspense fallback={<div className="route-loading" role="status" aria-live="polite">Opening your private document workspace…</div>}>
       {page}
     </Suspense>
   )
@@ -46,7 +47,7 @@ export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={deferred(<LandingPage />)} />
         <Route path="/tools" element={deferred(<AllToolsPage />)} />
         <Route path="/guides" element={deferred(<GuidesPage />)} />
         <Route path="/editorial-policy" element={deferred(<EditorialPolicyPage />)} />
@@ -80,6 +81,7 @@ export default function App() {
         <Route path="/document-info" element={deferred(<DocumentInfoPage />)} />
         <Route path="/unwatermark" element={deferred(<UnwatermarkPage />)} />
         <Route path="/to-word" element={deferred(<ToWordPage />)} />
+        <Route path="/word-to-pdf" element={deferred(<WordToPdfPage />)} />
         <Route path="/privacy" element={deferred(<PrivacyPage />)} />
         <Route path="/terms" element={deferred(<TermsPage />)} />
         <Route path="/security" element={deferred(<SecurityPage />)} />

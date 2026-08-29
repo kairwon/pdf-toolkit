@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight, Eye, Loader2 } from 'lucide-react'
-import { getPageCount, renderPageToCanvas } from '../../lib/pdf'
+import { getPageCount, renderPageToCanvas } from '../../lib/pdfLazy'
 
 type Props = { file: File; pageCount?: number; title?: string }
 
