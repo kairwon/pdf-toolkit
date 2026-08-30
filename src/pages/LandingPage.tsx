@@ -71,7 +71,7 @@ const popularTools: Card[] = [
   { title: 'Merge PDF', description: 'Combine files and reorder their pages.', path: '/merge', icon: Combine, tone: 'purple' },
   { title: 'Split PDF', description: 'Extract a range or separate selected pages.', path: '/split', icon: Split, tone: 'green' },
   { title: 'PDF to Word', description: 'Create an editable document with OCR.', path: '/to-word', icon: FileType, tone: 'blue' },
-  { title: 'Word to PDF', description: 'Preview and convert a DOCX locally.', path: '/word-to-pdf', icon: FileType, tone: 'cyan' },
+  { title: 'Word to PDF', description: 'Render DOC or DOCX with LibreOffice.', path: '/word-to-pdf', icon: FileType, tone: 'cyan' },
   { title: 'Images to PDF', description: 'Combine application photos or scans into one PDF.', path: '/images-to-pdf', icon: Image, tone: 'purple' },
   { title: 'Manage Pages', description: 'Delete, rotate, and reorder visually.', path: '/manage', icon: Layers, tone: 'cyan' },
   { title: 'Visual PDF Editor', description: 'Add text, drawings, signatures and redactions.', path: '/edit', icon: FilePenLine, tone: 'green' },

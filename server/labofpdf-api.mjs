@@ -1,15 +1,21 @@
 import http from 'node:http'
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
-import { dirname } from 'node:path'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { basename, dirname, extname, join } from 'node:path'
+import { spawn } from 'node:child_process'
 import { DatabaseSync } from 'node:sqlite'
 import { pathToFileURL } from 'node:url'
 
 const DEFAULT_DB_PATH = '/var/lib/labofpdf/feedback.sqlite3'
 const DEFAULT_COUNTERS_PATH = '/var/lib/labofpdf/counters.json'
 const MAX_BODY_BYTES = 4096
+const MAX_WORD_BYTES = 25 * 1024 * 1024
 const MAX_COMMENT_LENGTH = 300
 const RATE_WINDOW_MS = 10 * 60 * 1000
 const RATE_MAX_SUBMISSIONS = 6
+const WORD_RATE_MAX_SUBMISSIONS = 4
+const DEFAULT_WORD_TIMEOUT_MS = 60_000
 
 const OUTCOMES = new Set(['yes', 'no'])
 const REASONS = new Set([
@@ -55,6 +61,82 @@ async function readJsonBody(request) {
     return JSON.parse(Buffer.concat(chunks).toString('utf8'))
   } catch {
     throw createHttpError(400, 'Invalid JSON')
+  }
+}
+
+async function readBinaryBody(request, maximumBytes) {
+  const declaredLength = Number(request.headers['content-length'] || 0)
+  if (Number.isFinite(declaredLength) && declaredLength > maximumBytes) throw createHttpError(413, 'Word document is larger than 25 MB')
+  const chunks = []
+  let total = 0
+  for await (const chunk of request) {
+    total += chunk.length
+    if (total > maximumBytes) throw createHttpError(413, 'Word document is larger than 25 MB')
+    chunks.push(chunk)
+  }
+  if (total === 0) throw createHttpError(400, 'Word document is empty')
+  return Buffer.concat(chunks)
+}
+
+function validateWordBytes(bytes, extension) {
+  const isDocx = extension === '.docx' && bytes[0] === 0x50 && bytes[1] === 0x4b
+  const isDoc = extension === '.doc' && bytes.subarray(0, 4).equals(Buffer.from([0xd0, 0xcf, 0x11, 0xe0]))
+  if (!isDocx && !isDoc) throw createHttpError(415, `The uploaded file is not a valid ${extension} document`)
+}
+
+function waitForProcess(child, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    let stderr = ''
+    let finished = false
+    let timer
+    const finish = (callback) => {
+      if (finished) return
+      finished = true
+      clearTimeout(timer)
+      callback()
+    }
+    child.stderr?.on('data', (chunk) => { stderr = `${stderr}${chunk}`.slice(-4000) })
+    child.once('error', (error) => finish(() => {
+      error.status = error.code === 'ENOENT' ? 503 : 502
+      reject(error)
+    }))
+    child.once('close', (code) => finish(() => {
+      if (code === 0) resolve()
+      else reject(Object.assign(new Error(stderr.trim() || `LibreOffice exited with code ${code}`), { status: 422 }))
+    }))
+    timer = setTimeout(() => {
+      child.kill('SIGKILL')
+      finish(() => reject(Object.assign(new Error('Word conversion timed out'), { status: 504 })))
+    }, timeoutMs)
+  })
+}
+
+export async function convertWordDocumentToPdf(bytes, extension, options = {}) {
+  const converterBin = options.converterBin || process.env.WORD_CONVERTER_BIN || '/usr/bin/libreoffice'
+  const timeoutMs = Number(options.timeoutMs || process.env.WORD_CONVERSION_TIMEOUT_MS || DEFAULT_WORD_TIMEOUT_MS)
+  const directory = await mkdtemp(join(options.tempRoot || tmpdir(), 'labofpdf-word-'))
+  const profile = join(directory, 'profile')
+  const input = join(directory, `document${extension}`)
+  const output = join(directory, 'document.pdf')
+  try {
+    await mkdir(profile)
+    await writeFile(input, bytes, { mode: 0o600 })
+    const child = spawn(converterBin, [
+      `-env:UserInstallation=${pathToFileURL(profile).href}`,
+      '--headless', '--nologo', '--nodefault', '--nolockcheck', '--nofirststartwizard',
+      '--convert-to', 'pdf:writer_pdf_Export', '--outdir', directory, input,
+    ], {
+      stdio: ['ignore', 'ignore', 'pipe'],
+      env: { ...process.env, HOME: directory, TMPDIR: directory, SAL_USE_VCLPLUGIN: 'svp' },
+    })
+    await waitForProcess(child, timeoutMs)
+    const pdf = await readFile(output)
+    if (pdf.length < 8 || !pdf.subarray(0, 5).equals(Buffer.from('%PDF-'))) {
+      throw Object.assign(new Error('LibreOffice did not create a valid PDF'), { status: 502 })
+    }
+    return pdf
+  } finally {
+    await rm(directory, { recursive: true, force: true })
   }
 }
 
@@ -122,6 +204,8 @@ export function createLabOfPdfApi(options = {}) {
   const databasePath = options.databasePath || process.env.FEEDBACK_DB_PATH || DEFAULT_DB_PATH
   const countersPath = options.countersPath || process.env.COUNTERS_PATH || DEFAULT_COUNTERS_PATH
   const allowedOrigins = new Set(options.allowedOrigins || ['https://labofpdf.com'])
+  const wordConverter = options.wordConverter || convertWordDocumentToPdf
+  const wordConversionEngine = options.wordConversionEngine || 'libreoffice'
   const database = new DatabaseSync(databasePath)
   database.exec(`
     PRAGMA journal_mode = WAL;
@@ -145,6 +229,8 @@ export function createLabOfPdfApi(options = {}) {
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `)
   const rateBuckets = new Map()
+  const wordRateBuckets = new Map()
+  let wordConversionActive = false
 
   function rateLimitAllows(request) {
     const key = String(request.headers['x-real-ip'] || request.socket.remoteAddress || 'unknown').slice(0, 128)
@@ -156,11 +242,60 @@ export function createLabOfPdfApi(options = {}) {
     return true
   }
 
+  function wordRateLimitAllows(request) {
+    const key = String(request.headers['x-real-ip'] || request.socket.remoteAddress || 'unknown').slice(0, 128)
+    const now = Date.now()
+    const recent = (wordRateBuckets.get(key) || []).filter((timestamp) => timestamp > now - RATE_WINDOW_MS)
+    if (recent.length >= WORD_RATE_MAX_SUBMISSIONS) return false
+    recent.push(now)
+    wordRateBuckets.set(key, recent)
+    return true
+  }
+
   const server = http.createServer(async (request, response) => {
     const pathname = new URL(request.url || '/', 'http://localhost').pathname
     try {
       if (request.method === 'GET' && pathname === '/api/health') {
-        sendJson(response, 200, { ok: true, feedbackStorage: 'sqlite' })
+        sendJson(response, 200, { ok: true, feedbackStorage: 'sqlite', wordConversionEngine })
+        return
+      }
+
+      if (pathname === '/api/word-to-pdf' && request.method === 'POST') {
+        const origin = String(request.headers.origin || '')
+        if (!allowedOrigins.has(origin)) throw createHttpError(403, 'Origin is not allowed')
+        if (!wordRateLimitAllows(request)) throw createHttpError(429, 'Too many Word conversions; try again in a few minutes')
+        if (wordConversionActive) throw createHttpError(503, 'The Word converter is busy; try again shortly')
+        wordConversionActive = true
+        try {
+          const contentType = String(request.headers['content-type'] || '').split(';', 1)[0].toLowerCase()
+          if (!['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/octet-stream'].includes(contentType)) {
+            throw createHttpError(415, 'Choose a .doc or .docx Word document')
+          }
+          let fileName = String(request.headers['x-file-name'] || 'document.docx')
+          try { fileName = decodeURIComponent(fileName) } catch { throw createHttpError(400, 'Invalid file name') }
+          const extension = extname(fileName).toLowerCase()
+          if (!['.doc', '.docx'].includes(extension)) throw createHttpError(415, 'Choose a .doc or .docx Word document')
+          const bytes = await readBinaryBody(request, MAX_WORD_BYTES)
+          validateWordBytes(bytes, extension)
+          const pdf = await wordConverter(bytes, extension)
+          const originalBase = basename(fileName, extension).slice(0, 120) || 'converted'
+          const asciiBase = originalBase.replace(/[^a-z0-9._-]+/gi, '_').replace(/^[_.]+|[_.]+$/g, '').slice(0, 80) || 'converted'
+          response.writeHead(200, {
+            'Content-Type': 'application/pdf',
+            'Content-Length': pdf.length,
+            'Content-Disposition': `attachment; filename="${asciiBase}.pdf"; filename*=UTF-8''${encodeURIComponent(originalBase)}.pdf`,
+            'Cache-Control': 'no-store',
+            'X-Content-Type-Options': 'nosniff',
+          })
+          response.end(pdf)
+        } finally {
+          wordConversionActive = false
+        }
+        return
+      }
+
+      if (pathname === '/api/word-to-pdf') {
+        sendJson(response, 405, { error: 'Method not allowed' }, { Allow: 'POST' })
         return
       }
 

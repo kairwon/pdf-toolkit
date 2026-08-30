@@ -106,12 +106,12 @@ const howTos: Record<string, object> = {
   '/word-to-pdf': {
     '@context': 'https://schema.org',
     '@type': 'HowTo',
-    name: 'How to Convert Word to PDF Without Uploading',
-    description: 'Preview and convert a DOCX Word document to PDF locally in your browser.',
+    name: 'How to Convert Word to PDF with LibreOffice',
+    description: 'Convert a DOC or DOCX with LibreOffice Writer and preview the actual finished PDF.',
     step: [
-      { '@type': 'HowToStep', position: 1, name: 'Choose a DOCX', text: 'Choose the .docx Word document you want to convert.' },
-      { '@type': 'HowToStep', position: 2, name: 'Review the preview', text: 'Inspect the locally rendered pages for layout differences.' },
-      { '@type': 'HowToStep', position: 3, name: 'Create the PDF', text: 'Convert and download the PDF created in your browser.' },
+      { '@type': 'HowToStep', position: 1, name: 'Choose a Word document', text: 'Choose the .doc or .docx document you want to convert.' },
+      { '@type': 'HowToStep', position: 2, name: 'Run LibreOffice conversion', text: 'Confirm the temporary upload and let LibreOffice Writer export the PDF.' },
+      { '@type': 'HowToStep', position: 3, name: 'Review and download', text: 'Inspect the actual generated PDF pages, then download the result.' },
     ],
   },
   '/to-image': {

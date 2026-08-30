@@ -166,8 +166,8 @@ const seo: Record<string, SeoEntry> = {
     tool: true,
   },
   '/word-to-pdf': {
-    title: 'Convert Word to PDF Without Uploading | Lab of PDF',
-    description: 'Preview and convert a DOCX Word document to PDF locally in your browser. No file upload, account, or server-side document processing.',
+    title: 'LibreOffice Word to PDF Converter | Lab of PDF',
+    description: 'Convert DOC or DOCX to PDF with the LibreOffice Writer engine, then preview the actual finished PDF. Temporary files are deleted after conversion.',
     name: 'Word to PDF',
     tool: true,
   },

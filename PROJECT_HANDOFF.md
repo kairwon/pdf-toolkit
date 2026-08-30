@@ -9,8 +9,12 @@ every meaningful implementation or production change.
 - Production domain: `https://labofpdf.com`
 - Git remote: `https://github.com/kairwon/pdf-toolkit.git`
 - Production branch: `main`
-- Stack: React 19, TypeScript, Vite 8, client-side PDF processing
-- Privacy promise: PDF files remain in the browser and are not uploaded
+- Stack: React 19, TypeScript, Vite 8, primarily client-side PDF processing,
+  plus an isolated LibreOffice Writer service for Word-to-PDF conversion
+- Privacy promise: PDF files remain in the browser and are not uploaded. The
+  Word-to-PDF tool is the documented exception: it temporarily uploads the
+  selected DOC/DOCX over HTTPS, converts it in a unique server directory, and
+  deletes that directory after success, failure, or timeout.
 
 ## Canonical working copy
 
@@ -33,7 +37,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The intended production release represented by this handoff uses the immutable
-tag `production-2026-08-29-performance-word-to-pdf`. Verify its exact
+tag `production-2026-08-30-libreoffice-word-converter`. Verify its exact
 commit in the live `release.json` manifest and in GitHub before every subsequent
 deployment.
 
@@ -198,11 +202,15 @@ locally and on GitHub. Never move or reuse a production tag.
   languages for scanned pages. Long OCR conversions can be cancelled, report
   the current page, and always terminate the OCR worker. Complex tables,
   columns, equations, and exact typography remain documented limitations.
-- `/word-to-pdf` previews modern `.docx` documents locally before converting
-  the rendered pages into a PDF. DOCX rendering, canvas capture, and PDF
-  creation dependencies load only when this workflow is used. The current
-  output is image-based and the interface clearly asks users to review complex
-  fonts, tracked changes, SmartArt, and advanced Word layout before download.
+- `/word-to-pdf` accepts `.doc` and `.docx`, temporarily uploads the document
+  over HTTPS, and converts it with headless LibreOffice Writer using the real
+  `writer_pdf_Export` filter. It previews the exact generated PDF rather than a
+  browser approximation, so searchable text, pagination, tables, headers, and
+  typography are preserved as faithfully as the installed fonts allow. The
+  interface clearly discloses this tool's upload exception. The API uses a
+  unique per-job LibreOffice profile and temp directory, deletes both in a
+  `finally` path, limits files to 25 MB, permits one concurrent conversion,
+  rate-limits requests, and kills work after 60 seconds.
 - `npm test` covers watermark candidate detection and selective removal with a
   synthetic PDF fixture. Keep adding representative, non-sensitive fixtures as
   PDF manipulation behavior expands.
@@ -306,6 +314,12 @@ file in that directory, including files without a `.conf` suffix.
 The local API runs as `www-data` through `visitor-counter.service`, listening
 only on `127.0.0.1:3001`. Code is installed at `/opt/labofpdf-api`; counters and
 the feedback SQLite database live at `/var/lib/labofpdf`. Nginx proxies `/api/`.
+LibreOffice Writer 24.2 and Liberation, Carlito, Caladea, Noto Core/CJK/Emoji
+fonts provide Word rendering. Provision a replacement server with
+`deploy/install-word-converter.sh`; the deployment script refuses to switch a
+release if `/usr/bin/libreoffice` is absent. The exact Word endpoint has a
+25 MB Nginx body limit and 75-second proxy timeouts, and every deployment runs
+a real DOCX-to-PDF smoke conversion before the static-site switch.
 The deployment script validates and switches both the static site and API, and
 restores both if online verification fails. To view aggregate feedback without
 printing comments, run:

@@ -1,109 +1,128 @@
 import { useCallback, useRef, useState } from 'react'
-import { Download, FileText, Loader2, RefreshCw, ShieldCheck, TriangleAlert } from 'lucide-react'
+import { CloudUpload, Download, FileOutput, FileText, Loader2, RefreshCw, Server, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
+import CompactPdfPreview from '../components/ui/CompactPdfPreview'
 import FileUpload from '../components/ui/FileUpload'
 import ProcessingOverlay from '../components/ui/ProcessingOverlay'
 import ToolHeader from '../components/ui/ToolHeader'
 import ToolPageWrapper from '../components/ui/ToolPageWrapper'
 import usePageTitle from '../hooks/usePageTitle'
-import { renderWordDocument, renderedWordToPdf } from '../lib/wordToPdf'
 import { downloadBlob, formatFileSize, triggerDownloadOverlay } from '../lib/utils'
+
+const MAX_WORD_BYTES = 25 * 1024 * 1024
 
 export default function WordToPdfPage() {
   usePageTitle('/word-to-pdf')
   const [file, setFile] = useState<File | null>(null)
-  const [pageCount, setPageCount] = useState(0)
-  const [loadingPreview, setLoadingPreview] = useState(false)
+  const [output, setOutput] = useState<File | null>(null)
   const [processing, setProcessing] = useState(false)
-  const [progress, setProgress] = useState('')
-  const previewRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
-  const loadFile = useCallback(async (files: File[]) => {
+  const loadFile = useCallback((files: File[]) => {
     const nextFile = files[0]
-    if (!nextFile || !previewRef.current) return
-    if (!nextFile.name.toLowerCase().endsWith('.docx')) {
-      toast.error('Choose a .docx Word document')
+    if (!nextFile) return
+    if (!/\.docx?$/i.test(nextFile.name)) {
+      toast.error('Choose a .doc or .docx Word document')
+      return
+    }
+    if (nextFile.size > MAX_WORD_BYTES) {
+      toast.error('Word documents must be 25 MB or smaller')
       return
     }
     setFile(nextFile)
-    setPageCount(0)
-    setLoadingPreview(true)
-    try {
-      const pages = await renderWordDocument(nextFile, previewRef.current)
-      if (pages === 0) throw new Error('No pages could be displayed')
-      setPageCount(pages)
-      toast.success(`Preview ready · ${pages} page${pages === 1 ? '' : 's'}`)
-    } catch (error) {
-      previewRef.current.replaceChildren()
-      setFile(null)
-      toast.error(error instanceof Error ? error.message : 'This Word document could not be opened')
-    } finally {
-      setLoadingPreview(false)
-    }
+    setOutput(null)
   }, [])
 
   const reset = () => {
     if (processing) return
-    previewRef.current?.replaceChildren()
     setFile(null)
-    setPageCount(0)
+    setOutput(null)
   }
 
   const convert = async () => {
-    if (!file || !previewRef.current || pageCount === 0) return
+    if (!file) return
     const controller = new AbortController()
     abortRef.current = controller
     setProcessing(true)
+    setOutput(null)
     try {
-      const bytes = await renderedWordToPdf(previewRef.current, (_current, _total, message) => setProgress(message), controller.signal)
-      const blob = new Blob([Uint8Array.from(bytes).buffer], { type: 'application/pdf' })
-      triggerDownloadOverlay('Word document converted to PDF', () => downloadBlob(blob, `${file.name.replace(/\.docx$/i, '')}.pdf`), [
-        `${pageCount} page${pageCount === 1 ? '' : 's'}`,
-        'Created locally on this device',
-      ])
+      const response = await fetch('/api/word-to-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': file.type || (file.name.toLowerCase().endsWith('.docx')
+            ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            : 'application/msword'),
+          'X-File-Name': encodeURIComponent(file.name),
+        },
+        body: file,
+        signal: controller.signal,
+      })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null)
+        throw new Error(payload?.error || `Conversion failed (${response.status})`)
+      }
+      const blob = await response.blob()
+      if (blob.type !== 'application/pdf' || blob.size < 8) throw new Error('The converter did not return a valid PDF')
+      const result = new File([blob], `${file.name.replace(/\.docx?$/i, '')}.pdf`, { type: 'application/pdf' })
+      setOutput(result)
+      toast.success('LibreOffice PDF ready · review the final pages below')
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') toast.success('Conversion cancelled')
-      else toast.error(error instanceof Error ? error.message : 'Could not create the PDF')
+      else toast.error(error instanceof Error ? error.message : 'Could not convert this Word document')
     } finally {
       setProcessing(false)
-      setProgress('')
       abortRef.current = null
     }
   }
 
+  const download = () => {
+    if (!output) return
+    triggerDownloadOverlay('LibreOffice PDF ready', () => downloadBlob(output, output.name), [
+      'Rendered by LibreOffice Writer',
+      'Final PDF preview available',
+    ])
+  }
+
   return (
     <ToolPageWrapper>
-      <ToolHeader title="Word to PDF" description="Preview and convert a .docx document to PDF in your browser. The document stays on this device, and the converter loads only when you use it." />
+      <ToolHeader title="Word to PDF" description="Convert DOC or DOCX with the LibreOffice Writer PDF export engine. Review the actual finished PDF before downloading." />
 
-      {!file && <FileUpload onFiles={loadFile} multiple={false} accept={{ 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'] }} title="Word document" note="DOCX · processed on this device · no account required" />}
+      {!file && <>
+        <FileUpload
+          onFiles={loadFile}
+          multiple={false}
+          accept={{ 'application/msword': ['.doc'], 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'] }}
+          title="Word document"
+          note="DOC or DOCX · uploaded only after you start conversion · 25 MB maximum"
+        />
+        <div className="word-pdf-upload-disclosure"><CloudUpload /><div><strong>This tool requires a temporary document upload</strong><p>Unlike the local PDF tools, faithful Word layout needs a full office rendering engine. The document is sent over HTTPS to Lab of PDF, converted in an isolated temporary directory, and deleted immediately after the request succeeds or fails.</p></div></div>
+      </>}
 
-      <div className={`word-pdf-workspace ${file ? 'has-document' : ''}`} hidden={!file && !loadingPreview}>
-        <section className="word-pdf-preview-card" aria-label="Word document preview">
-          <div className="word-pdf-preview-head"><div><strong>Document preview</strong><small>{loadingPreview ? 'Building preview…' : `${pageCount} page${pageCount === 1 ? '' : 's'} · scroll to inspect`}</small></div>{file && <button type="button" onClick={reset} disabled={processing}><RefreshCw /> Change</button>}</div>
-          <div className="word-pdf-preview-viewport">
-            {loadingPreview && <div className="word-pdf-preview-loading"><Loader2 className="animate-spin" /><span>Opening the Word document locally…</span></div>}
-            <div className="word-pdf-preview-render" ref={previewRef} />
-          </div>
-        </section>
+      {file && <>
+        <div className="word-pdf-file-bar"><div><span><FileText /></span><div><strong>{file.name}</strong><small>{formatFileSize(file.size)} · {output ? 'LibreOffice conversion complete' : 'Ready to upload for conversion'}</small></div></div><button type="button" onClick={reset} disabled={processing}><RefreshCw /> Change file</button></div>
+        <div className="word-pdf-workspace">
+          {output
+            ? <CompactPdfPreview file={output} title="Final LibreOffice PDF preview" />
+            : <section className="word-pdf-awaiting" aria-label="Word conversion status"><span><FileOutput /></span><h2>No approximate browser preview</h2><p>Start the conversion to create the real LibreOffice-rendered PDF. The final PDF—not a browser imitation—will appear here for review.</p></section>}
 
-        <aside className="word-pdf-controls">
-          <div className="word-pdf-file"><span><FileText /></span><div><strong>{file?.name}</strong><small>{file ? formatFileSize(file.size) : ''}</small></div></div>
-          <div className="word-pdf-status"><ShieldCheck /><div><strong>No document upload</strong><p>Preview rendering and PDF creation run in browser memory on this device.</p></div></div>
-          <div className="word-pdf-warning"><TriangleAlert /><div><strong>Review the preview before downloading</strong><p>Common paragraphs, images, tables, headers, and page breaks are supported. Complex fonts, tracked changes, SmartArt, and advanced Word layout can differ from Microsoft Word.</p></div></div>
-          <button className="btn-primary word-pdf-convert" type="button" onClick={convert} disabled={processing || loadingPreview || pageCount === 0}>
-            {processing ? <Loader2 className="animate-spin" /> : <Download />}{processing ? progress || 'Creating PDF…' : 'Convert & download PDF'}
-          </button>
-        </aside>
-      </div>
+          <aside className="word-pdf-controls">
+            <div className="word-pdf-status"><Server /><div><strong>LibreOffice Writer rendering</strong><p>Uses the standard Writer PDF export filter for fonts, pagination, tables, headers, footers, and selectable text.</p></div></div>
+            <div className="word-pdf-warning"><CloudUpload /><div><strong>Temporary server processing</strong><p>Your Word document is uploaded to this site's converter and removed immediately after conversion. It is not added to feedback, analytics, backups, or the public site.</p></div></div>
+            <div className="word-pdf-status"><ShieldCheck /><div><strong>One conversion at a time</strong><p>Low concurrency, a 60-second limit, and a 25 MB cap protect the shared service from memory pressure.</p></div></div>
+            {!output ? <button className="btn-primary word-pdf-convert" type="button" onClick={convert} disabled={processing}>
+              {processing ? <Loader2 className="animate-spin" /> : <CloudUpload />}{processing ? 'LibreOffice is rendering…' : 'Upload & convert with LibreOffice'}
+            </button> : <div className="word-pdf-result-actions"><button className="btn-primary" type="button" onClick={download}><Download /> Download PDF</button><button className="btn-ghost" type="button" onClick={convert}><RefreshCw /> Convert again</button></div>}
+          </aside>
+        </div>
+      </>}
 
-      {processing && <ProcessingOverlay message={progress || 'Creating PDF…'} onCancel={() => abortRef.current?.abort()} />}
+      {processing && <ProcessingOverlay message="LibreOffice is rendering the Word document…" onCancel={() => abortRef.current?.abort()} />}
 
       <section className="portal-seo-copy" style={{ marginTop: 24 }}>
-        <span>PRIVATE WORD TO PDF CONVERTER</span>
-        <h2>Convert DOCX to PDF without uploading the document</h2>
-        <p>Choose a modern Word .docx file, inspect the rendered pages, then create a PDF locally. The preview helps you catch layout differences before downloading.</p>
-        <div><article><h3>Why does the PDF sometimes differ from Word?</h3><p>DOCX layout depends on Microsoft Word fonts and rendering rules. Browser conversion preserves common content but advanced layouts may differ, so always inspect the preview.</p></article><article><h3>Can I convert old .doc files?</h3><p>Not directly. Open the legacy .doc in Word or LibreOffice, save it as .docx, then use this private converter.</p></article><article><h3>Is the output searchable?</h3><p>The current privacy-first output preserves the visible page as a high-quality image. Use it when appearance matters; use a desktop office suite when selectable text or exact legal fidelity is required.</p></article></div>
+        <span>LIBREOFFICE-POWERED WORD TO PDF</span>
+        <h2>Use a real office engine, then preview the finished PDF</h2>
+        <p>Lab of PDF sends the selected DOC or DOCX to an isolated LibreOffice Writer process, returns the generated PDF, and removes the temporary files. The finished PDF keeps selectable text where the source allows it.</p>
+        <div><article><h3>Why is this more accurate than browser rendering?</h3><p>LibreOffice Writer understands Word document styles, sections, page breaks, headers, footers, tables, and embedded fonts more completely than an HTML preview.</p></article><article><h3>Is it identical to Microsoft Word?</h3><p>Not always. Proprietary fonts or Microsoft-only layout features can still differ, which is why the actual generated PDF is shown before download.</p></article><article><h3>Is the document uploaded?</h3><p>Yes, only for this tool. The page tells you before conversion. Temporary files are deleted after the conversion request and are not retained in product analytics or feedback.</p></article></div>
       </section>
     </ToolPageWrapper>
   )

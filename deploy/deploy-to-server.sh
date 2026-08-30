@@ -70,6 +70,8 @@ test -f "$NEXT_ROOT/guides/compress-pdf-for-university-upload.html"
 grep -q "\"commit\": \"$RELEASE_COMMIT\"" "$NEXT_ROOT/release.json"
 node --check "$API_STAGE/labofpdf-api.mjs"
 node --check "$API_STAGE/feedback-report.mjs"
+command -v libreoffice >/dev/null
+libreoffice --headless --version
 
 echo "Installing and validating the local feedback API..."
 mkdir -p "$API_DATA"
@@ -109,7 +111,7 @@ systemctl daemon-reload
 systemctl restart visitor-counter.service
 API_READY=0
 for attempt in $(seq 1 10); do
-  if curl -fsS http://127.0.0.1:3001/api/health | grep -q '"ok":true'; then API_READY=1; break; fi
+  if curl -fsS http://127.0.0.1:3001/api/health | grep -q '"wordConversionEngine":"libreoffice"'; then API_READY=1; break; fi
   sleep 1
 done
 if [[ "$API_READY" != 1 ]]; then
@@ -117,6 +119,31 @@ if [[ "$API_READY" != 1 ]]; then
   rollback_api
   exit 1
 fi
+
+WORD_SMOKE_DOCX="/tmp/labofpdf-word-smoke.docx"
+WORD_SMOKE_PDF="/tmp/labofpdf-word-smoke.pdf"
+python3 - "$WORD_SMOKE_DOCX" <<'PY'
+import sys
+from zipfile import ZIP_DEFLATED, ZipFile
+
+target = sys.argv[1]
+with ZipFile(target, 'w', ZIP_DEFLATED) as archive:
+    archive.writestr('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>')
+    archive.writestr('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>')
+    archive.writestr('word/document.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Lab of PDF LibreOffice deployment check</w:t></w:r></w:p><w:sectPr/></w:body></w:document>')
+PY
+if ! curl -fsS \
+  -H 'Origin: https://labofpdf.com' \
+  -H 'Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document' \
+  -H 'X-File-Name: deployment-check.docx' \
+  --data-binary "@$WORD_SMOKE_DOCX" \
+  http://127.0.0.1:3001/api/word-to-pdf > "$WORD_SMOKE_PDF" || ! grep -aq '^%PDF-' "$WORD_SMOKE_PDF"; then
+  rm -f "$WORD_SMOKE_DOCX" "$WORD_SMOKE_PDF"
+  echo "LibreOffice Word conversion validation failed; restoring the previous API." >&2
+  rollback_api
+  exit 1
+fi
+rm -f "$WORD_SMOKE_DOCX" "$WORD_SMOKE_PDF"
 
 if ! curl -fsS \
   -H 'Origin: https://labofpdf.com' \
@@ -188,6 +215,25 @@ new_asset_cache = '''            expires 1y;
 text = text.replace(old_asset_cache, new_asset_cache)
 if 'expires 1h;' in text:
     raise SystemExit('A short JavaScript or CSS cache rule remains in the Lab of PDF Nginx configuration')
+
+word_proxy = '''    location = /api/word-to-pdf {
+        client_max_body_size 25m;
+        proxy_request_buffering off;
+        proxy_read_timeout 75s;
+        proxy_send_timeout 75s;
+        proxy_pass http://127.0.0.1:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+'''
+if 'location = /api/word-to-pdf' not in text:
+    api_anchor = '    location /api/ {'
+    if api_anchor not in text:
+        raise SystemExit('Expected API proxy anchor was not found')
+    text = text.replace(api_anchor, word_proxy + api_anchor, 1)
 
 security_anchor = '    add_header Referrer-Policy strict-origin-when-cross-origin always;'
 security_headers = '''    add_header Referrer-Policy strict-origin-when-cross-origin always;
@@ -265,7 +311,7 @@ if ! curl -kfsS --resolve labofpdf.com:443:127.0.0.1 https://labofpdf.com/releas
   exit 1
 fi
 
-if ! curl -kfsS --resolve labofpdf.com:443:127.0.0.1 https://labofpdf.com/api/health | grep -q '"feedbackStorage":"sqlite"'; then
+if ! curl -kfsS --resolve labofpdf.com:443:127.0.0.1 https://labofpdf.com/api/health | grep -q '"wordConversionEngine":"libreoffice"'; then
   echo "Feedback API proxy verification failed; restoring the previous release." >&2
   rollback
   exit 1
