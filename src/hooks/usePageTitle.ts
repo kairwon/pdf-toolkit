@@ -166,8 +166,8 @@ const seo: Record<string, SeoEntry> = {
     tool: true,
   },
   '/word-to-pdf': {
-    title: 'LibreOffice Word to PDF Converter | Lab of PDF',
-    description: 'Convert DOC or DOCX to PDF with the LibreOffice Writer engine, then preview the actual finished PDF. Temporary files are deleted after conversion.',
+    title: 'Word to PDF Converter with Preview | Lab of PDF',
+    description: 'Convert DOC or DOCX to PDF automatically, preview every finished page, and download a searchable PDF with the document layout preserved.',
     name: 'Word to PDF',
     tool: true,
   },

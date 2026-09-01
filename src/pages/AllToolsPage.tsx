@@ -58,7 +58,7 @@ const groups = [
       { title: 'Compress scanned PDF', note: 'Detect image-based scans and reduce their MB size.', path: '/compress/scanned', icon: FileSearch },
       { title: 'Compress to exact size', note: 'Aim for a specific portal limit.', path: '/compress/exact', icon: FileOutput },
       { title: 'PDF to Word', note: 'Turn a PDF into an editable document.', path: '/to-word', icon: FileText },
-      { title: 'Word to PDF', note: 'Render DOC or DOCX accurately with LibreOffice.', path: '/word-to-pdf', icon: FileText },
+      { title: 'Word to PDF', note: 'Convert DOC or DOCX and preview the finished PDF.', path: '/word-to-pdf', icon: FileText },
       { title: 'PDF to images', note: 'Export PDF pages as image files.', path: '/to-image', icon: FileImage },
       { title: 'Images to PDF', note: 'Combine photos and scans into an ordered PDF.', path: '/images-to-pdf', icon: Images },
       { title: 'OCR searchable PDF', note: 'Add searchable text to scanned PDF pages locally.', path: '/ocr-pdf', icon: ScanText },

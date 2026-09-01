@@ -37,7 +37,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The intended production release represented by this handoff uses the immutable
-tag `production-2026-08-30-libreoffice-word-converter`. Verify its exact
+tag `production-2026-09-01-auto-word-preview`. Verify its exact
 commit in the live `release.json` manifest and in GitHub before every subsequent
 deployment.
 
@@ -211,6 +211,11 @@ locally and on GitHub. Never move or reuse a production tag.
   unique per-job LibreOffice profile and temp directory, deletes both in a
   `finally` path, limits files to 25 MB, permits one concurrent conversion,
   rate-limits requests, and kills work after 60 seconds.
+- Word-to-PDF begins conversion immediately after a valid file is selected and
+  opens the real generated PDF preview automatically. The main workflow avoids
+  exposing rendering-engine, concurrency, and server implementation details;
+  users see only concise preparing, preview, retry, change-file, and download
+  states. Privacy and security pages retain the technical disclosure.
 - `npm test` covers watermark candidate detection and selective removal with a
   synthetic PDF fixture. Keep adding representative, non-sensitive fixtures as
   PDF manipulation behavior expands.
