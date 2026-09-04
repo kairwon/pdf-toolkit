@@ -73,7 +73,7 @@ const groups = [
       { title: 'Fill & sign PDF', note: 'Draw or type a signature and place it directly.', path: '/sign-pdf', icon: Signature },
       { title: 'Securely redact PDF', note: 'Permanently flatten covered content on selected pages.', path: '/redact-pdf', icon: ShieldX },
       { title: 'Crop and resize PDF', note: 'Drag a crop frame and fit pages to A4 or Letter.', path: '/crop-pdf', icon: Crop },
-      { title: 'Compare PDF versions', note: 'Review two files side by side and highlight differences.', path: '/compare-pdf', icon: Files },
+      { title: 'Compare PDF versions', note: 'Scan every page, find changes, and export a report.', path: '/compare-pdf', icon: Files },
       { title: 'PDF forms', note: 'Fill existing fields or place new fields visually.', path: '/pdf-forms', icon: FormInput },
       { title: 'Document information', note: 'Edit metadata and inspect bookmarks or attachments.', path: '/document-info', icon: Tags },
     ],
@@ -96,7 +96,7 @@ const commonRequirements = [
   { title: 'Reduce a PDF for an email attachment', text: 'Create the smallest practical copy without guessing which compression setting to use.', path: '/compress/exact' },
   { title: 'Extract selected pages from a PDF', text: 'Preview a document and create a new PDF containing only the pages you choose.', path: '/split' },
   { title: 'Convert a scanned PDF to editable Word text', text: 'Use browser-based OCR for scanned pages and direct extraction for text PDFs.', path: '/to-word' },
-  { title: 'Turn a Word document into a shareable PDF', text: 'Preview the DOCX pages first, then create a private local PDF copy.', path: '/word-to-pdf' },
+  { title: 'Turn a Word document into a shareable PDF', text: 'Choose a DOC or DOCX file, then review the finished PDF before downloading.', path: '/word-to-pdf' },
 ]
 
 export default function AllToolsPage() {

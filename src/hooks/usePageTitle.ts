@@ -88,8 +88,8 @@ const seo: Record<string, SeoEntry> = {
     tool: true,
   },
   '/compare-pdf': {
-    title: 'Compare Two PDF Versions Visually | Lab of PDF',
-    description: 'Compare PDF pages side by side and highlight changed pixels locally in your browser without uploading either document.',
+    title: 'Compare PDF Files and Find Changed Pages | Lab of PDF',
+    description: 'Scan two PDF files locally, find every changed page, inspect highlighted differences, choose detection sensitivity, and download a comparison report.',
     name: 'Compare PDF versions',
     tool: true,
   },

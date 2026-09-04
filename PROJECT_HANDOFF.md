@@ -37,7 +37,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The intended production release represented by this handoff uses the immutable
-tag `production-2026-09-01-auto-word-preview`. Verify its exact
+tag `production-2026-09-04-full-pdf-comparison`. Verify its exact
 commit in the live `release.json` manifest and in GitHub before every subsequent
 deployment.
 
@@ -93,6 +93,11 @@ locally and on GitHub. Never move or reuse a production tag.
 - `/crop-pdf` provides a draggable crop frame, per-page or all-page scope,
   margins, and A4/Letter fitting. `/compare-pdf` renders two versions locally
   and reports page-level visual differences with red overlays.
+- PDF comparison can scan every matching page sequentially, report changed and
+  unchanged page counts, list and jump between changed pages, identify pages
+  present in only one version, and export a spreadsheet-safe CSV report. Users
+  can choose major, balanced, or small-change detection and stop a long scan
+  between pages; documents remain local throughout.
 - `/pdf-forms` fills existing AcroForm fields and lets users place new text or
   checkbox fields visually, with optional flattening. `/document-info` edits
   title, author, subject, keywords and dates, and can remove bookmarks,
