@@ -208,6 +208,25 @@ if about_redirects not in text:
         1,
     )
 
+release_json_rules = '''    location = /release.json {
+        try_files $uri =404;
+        expires -1;
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+        add_header X-Robots-Tag "noindex, nofollow" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()" always;
+        add_header X-Permitted-Cross-Domain-Policies "none" always;
+    }'''
+if release_json_rules not in text:
+    text = text.replace(
+        about_redirects,
+        f'{about_redirects}\n\n{release_json_rules}',
+        1,
+    )
+
 old_asset_cache = '''            expires 1h;
             add_header Cache-Control public;'''
 new_asset_cache = '''            expires 1y;
@@ -307,6 +326,12 @@ fi
 
 if ! curl -kfsS --resolve labofpdf.com:443:127.0.0.1 https://labofpdf.com/release.json | grep -q "\"commit\": \"$RELEASE_COMMIT\""; then
   echo "Release manifest verification failed; restoring the previous release." >&2
+  rollback
+  exit 1
+fi
+
+if ! curl -kfsSI --resolve labofpdf.com:443:127.0.0.1 https://labofpdf.com/release.json | grep -qi '^x-robots-tag:.*noindex'; then
+  echo "Release manifest indexing protection verification failed; restoring the previous release." >&2
   rollback
   exit 1
 fi
