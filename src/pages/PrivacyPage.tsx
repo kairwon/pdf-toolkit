@@ -1,6 +1,7 @@
+import { Link } from 'react-router-dom'
 import usePageTitle from '../hooks/usePageTitle'
 
-const tools = ['Merge, split, and manage pages', 'Compress and Portal‑Ready PDF', 'Visa document pack', 'PDF to image and PDF to Word', 'Add and remove supported watermark overlays']
+const tools = ['Merge, split, and manage pages', 'Remove blank or duplicate pages and clean private PDF data', 'Compress and Portal‑Ready PDF', 'Visa document pack', 'PDF to image and PDF to Word', 'Add and remove supported watermark overlays']
 
 export default function PrivacyPage() {
   usePageTitle('/privacy')
@@ -8,10 +9,10 @@ export default function PrivacyPage() {
     <div className="legal-page">
       <span className="legal-kicker">PLAIN-LANGUAGE PRIVACY NOTICE</span>
       <h1>Privacy Policy</h1>
-      <p className="legal-updated">Last updated: 30 August 2026</p>
+      <p className="legal-updated">Last updated: 13 September 2026</p>
       <div className="legal-highlight"><strong>The short version</strong><p>Your PDF files are processed in browser memory. Lab of PDF does not receive, store, or inspect their contents.</p></div>
       <div className="legal-content">
-        <section><h2>1. Document processing</h2><p>The following current tools run locally with JavaScript and open-source browser libraries:</p><ul>{tools.map((item) => <li key={item}>{item}</li>)}</ul><p>Selecting a file gives your browser temporary access to it. The file is not automatically uploaded to Lab of PDF. Refreshing or closing the tab clears working data held in memory.</p></section>
+        <section><h2>1. Document processing</h2><p>The following current tools run locally with JavaScript and open-source browser libraries:</p><ul>{tools.map((item) => <li key={item}>{item}</li>)}</ul><p>Selecting a file gives your browser temporary access to it. The file is not automatically uploaded to Lab of PDF. Refreshing or closing the tab clears working data held in memory. Before sharing a document, you can use the <Link to="/clean-pdf-metadata">PDF private-data cleaner</Link> to inspect and remove supported metadata and active structures.</p></section>
         <section><h2>2. Word to PDF exception</h2><p>The Word to PDF tool clearly asks before uploading a selected DOC or DOCX file. If you start that conversion, the document is sent over HTTPS to the Lab of PDF server, processed by LibreOffice in a uniquely created temporary directory, returned as a PDF, and deleted after the request succeeds, fails, or times out. The document and generated PDF are not written to the feedback database, analytics, application backups, or the public website. Do not use this server-assisted tool for material that you are not permitted to transmit.</p></section>
         <section><h2>3. Data the website may receive</h2><p>Like most hosted websites, the hosting and security infrastructure may receive basic request information such as IP address, browser type, requested URL, timestamp, and error or security logs. This information may be processed for delivery, abuse prevention, reliability, and legal compliance. Document contents are not included in ordinary page requests.</p></section>
         <section><h2>4. Optional result feedback</h2><p>After downloading a result, you may choose to tell us whether it solved your problem. If you respond, we store the tool used, yes or no outcome, selected reason, optional short comment, time, and website release version. We do not include your PDF, file name, document contents, or IP address in the feedback database. Please do not enter personal or document information in the optional comment.</p></section>

@@ -11,7 +11,7 @@ Object.defineProperty(globalThis, 'DOMMatrix', { value: class DOMMatrix {} })
 Object.defineProperty(globalThis, 'ImageData', { value: class ImageData {} })
 Object.defineProperty(globalThis, 'Path2D', { value: class Path2D {} })
 
-const { addWatermark, arrangePdfPages, cropPdfPages, getPageCount, inspectPdfForm, inspectPdfStructure, inspectWatermarks, mergePdfPages, readPdfDocumentInfo, removeWatermark, textPagesToWord, updatePdfDocumentInfo, updatePdfForm } = await import('./pdf')
+const { addWatermark, arrangePdfPages, cleanPdfPrivacy, cropPdfPages, getPageCount, inspectPdfForm, inspectPdfPrivacy, inspectPdfStructure, inspectWatermarks, mergePdfPages, readPdfDocumentInfo, removeWatermark, textPagesToWord, updatePdfDocumentInfo, updatePdfForm } = await import('./pdf')
 
 async function createAnnotationPdf() {
   const document = await PDFDocument.create()
@@ -236,5 +236,37 @@ describe('PDF structure inspection', () => {
     expect(before.structure.hasBookmarks).toBe(true)
     expect(result.getTitle()).toBe('New title')
     expect(result.catalog.has(PDFName.of('Outlines'))).toBe(false)
+  })
+})
+
+describe('PDF privacy cleanup', () => {
+  it('rebuilds visible pages without metadata, attachments, actions, comments, or form fields', async () => {
+    const document = await PDFDocument.create()
+    document.setTitle('Private title')
+    document.setAuthor('Private author')
+    const page = document.addPage([612, 792])
+    const form = document.getForm()
+    const field = form.createTextField('private-name')
+    field.setText('Visible form value')
+    field.addToPage(page, { x: 80, y: 680, width: 220, height: 28 })
+    const note = document.context.obj({ Type: 'Annot', Subtype: 'Text', Rect: [20, 20, 60, 60], Contents: PDFString.of('private note') })
+    page.node.set(PDFName.of('Annots'), document.context.obj([document.context.register(note)]))
+    document.catalog.set(PDFName.of('OpenAction'), document.context.obj({ S: 'JavaScript', JS: PDFString.of('app.alert("test")') }))
+    document.catalog.set(PDFName.of('Outlines'), document.context.obj({ Type: 'Outlines' }))
+    await document.attach(new TextEncoder().encode('private attachment'), 'private.txt')
+    const file = new File([Uint8Array.from(await document.save()).buffer], 'private.pdf', { type: 'application/pdf' })
+
+    const before = await inspectPdfPrivacy(file)
+    expect(before.metadataFields).toEqual(expect.arrayContaining(['Title', 'Author']))
+    expect(before).toMatchObject({ hasAttachments: true, hasAutomaticActions: true, commentCount: 1, formFieldCount: 1, hasBookmarks: true })
+
+    const result = await cleanPdfPrivacy(file, { removeComments: true })
+    const cleanedFile = new File([Uint8Array.from(result.bytes).buffer], 'cleaned.pdf', { type: 'application/pdf' })
+    await expect(inspectPdfPrivacy(cleanedFile)).resolves.toMatchObject({
+      metadataFields: [], hasXmpMetadata: false, hasAttachments: false, hasAutomaticActions: false,
+      commentCount: 0, formFieldCount: 0, hasBookmarks: false, hasPageLabels: false,
+    })
+    expect(result.removedComments).toBe(1)
+    expect(result.flattenedFields).toBe(1)
   })
 })

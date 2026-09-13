@@ -52,6 +52,7 @@ const navGroups = [
       { label: 'Remove watermark', path: '/unwatermark' },
       { label: 'Compare PDFs', path: '/compare-pdf' },
       { label: 'Document information', path: '/document-info' },
+      { label: 'Clean PDF private data', path: '/clean-pdf-metadata' },
       { label: 'Reusable workflows', path: '/workflows' },
     ],
   },

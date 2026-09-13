@@ -117,6 +117,12 @@ const seo: Record<string, SeoEntry> = {
     name: 'PDF document information',
     tool: true,
   },
+  '/clean-pdf-metadata': {
+    title: 'Remove PDF Metadata and Hidden Data Privately | Lab of PDF',
+    description: 'Inspect and remove PDF metadata, attachments, scripts, automatic actions, comments, bookmarks, page labels, and interactive form structures locally.',
+    name: 'Clean PDF metadata and private data',
+    tool: true,
+  },
   '/to-image': {
     title: 'Convert PDF Pages to PNG or JPEG Privately | Lab of PDF',
     description: 'Preview PDF pages as PNG or JPEG while choosing clarity and quality, then download selected pages locally without uploading the document.',

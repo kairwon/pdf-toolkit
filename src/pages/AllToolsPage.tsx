@@ -23,6 +23,7 @@ import {
   ScanText,
   Search,
   ShieldX,
+  ShieldCheck,
   Signature,
   Stamp,
   Tags,
@@ -80,6 +81,7 @@ const groups = [
       { title: 'Compare PDF versions', note: 'Scan every page, find changes, and export a report.', path: '/compare-pdf', icon: Files },
       { title: 'PDF forms', note: 'Fill existing fields or place new fields visually.', path: '/pdf-forms', icon: FormInput },
       { title: 'Document information', note: 'Edit metadata and inspect bookmarks or attachments.', path: '/document-info', icon: Tags },
+      { title: 'Clean PDF private data', note: 'Remove metadata, attachments, scripts, comments, and hidden structures.', path: '/clean-pdf-metadata', icon: ShieldCheck },
     ],
   },
   {
@@ -101,6 +103,7 @@ const commonRequirements = [
   { title: 'Extract selected pages from a PDF', text: 'Preview a document and create a new PDF containing only the pages you choose.', path: '/split' },
   { title: 'Remove empty scanned pages', text: 'Automatically find likely blank pages, inspect every preview, and remove only the pages you approve.', path: '/remove-blank-pages' },
   { title: 'Remove duplicate PDF pages', text: 'Find repeated scan or document pages and compare matching thumbnails before removing copies.', path: '/remove-duplicate-pages' },
+  { title: 'Remove PDF metadata before sharing', text: 'Inspect and clean metadata, attachments, automatic actions, comments, and form structures locally.', path: '/clean-pdf-metadata' },
   { title: 'Convert a scanned PDF to editable Word text', text: 'Use browser-based OCR for scanned pages and direct extraction for text PDFs.', path: '/to-word' },
   { title: 'Turn a Word document into a shareable PDF', text: 'Choose a DOC or DOCX file, then review the finished PDF before downloading.', path: '/word-to-pdf' },
 ]

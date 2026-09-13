@@ -24,6 +24,7 @@ export default function Layout() {
     '/compare-pdf': 'Compare PDFs',
     '/remove-blank-pages': 'Remove blank PDF pages',
     '/remove-duplicate-pages': 'Remove duplicate PDF pages',
+    '/clean-pdf-metadata': 'Clean PDF private data',
     '/pdf-forms': 'Fill and create PDF forms',
     '/document-info': 'PDF document information',
     '/to-image': 'PDF to images',
@@ -57,7 +58,7 @@ export default function Layout() {
     '/compress/visa', '/compress/exact', '/compress/scanned', '/thesis-pdf-check', '/watermark',
     '/unwatermark', '/to-word', '/word-to-pdf', '/visa-prep', '/portal-ready-pdf', '/edit', '/sign-pdf',
     '/redact-pdf', '/crop-pdf', '/ocr-pdf', '/scan-cleanup', '/workflows', '/compare-pdf', '/remove-blank-pages', '/remove-duplicate-pages',
-    '/pdf-forms', '/document-info',
+    '/pdf-forms', '/document-info', '/clean-pdf-metadata',
   ])
   const goBack = () => {
     if (window.history.length > 1) navigate(-1)

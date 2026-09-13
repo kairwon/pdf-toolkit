@@ -12,6 +12,8 @@ export const getPageCount = async (...args: Parameters<PdfModule['getPageCount']
 export const renderPageToCanvas = async (...args: Parameters<PdfModule['renderPageToCanvas']>) => (await loadPdf()).renderPageToCanvas(...args)
 export const analyzePdfPageForBlankness = async (...args: Parameters<PdfModule['analyzePdfPageForBlankness']>) => (await loadPdf()).analyzePdfPageForBlankness(...args)
 export const analyzePdfPageForDuplication = async (...args: Parameters<PdfModule['analyzePdfPageForDuplication']>) => (await loadPdf()).analyzePdfPageForDuplication(...args)
+export const inspectPdfPrivacy = async (...args: Parameters<PdfModule['inspectPdfPrivacy']>) => (await loadPdf()).inspectPdfPrivacy(...args)
+export const cleanPdfPrivacy = async (...args: Parameters<PdfModule['cleanPdfPrivacy']>) => (await loadPdf()).cleanPdfPrivacy(...args)
 export const imagesToPdf = async (...args: Parameters<PdfModule['imagesToPdf']>) => (await loadPdf()).imagesToPdf(...args)
 export const inspectPdfForm = async (...args: Parameters<PdfModule['inspectPdfForm']>) => (await loadPdf()).inspectPdfForm(...args)
 export const updatePdfForm = async (...args: Parameters<PdfModule['updatePdfForm']>) => (await loadPdf()).updatePdfForm(...args)
@@ -48,6 +50,9 @@ export type {
   PdfDocumentInfo,
   PdfBlankPageAnalysis,
   PdfDuplicatePageAnalysis,
+  PdfPrivacyInspection,
+  PdfPrivacyCleanupOptions,
+  PdfPrivacyCleanupResult,
   PdfFormFieldInfo,
   PdfStructureCleanup,
   PdfStructureInspection,

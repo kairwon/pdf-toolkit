@@ -17,6 +17,7 @@ const WorkflowsPage = lazy(() => import('./pages/WorkflowsPage'))
 const ComparePdfPage = lazy(() => import('./pages/ComparePdfPage'))
 const RemoveBlankPagesPage = lazy(() => import('./pages/RemoveBlankPagesPage'))
 const RemoveDuplicatePagesPage = lazy(() => import('./pages/RemoveDuplicatePagesPage'))
+const PrivacyCleanerPage = lazy(() => import('./pages/PrivacyCleanerPage'))
 const PdfFormsPage = lazy(() => import('./pages/PdfFormsPage'))
 const DocumentInfoPage = lazy(() => import('./pages/DocumentInfoPage'))
 const UnwatermarkPage = lazy(() => import('./pages/UnwatermarkPage'))
@@ -81,6 +82,7 @@ export default function App() {
         <Route path="/compare-pdf" element={deferred(<ComparePdfPage />)} />
         <Route path="/remove-blank-pages" element={deferred(<RemoveBlankPagesPage />)} />
         <Route path="/remove-duplicate-pages" element={deferred(<RemoveDuplicatePagesPage />)} />
+        <Route path="/clean-pdf-metadata" element={deferred(<PrivacyCleanerPage />)} />
         <Route path="/pdf-forms" element={deferred(<PdfFormsPage />)} />
         <Route path="/document-info" element={deferred(<DocumentInfoPage />)} />
         <Route path="/unwatermark" element={deferred(<UnwatermarkPage />)} />

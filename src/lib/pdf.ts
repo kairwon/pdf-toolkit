@@ -288,6 +288,138 @@ export async function inspectPdfStructure(file: File): Promise<PdfStructureInspe
   }
 }
 
+const privacyAnnotationTypes = new Set(['Text', 'FreeText', 'Stamp', 'Highlight', 'Underline', 'Squiggly', 'StrikeOut', 'Ink', 'Popup', 'FileAttachment', 'Sound'])
+const embeddedAnnotationTypes = new Set(['FileAttachment', 'Sound'])
+
+export interface PdfPrivacyInspection {
+  pageCount: number
+  metadataFields: string[]
+  hasXmpMetadata: boolean
+  hasAttachments: boolean
+  hasAutomaticActions: boolean
+  commentCount: number
+  formFieldCount: number
+  hasDigitalSignature: boolean
+  hasBookmarks: boolean
+  hasPageLabels: boolean
+}
+
+export interface PdfPrivacyCleanupOptions {
+  removeComments: boolean
+}
+
+export interface PdfPrivacyCleanupResult {
+  bytes: Uint8Array
+  removedComments: number
+  flattenedFields: number
+}
+
+function annotationSubtype(pdfDoc: PDFDocument, annotation: PDFDict) {
+  const raw = annotation.get(PDFName.of('Subtype'))
+  return pdfNameValue(raw ? pdfDoc.context.lookup(raw) : null)
+}
+
+function isJavaScriptAction(pdfDoc: PDFDocument, raw: unknown) {
+  if (!raw) return false
+  const action = pdfDoc.context.lookup(raw as any)
+  if (!(action instanceof PDFDict)) return false
+  const kind = action.get(PDFName.of('S'))
+  return pdfNameValue(kind ? pdfDoc.context.lookup(kind) : null) === 'JavaScript'
+}
+
+/** Inspect privacy-relevant structures without uploading or modifying the PDF. */
+export async function inspectPdfPrivacy(file: File): Promise<PdfPrivacyInspection> {
+  const buffer = await file.arrayBuffer()
+  const document = await PDFDocument.load(buffer.slice(0), { updateMetadata: false })
+  const catalog = document.catalog
+  const infoRef = document.context.trailerInfo.Info
+  const info = infoRef ? document.context.lookupMaybe(infoRef, PDFDict) : undefined
+  const metadataFields = ['Title', 'Author', 'Subject', 'Keywords', 'Creator', 'Producer', 'CreationDate', 'ModDate']
+    .filter((key) => !!info?.get(PDFName.of(key)))
+  const names = catalog.lookupMaybe(PDFName.of('Names'), PDFDict)
+  const hasAcroForm = catalog.has(PDFName.of('AcroForm'))
+  let formFieldCount = 0
+  let hasDigitalSignature = hasAsciiToken(buffer, '/ByteRange')
+  if (hasAcroForm) {
+    try {
+      const fields = document.getForm().getFields()
+      formFieldCount = fields.length
+      hasDigitalSignature ||= fields.some((field) => field.constructor.name === 'PDFSignature')
+    } catch { formFieldCount = 1 }
+  }
+  let commentCount = 0
+  let hasPageActions = false
+  for (const page of document.getPages()) {
+    const pageNode = page.node
+    hasPageActions ||= pageNode.has(PDFName.of('AA'))
+    const annots = pageNode.lookupMaybe(PDFName.of('Annots'), PDFArray)
+    if (!annots) continue
+    for (let index = 0; index < annots.size(); index++) {
+      const annotation = document.context.lookup(annots.get(index))
+      if (!(annotation instanceof PDFDict)) continue
+      if (privacyAnnotationTypes.has(annotationSubtype(document, annotation))) commentCount++
+      hasPageActions ||= annotation.has(PDFName.of('AA')) || isJavaScriptAction(document, annotation.get(PDFName.of('A')))
+    }
+  }
+  return {
+    pageCount: document.getPageCount(), metadataFields,
+    hasXmpMetadata: catalog.has(PDFName.of('Metadata')),
+    hasAttachments: !!names?.get(PDFName.of('EmbeddedFiles')),
+    hasAutomaticActions: catalog.has(PDFName.of('OpenAction')) || catalog.has(PDFName.of('AA')) || !!names?.get(PDFName.of('JavaScript')) || hasPageActions,
+    commentCount, formFieldCount, hasDigitalSignature,
+    hasBookmarks: catalog.has(PDFName.of('Outlines')),
+    hasPageLabels: catalog.has(PDFName.of('PageLabels')),
+  }
+}
+
+/** Rebuild a PDF from its visible pages, dropping document-level private or active structures. */
+export async function cleanPdfPrivacy(file: File, options: PdfPrivacyCleanupOptions): Promise<PdfPrivacyCleanupResult> {
+  const source = await PDFDocument.load(await file.arrayBuffer(), { updateMetadata: false })
+  const hasAcroForm = source.catalog.has(PDFName.of('AcroForm'))
+  let flattenedFields = 0
+  if (hasAcroForm) {
+    const form = source.getForm()
+    flattenedFields = form.getFields().length
+    if (flattenedFields) form.flatten()
+  }
+  let removedComments = 0
+  for (const page of source.getPages()) {
+    page.node.delete(PDFName.of('AA'))
+    page.node.delete(PDFName.of('Metadata'))
+    page.node.delete(PDFName.of('PieceInfo'))
+    page.node.delete(PDFName.of('LastModified'))
+    const annots = page.node.lookupMaybe(PDFName.of('Annots'), PDFArray)
+    if (!annots) continue
+    const kept: any[] = []
+    for (let index = 0; index < annots.size(); index++) {
+      const raw = annots.get(index)
+      const annotation = source.context.lookup(raw)
+      if (!(annotation instanceof PDFDict)) { kept.push(raw); continue }
+      annotation.delete(PDFName.of('AA'))
+      if (isJavaScriptAction(source, annotation.get(PDFName.of('A')))) annotation.delete(PDFName.of('A'))
+      const subtype = annotationSubtype(source, annotation)
+      if (embeddedAnnotationTypes.has(subtype) || (options.removeComments && privacyAnnotationTypes.has(subtype))) removedComments++
+      else kept.push(raw)
+    }
+    page.node.set(PDFName.of('Annots'), source.context.obj(kept))
+  }
+
+  const output = await PDFDocument.create()
+  const pages = await output.copyPages(source, source.getPageIndices())
+  pages.forEach((page) => output.addPage(page))
+  output.catalog.delete(PDFName.of('Names'))
+  output.catalog.delete(PDFName.of('OpenAction'))
+  output.catalog.delete(PDFName.of('AA'))
+  output.catalog.delete(PDFName.of('Outlines'))
+  output.catalog.delete(PDFName.of('PageLabels'))
+  output.catalog.delete(PDFName.of('Metadata'))
+  output.catalog.delete(PDFName.of('AcroForm'))
+  const infoRef = output.context.trailerInfo.Info
+  const info = infoRef ? output.context.lookupMaybe(infoRef, PDFDict) : undefined
+  for (const key of ['Title', 'Author', 'Subject', 'Keywords', 'Creator', 'Producer', 'CreationDate', 'ModDate']) info?.delete(PDFName.of(key))
+  return { bytes: await output.save({ updateFieldAppearances: false }), removedComments, flattenedFields }
+}
+
 export interface PdfDocumentInfo {
   title: string
   author: string
