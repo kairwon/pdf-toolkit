@@ -37,7 +37,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The intended production release represented by this handoff uses the immutable
-tag `production-2026-09-05-search-console-indexing`. Verify its exact
+tag `production-2026-09-13-remove-blank-pages`. Verify its exact
 commit in the live `release.json` manifest and in GitHub before every subsequent
 deployment.
 
@@ -98,6 +98,11 @@ locally and on GitHub. Never move or reuse a production tag.
   present in only one version, and export a spreadsheet-safe CSV report. Users
   can choose major, balanced, or small-change detection and stop a long scan
   between pages; documents remain local throughout.
+- `/remove-blank-pages` scans every PDF page locally, suggests likely empty
+  pages from grouped visible-ink coverage, and shows a thumbnail for every
+  decision before anything is removed. Users can choose conservative,
+  balanced, or aggressive sensitivity, override any suggestion, stop and
+  resume long scans, and download a new PDF while keeping the original intact.
 - `/release.json` is served with `X-Robots-Tag: noindex, nofollow` and no-cache
   headers so Google does not treat the internal deployment manifest as a search
   result candidate. The deployment script verifies this header before accepting

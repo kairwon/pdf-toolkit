@@ -8,6 +8,7 @@ import {
   FileCheck2,
   FileImage,
   FileOutput,
+  FileMinus2,
   FileSearch,
   Files,
   FileText,
@@ -48,6 +49,7 @@ const groups = [
       { title: 'Merge PDFs', note: 'Combine files in the order you choose.', path: '/merge', icon: Files },
       { title: 'Split PDF', note: 'Extract the pages you actually need.', path: '/split', icon: Scissors },
       { title: 'Manage pages', note: 'Reorder, rotate, or remove PDF pages.', path: '/manage', icon: Layers3 },
+      { title: 'Remove blank pages', note: 'Detect empty pages visually and review before removal.', path: '/remove-blank-pages', icon: FileMinus2 },
     ],
   },
   {
@@ -95,6 +97,7 @@ const commonRequirements = [
   { title: 'Combine passport and supporting document PDFs', text: 'Organize sensitive visa files into one ordered PDF or a clearly named ZIP package.', path: '/visa-prep' },
   { title: 'Reduce a PDF for an email attachment', text: 'Create the smallest practical copy without guessing which compression setting to use.', path: '/compress/exact' },
   { title: 'Extract selected pages from a PDF', text: 'Preview a document and create a new PDF containing only the pages you choose.', path: '/split' },
+  { title: 'Remove empty scanned pages', text: 'Automatically find likely blank pages, inspect every preview, and remove only the pages you approve.', path: '/remove-blank-pages' },
   { title: 'Convert a scanned PDF to editable Word text', text: 'Use browser-based OCR for scanned pages and direct extraction for text PDFs.', path: '/to-word' },
   { title: 'Turn a Word document into a shareable PDF', text: 'Choose a DOC or DOCX file, then review the finished PDF before downloading.', path: '/word-to-pdf' },
 ]

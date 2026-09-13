@@ -22,6 +22,7 @@ export default function Layout() {
     '/scan-cleanup': 'Clean scanned PDF',
     '/workflows': 'Reusable PDF workflows',
     '/compare-pdf': 'Compare PDFs',
+    '/remove-blank-pages': 'Remove blank PDF pages',
     '/pdf-forms': 'Fill and create PDF forms',
     '/document-info': 'PDF document information',
     '/to-image': 'PDF to images',
@@ -54,7 +55,7 @@ export default function Layout() {
     '/merge', '/split', '/manage', '/to-image', '/images-to-pdf', '/compress',
     '/compress/visa', '/compress/exact', '/compress/scanned', '/thesis-pdf-check', '/watermark',
     '/unwatermark', '/to-word', '/word-to-pdf', '/visa-prep', '/portal-ready-pdf', '/edit', '/sign-pdf',
-    '/redact-pdf', '/crop-pdf', '/ocr-pdf', '/scan-cleanup', '/workflows', '/compare-pdf',
+    '/redact-pdf', '/crop-pdf', '/ocr-pdf', '/scan-cleanup', '/workflows', '/compare-pdf', '/remove-blank-pages',
     '/pdf-forms', '/document-info',
   ])
   const goBack = () => {

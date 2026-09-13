@@ -93,6 +93,12 @@ const seo: Record<string, SeoEntry> = {
     name: 'Compare PDF versions',
     tool: true,
   },
+  '/remove-blank-pages': {
+    title: 'Remove Blank Pages from PDF Automatically | Lab of PDF',
+    description: 'Automatically detect blank PDF pages, review every visual suggestion, and remove only the pages you approve without uploading the document.',
+    name: 'Remove blank PDF pages',
+    tool: true,
+  },
   '/pdf-forms': {
     title: 'Fill or Create PDF Forms Visually | Lab of PDF',
     description: 'Fill existing PDF form fields or place new text and checkbox fields directly on a page preview without uploading the document.',

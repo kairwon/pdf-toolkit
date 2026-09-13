@@ -10,6 +10,7 @@ function loadPdf() {
 
 export const getPageCount = async (...args: Parameters<PdfModule['getPageCount']>) => (await loadPdf()).getPageCount(...args)
 export const renderPageToCanvas = async (...args: Parameters<PdfModule['renderPageToCanvas']>) => (await loadPdf()).renderPageToCanvas(...args)
+export const analyzePdfPageForBlankness = async (...args: Parameters<PdfModule['analyzePdfPageForBlankness']>) => (await loadPdf()).analyzePdfPageForBlankness(...args)
 export const imagesToPdf = async (...args: Parameters<PdfModule['imagesToPdf']>) => (await loadPdf()).imagesToPdf(...args)
 export const inspectPdfForm = async (...args: Parameters<PdfModule['inspectPdfForm']>) => (await loadPdf()).inspectPdfForm(...args)
 export const updatePdfForm = async (...args: Parameters<PdfModule['updatePdfForm']>) => (await loadPdf()).updatePdfForm(...args)
@@ -44,6 +45,7 @@ export type {
   ArrangePdfPage,
   NewPdfFormField,
   PdfDocumentInfo,
+  PdfBlankPageAnalysis,
   PdfFormFieldInfo,
   PdfStructureCleanup,
   PdfStructureInspection,

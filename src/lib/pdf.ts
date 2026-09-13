@@ -2,6 +2,7 @@ import './promiseTryPolyfill'
 import { PDFDocument, rgb, StandardFonts, degrees, PDFName, PDFArray, PDFDict } from 'pdf-lib'
 import * as pdfjsLib from 'pdfjs-dist'
 import { DEFAULT_WATERMARK_ANCHOR, resolveWatermarkCoordinates, type WatermarkAnchor } from './watermarkPlacement'
+import { analyzePagePixels, type BlankPageAnalysis } from './blankPageDetection'
 
 // Set up the worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -58,6 +59,34 @@ export async function renderPageToCanvas(
   await page.render({ canvas, canvasContext: ctx, viewport }).promise
 
   return canvas.toDataURL(format === 'png' ? 'image/png' : 'image/jpeg', quality)
+}
+
+export type PdfBlankPageAnalysis = BlankPageAnalysis & {
+  pageNumber: number
+  preview: string
+}
+
+/** Render a lightweight page preview and measure visible ink without uploading the PDF. */
+export async function analyzePdfPageForBlankness(file: File, pageNumber: number, signal?: AbortSignal): Promise<PdfBlankPageAnalysis> {
+  if (signal?.aborted) throw new DOMException('Operation cancelled', 'AbortError')
+  const pdf = await loadRenderedDocument(file)
+  const page = await pdf.getPage(pageNumber)
+  const unscaled = page.getViewport({ scale: 1 })
+  const scale = Math.min(.5, 260 / Math.max(unscaled.width, unscaled.height))
+  const viewport = page.getViewport({ scale })
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(viewport.width))
+  canvas.height = Math.max(1, Math.round(viewport.height))
+  const context = canvas.getContext('2d', { willReadFrequently: true })
+  if (!context) throw new Error('This browser could not inspect the page')
+  context.fillStyle = '#fff'
+  context.fillRect(0, 0, canvas.width, canvas.height)
+  await page.render({ canvas, canvasContext: context, viewport }).promise
+  if (signal?.aborted) { canvas.width = 1; throw new DOMException('Operation cancelled', 'AbortError') }
+  const analysis = analyzePagePixels(context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height)
+  const preview = canvas.toDataURL('image/jpeg', .72)
+  canvas.width = 1
+  return { pageNumber, preview, ...analysis }
 }
 
 export interface ImagePdfSource {
