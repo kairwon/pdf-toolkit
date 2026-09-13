@@ -3,6 +3,7 @@ import { PDFDocument, rgb, StandardFonts, degrees, PDFName, PDFArray, PDFDict } 
 import * as pdfjsLib from 'pdfjs-dist'
 import { DEFAULT_WATERMARK_ANCHOR, resolveWatermarkCoordinates, type WatermarkAnchor } from './watermarkPlacement'
 import { analyzePagePixels, type BlankPageAnalysis } from './blankPageDetection'
+import { fingerprintPagePixels, type PageFingerprint } from './duplicatePageDetection'
 
 // Set up the worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -87,6 +88,36 @@ export async function analyzePdfPageForBlankness(file: File, pageNumber: number,
   const preview = canvas.toDataURL('image/jpeg', .72)
   canvas.width = 1
   return { pageNumber, preview, ...analysis }
+}
+
+export type PdfDuplicatePageAnalysis = {
+  pageNumber: number
+  preview: string
+  fingerprint: PageFingerprint
+}
+
+/** Render a small page preview and a visual fingerprint for local duplicate detection. */
+export async function analyzePdfPageForDuplication(file: File, pageNumber: number, signal?: AbortSignal): Promise<PdfDuplicatePageAnalysis> {
+  if (signal?.aborted) throw new DOMException('Operation cancelled', 'AbortError')
+  const pdf = await loadRenderedDocument(file)
+  const page = await pdf.getPage(pageNumber)
+  const unscaled = page.getViewport({ scale: 1 })
+  const scale = Math.min(.5, 260 / Math.max(unscaled.width, unscaled.height))
+  const viewport = page.getViewport({ scale })
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(viewport.width))
+  canvas.height = Math.max(1, Math.round(viewport.height))
+  const context = canvas.getContext('2d', { willReadFrequently: true })
+  if (!context) throw new Error('This browser could not inspect the page')
+  context.fillStyle = '#fff'
+  context.fillRect(0, 0, canvas.width, canvas.height)
+  await page.render({ canvas, canvasContext: context, viewport }).promise
+  if (signal?.aborted) { canvas.width = 1; throw new DOMException('Operation cancelled', 'AbortError') }
+  const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
+  const fingerprint = fingerprintPagePixels(pixels, canvas.width, canvas.height)
+  const preview = canvas.toDataURL('image/jpeg', .72)
+  canvas.width = 1
+  return { pageNumber, preview, fingerprint }
 }
 
 export interface ImagePdfSource {
@@ -245,11 +276,11 @@ export async function updatePdfForm(
 export async function inspectPdfStructure(file: File): Promise<PdfStructureInspection> {
   const pdfDoc = await PDFDocument.load(await file.arrayBuffer())
   const catalog = pdfDoc.catalog
-  const form = pdfDoc.getForm()
-  const fields = form.getFields()
+  const hasAcroForm = catalog.has(PDFName.of('AcroForm'))
+  const fields = hasAcroForm ? pdfDoc.getForm().getFields() : []
   const names = catalog.lookupMaybe(PDFName.of('Names'), PDFDict)
   return {
-    hasForm: catalog.has(PDFName.of('AcroForm')) || fields.length > 0,
+    hasForm: hasAcroForm || fields.length > 0,
     hasDigitalSignature: fields.some((field) => field.constructor.name === 'PDFSignature'),
     hasBookmarks: catalog.has(PDFName.of('Outlines')),
     hasAttachments: !!names?.get(PDFName.of('EmbeddedFiles')),

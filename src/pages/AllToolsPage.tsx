@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BriefcaseBusiness,
   Crop,
+  CopyCheck,
   FileArchive,
   FileCheck2,
   FileImage,
@@ -50,6 +51,7 @@ const groups = [
       { title: 'Split PDF', note: 'Extract the pages you actually need.', path: '/split', icon: Scissors },
       { title: 'Manage pages', note: 'Reorder, rotate, or remove PDF pages.', path: '/manage', icon: Layers3 },
       { title: 'Remove blank pages', note: 'Detect empty pages visually and review before removal.', path: '/remove-blank-pages', icon: FileMinus2 },
+      { title: 'Remove duplicate pages', note: 'Find repeated pages visually and approve every removal.', path: '/remove-duplicate-pages', icon: CopyCheck },
     ],
   },
   {
@@ -98,6 +100,7 @@ const commonRequirements = [
   { title: 'Reduce a PDF for an email attachment', text: 'Create the smallest practical copy without guessing which compression setting to use.', path: '/compress/exact' },
   { title: 'Extract selected pages from a PDF', text: 'Preview a document and create a new PDF containing only the pages you choose.', path: '/split' },
   { title: 'Remove empty scanned pages', text: 'Automatically find likely blank pages, inspect every preview, and remove only the pages you approve.', path: '/remove-blank-pages' },
+  { title: 'Remove duplicate PDF pages', text: 'Find repeated scan or document pages and compare matching thumbnails before removing copies.', path: '/remove-duplicate-pages' },
   { title: 'Convert a scanned PDF to editable Word text', text: 'Use browser-based OCR for scanned pages and direct extraction for text PDFs.', path: '/to-word' },
   { title: 'Turn a Word document into a shareable PDF', text: 'Choose a DOC or DOCX file, then review the finished PDF before downloading.', path: '/word-to-pdf' },
 ]

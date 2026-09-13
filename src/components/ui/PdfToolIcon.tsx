@@ -13,6 +13,7 @@ export type PdfIconKind =
   | 'merge'
   | 'manage'
   | 'blank'
+  | 'duplicate'
   | 'watermark'
   | 'unwatermark'
 
@@ -36,6 +37,7 @@ export function pdfIconKindForPath(path: string): PdfIconKind {
   if (path === '/merge') return 'merge'
   if (path === '/manage' || path === '/edit-pdf') return 'manage'
   if (path === '/remove-blank-pages') return 'blank'
+  if (path === '/remove-duplicate-pages') return 'duplicate'
   if (path === '/watermark') return 'watermark'
   if (path === '/unwatermark') return 'unwatermark'
   return 'standard'
@@ -104,6 +106,9 @@ function VisualScene({ kind }: { kind: PdfIconKind }) {
   }
   if (kind === 'blank') {
     return <span className="pdf-visual-scene"><span className="pdf-scene-stack"><MiniPdf /><MiniPdf /><MiniPdf /></span><span className="pdf-scene-mark">×</span></span>
+  }
+  if (kind === 'duplicate') {
+    return <span className="pdf-visual-scene"><span className="pdf-scene-double"><MiniPdf /><MiniPdf /></span><span className="pdf-scene-mark">=</span></span>
   }
   if (kind === 'watermark' || kind === 'unwatermark') {
     return <span className="pdf-visual-scene"><MiniPdf className={kind === 'unwatermark' ? 'has-removed-mark' : 'has-mark'} /><span className="pdf-scene-mark">{kind === 'unwatermark' ? '×' : 'A'}</span></span>

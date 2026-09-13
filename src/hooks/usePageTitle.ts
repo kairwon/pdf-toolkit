@@ -99,6 +99,12 @@ const seo: Record<string, SeoEntry> = {
     name: 'Remove blank PDF pages',
     tool: true,
   },
+  '/remove-duplicate-pages': {
+    title: 'Find and Remove Duplicate PDF Pages Online | Lab of PDF',
+    description: 'Find visually duplicate PDF pages, compare every matching thumbnail, and remove only the repeated pages you approve without uploading the document.',
+    name: 'Remove duplicate PDF pages',
+    tool: true,
+  },
   '/pdf-forms': {
     title: 'Fill or Create PDF Forms Visually | Lab of PDF',
     description: 'Fill existing PDF form fields or place new text and checkbox fields directly on a page preview without uploading the document.',

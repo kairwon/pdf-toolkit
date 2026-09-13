@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && node scripts/prerender-seo.mjs && node scripts/write-release-manifest.mjs",
+    "build": "tsc -b && vite build && node scripts/prerender-seo.mjs && node scripts/check-seo.mjs && node scripts/write-release-manifest.mjs",
+    "check:seo": "node scripts/check-seo.mjs",
     "lint": "oxlint",
     "test": "vitest run",
     "preview": "vite preview"

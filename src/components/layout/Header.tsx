@@ -27,6 +27,8 @@ const navGroups = [
       { label: 'Merge PDFs', path: '/merge' },
       { label: 'Split PDF', path: '/split' },
       { label: 'Manage pages', path: '/manage' },
+      { label: 'Remove blank pages', path: '/remove-blank-pages' },
+      { label: 'Remove duplicate pages', path: '/remove-duplicate-pages' },
     ],
   },
   {

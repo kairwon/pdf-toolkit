@@ -37,7 +37,7 @@ Nginx to the new static files. Verify the live version at
 `https://labofpdf.com/release.json`.
 
 The intended production release represented by this handoff uses the immutable
-tag `production-2026-09-13-remove-blank-pages`. Verify its exact
+tag `production-2026-09-13-remove-duplicate-pages`. Verify its exact
 commit in the live `release.json` manifest and in GitHub before every subsequent
 deployment.
 
@@ -103,6 +103,11 @@ locally and on GitHub. Never move or reuse a production tag.
   decision before anything is removed. Users can choose conservative,
   balanced, or aggressive sensitivity, override any suggestion, stop and
   resume long scans, and download a new PDF while keeping the original intact.
+- `/remove-duplicate-pages` builds a local visual fingerprint for every page,
+  clusters exact or near-identical pages, and presents matching thumbnails in
+  review groups. The first occurrence is kept by default, every suggestion can
+  be overridden, and long scans can be stopped and resumed without uploading
+  the document.
 - `/release.json` is served with `X-Robots-Tag: noindex, nofollow` and no-cache
   headers so Google does not treat the internal deployment manifest as a search
   result candidate. The deployment script verifies this header before accepting

@@ -173,6 +173,14 @@ describe('PDF output formats', () => {
 })
 
 describe('PDF structure inspection', () => {
+  it('does not create or report an empty form while inspecting an ordinary PDF', async () => {
+    const document = await PDFDocument.create()
+    document.addPage([612, 792])
+    const file = new File([Uint8Array.from(await document.save()).buffer], 'ordinary.pdf', { type: 'application/pdf' })
+
+    await expect(inspectPdfStructure(file)).resolves.toMatchObject({ hasForm: false, hasDigitalSignature: false })
+  })
+
   it('detects forms, bookmarks, attachments, and custom page labels', async () => {
     const document = await PDFDocument.create()
     document.addPage([612, 792])
